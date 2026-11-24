@@ -377,11 +377,12 @@ function RadarPage({ go }: { go: (r: string) => void }) {
 }
 
 // ------------------------------------------------------------------ helpline
+const STATUS_ORDER: Record<string, number> = { likely_scam: 0, unverified: 1, official: 2 };
 function HelplinePage() {
   const { t, lang } = useI18n();
   const [rows, setRows] = useState<PhoneRow[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const load = useCallback(() => api.helpline().then(setRows).catch(() => setRows([])), []);
+  const load = useCallback(() => api.helpline().then((r) => setRows([...r].sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3)))).catch(() => setRows([])), []);
   useEffect(() => { load(); }, [load]);
   const run = async () => { setBusy(true); try { await api.helplineRun(); await load(); } finally { setBusy(false); } };
   const anySynthetic = rows?.some((r) => r.synthetic);
@@ -396,8 +397,9 @@ function HelplinePage() {
               <td>{(lang === "ar" ? f.brand_name_ar : f.brand_name_en) || f.brand_id}</td>
               <td>{f.listing_url ? <a href={f.listing_url} target="_blank" rel="noreferrer noopener">{f.listing_name}</a> : f.listing_name}
                 {f.synthetic && <span className="badge badge-synth">{t("synthetic")}</span>}
-                <div className="muted small">{f.source} · {lang === "ar" ? f.reasons_ar || f.reasons_en : f.reasons_en || f.reasons_ar}</div></td>
-              <td className="nowrap"><Ltr><code>{f.number_e164 || f.raw_number}</code></Ltr></td>
+                {f.address && <div className="muted small">{f.address}</div>}
+                <div className="muted small">{f.source} · <span dir={lang === "ar" ? "rtl" : "ltr"}>{lang === "ar" ? f.reasons_ar || f.reasons_en : f.reasons_en || f.reasons_ar}</span></div></td>
+              <td className="nowrap"><Ltr><code>{f.number_e164 || f.raw_number}</code></Ltr>{f.number_e164 && f.raw_number && <div className="muted small"><Ltr>{f.raw_number}</Ltr></div>}</td>
               <td>{f.official_numbers.map((n) => <div key={n}><Ltr><code>{n}</code></Ltr></div>)}</td>
               <td><span className={`pill st-${f.status}`}>{t(`status_${f.status}` as Key)}</span></td>
               <td>{f.second_signals.map((s) => <span key={s} className="chip">{s}</span>)}</td>

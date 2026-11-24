@@ -67,7 +67,9 @@ TEXT_CAP = 20_000
 DOM_CAP = 5_000_000
 FAVICON_CAP = 256 * 1024
 SCREENSHOT_MAX_H = 10_000
-SETTLE_QUIET_S = 1.5  # wait this long without a new main-frame navigation before capturing
+SETTLE_QUIET_S = 1.5
+_IN_USE: set[str] = set()
+_CHALLENGE_RE = re.compile(r"^(Just a moment|Attention Required|لحظة|DDoS-Guard|Checking your browser)", re.I)  # wait this long without a new main-frame navigation before capturing
 
 
 def is_shortener(url: str) -> bool:
@@ -429,6 +431,8 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
         if det.status == "ok":
             if len(det.visible_text.strip()) < 20 and not det.form_fields:
                 det.status = "blank"
+            if _CHALLENGE_RE.search(det.title or "") or "cf-chl" in (html_snip := (det.visible_text or "")[:2000])                     or "Verify you are human" in html_snip:
+                run.notes.append("anti-bot challenge page (content hidden from scanner)")
     finally:
         await _safe(context.close(), 4)  # writes the HAR
         har = run.out_dir / "page.har"
@@ -444,6 +448,7 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
     det = Detonation(url=str(url or ""), persona=persona, status="ok")  # type: ignore[arg-type]
     t0 = time.monotonic()
     run: _Run | None = None
+    in_use = ""
     try:
         norm, reason = normalize_url(str(url or ""))
         if reason:
@@ -452,7 +457,19 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
             return det
         sid = re.sub(r"[^A-Za-z0-9_.-]", "_", scan_id or ("det-" + uuid.uuid4().hex[:12]))[:80]
         out_dir = Path(settings.artifacts_dir) / sid / persona
+        n = 2
+        while str(out_dir) in _IN_USE:  # same scan_id+persona running concurrently: don't clobber
+            out_dir = Path(settings.artifacts_dir) / sid / f"{persona}-{n}"
+            n += 1
+        _IN_USE.add(str(out_dir))
+        in_use = str(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
+        for old in out_dir.iterdir():  # never report stale artifacts from an earlier run
+            try:
+                if old.is_file():
+                    old.unlink()
+            except Exception:
+                pass
         run = _Run(det, out_dir)
         budget = max(3.0, float(settings.detonate_timeout))
         async with _browser.semaphore():
@@ -485,6 +502,7 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
                     det.har_path = str(har)
         except Exception:
             pass
+        _IN_USE.discard(in_use)
         det.finished_at = utcnow()
         det.duration_ms = int((time.monotonic() - t0) * 1000)
     return det

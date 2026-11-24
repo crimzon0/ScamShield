@@ -35,7 +35,7 @@ export interface RadarRow {
 }
 export interface PhoneRow {
   id: number; brand_id: string; brand_name_en?: string; brand_name_ar?: string; query: string; source: string;
-  listing_name: string; listing_url: string; raw_number: string; number_e164: string; official_numbers: string[];
+  listing_name: string; listing_url: string; address: string; raw_number: string; number_e164: string; official_numbers: string[];
   status: "official" | "unverified" | "likely_scam"; second_signals: string[]; reasons_en: string; reasons_ar: string;
   synthetic: boolean; found_at: string;
 }

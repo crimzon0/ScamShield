@@ -15,12 +15,12 @@ from typing import Any
 from scamshield.core.domains import is_official, registrable
 from scamshield.core.schemas import PhoneFinding
 
-from .phones import extract, is_mobile, normalize, whatsapp_numbers
+from .phones import ascii_digits, extract, is_mobile, normalize, whatsapp_numbers
 
 # Categories whose public helplines are landline / 800 / 600 numbers, never personal mobiles.
 INSTITUTION_CATEGORIES = {
     "bank", "government", "gov", "police", "telecom", "utility", "exchange", "payments", "payment",
-    "fintech", "insurance", "islamic_bank", "airline", "courier", "delivery", "postal", "health",
+    "fintech", "insurance", "regulator", "fuel", "islamic_bank", "airline", "courier", "delivery", "postal", "health",
 }
 FEW_REVIEWS = 3
 
@@ -80,6 +80,16 @@ def official_numbers(brand: dict) -> list[str]:
     return out
 
 
+def short_codes(brand: dict) -> list[str]:
+    """Official short codes (999, 901, 171...). Not E.164; compared on ASCII digits."""
+    return [re.sub(r"\D", "", ascii_digits(str(s))) for s in (brand.get("short_codes", []) or []) if str(s).strip()]
+
+
+def short_code_of(raw: str, brand: dict) -> str:
+    d = re.sub(r"\D", "", ascii_digits(raw or ""))
+    return d if d and d in short_codes(brand) else ""
+
+
 def malformed_phones(brand: dict) -> list[str]:
     return [str(p) for p in (brand.get("phones", []) or []) if not normalize(str(p))]
 
@@ -87,7 +97,7 @@ def malformed_phones(brand: dict) -> list[str]:
 def classify(listing: dict[str, Any], brand: dict, raw_number: str, number_e164: str) -> PhoneFinding:
     """listing keys: query, source, name, url (website), maps_url, address, rating_count, whatsapp_only,
     landing_label, synthetic."""
-    official = official_numbers(brand)
+    official = official_numbers(brand) + short_codes(brand)
     domains = brand.get("official_domains", []) or []
     name = listing.get("name", "") or ""
     site = listing.get("url", "") or ""
@@ -99,7 +109,8 @@ def classify(listing: dict[str, Any], brand: dict, raw_number: str, number_e164:
     fmt: dict[str, Any] = {"brand": brand_en, "brand_ar": brand_ar, "site": registrable(site) if site else ""}
     if number_e164 in official:
         status = "official"
-        en = [f"Number {number_e164} matches an official {brand_en} number in the registry."]
+        kind = "short code" if not number_e164.startswith("+") else "number"
+        en = [f"Number {number_e164} matches an official {brand_en} {kind} in the registry."]
         ar = [f"الرقم {number_e164} يطابق رقماً رسمياً لـ{brand_ar} في السجل."]
     else:
         if named and site and not is_official(site, domains) and not whatsapp_numbers(site):
@@ -150,7 +161,7 @@ def findings_from_listing(listing: dict[str, Any], brand: dict) -> list[PhoneFin
     nums: list[tuple[str, str]] = []
     for key in ("phone", "phone_intl"):
         raw = listing.get(key) or ""
-        e = normalize(raw)
+        e = normalize(raw) or short_code_of(raw, brand)
         if e and e not in [x[1] for x in nums]:
             nums.append((raw, e))
     for raw, e in extract((listing.get("url") or "") + "\n" + (listing.get("text") or "")):
@@ -158,7 +169,7 @@ def findings_from_listing(listing: dict[str, Any], brand: dict) -> list[PhoneFin
             nums.append((raw, e))
     if not nums:
         return []
-    official = official_numbers(brand)
+    official = official_numbers(brand) + short_codes(brand)
     relevant = (claims_brand(listing.get("name", ""), brand) or claims_brand(listing.get("text", ""), brand)
                 or (listing.get("url") and is_official(listing["url"], brand.get("official_domains", []) or []))
                 or any(e in official for _, e in nums))

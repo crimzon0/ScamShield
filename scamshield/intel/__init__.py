@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 
+from scamshield.core import db
 from scamshield.core.config import settings
 from scamshield.core.domains import host_of, registrable
 from scamshield.core.schemas import Intel
@@ -23,7 +24,7 @@ from ._common import DAY, HOUR, log, parse_dt, run_source
 from .crtsh import crtsh_search, fetch_first_seen
 from .keyed import fetch_safe_browsing, fetch_urlscan
 from .netinfo import fetch_asn, fetch_dns
-from .rdap import registration
+from .rdap import fetch_ip_rdap, registration
 
 __all__ = ["enrich", "blocklist_hits", "feed_urls", "crtsh_search"]
 
@@ -45,6 +46,27 @@ def blocklist_hits(url: str) -> list[str]:
 
 def feed_urls(limit: int = 200) -> dict[str, list[str]]:
     return _feeds.feed_urls(limit)
+
+
+CRTSH_FAIL_TTL = 15 * 60
+
+
+def _crtsh_bg(reg: str):
+    """Runs in a worker thread with its own loop. Caches success (1 d) itself so a capped enrich still benefits
+    next time; failures are remembered for 15 min so we don't hammer crt.sh."""
+    fail_key = f"intel:crtsh_fail:{reg}"
+    if db.cache_get(fail_key):
+        return None
+    try:
+        v = asyncio.run(fetch_first_seen(reg, timeout=25.0))
+    except Exception as e:
+        log.info("crt.sh failed for %s: %r", reg, e)
+        v = None
+    if v is None:
+        db.cache_set(fail_key, True, CRTSH_FAIL_TTL)
+    else:
+        db.cache_set(f"intel:crtsh:{reg}", v, DAY)
+    return v
 
 
 async def enrich(domain: str) -> Intel:
@@ -102,9 +124,15 @@ async def _enrich(domain: str) -> Intel:
         a = await run_source(src, "asn", f"intel:asn:{intel.ip}", lambda: fetch_asn(intel.ip), DAY)
         if a:
             intel.asn, intel.asn_org, intel.hosting_country = a.get("asn", ""), a.get("asn_org", ""), a.get("country", "")
+        ipr = await run_source(src, "ip_rdap", f"intel:iprdap:{intel.ip}", lambda: fetch_ip_rdap(intel.ip), 7 * DAY)
+        if ipr:
+            intel.hosting_abuse_emails = ipr.get("abuse_emails") or []
+            if not intel.hosting_country:
+                intel.hosting_country = ipr.get("country", "")
 
     async def do_crtsh():
-        v = await run_source(src, "crtsh", f"intel:crtsh:{reg}", lambda: fetch_first_seen(reg), DAY)
+        # crt.sh is slow: the fetch runs in its own thread so it can finish (and fill the cache) after the 10 s cap.
+        v = await run_source(src, "crtsh", f"intel:crtsh:{reg}", lambda: asyncio.to_thread(_crtsh_bg, reg), DAY)
         if v:
             intel.cert_first_seen = parse_dt(v.get("first_seen"))
             intel.cert_count = v.get("count")

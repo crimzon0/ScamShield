@@ -1,6 +1,7 @@
 """DNS (A/NS/MX via dnspython) and IP -> ASN/org/country (Team Cymru DNS, fallback ip-api.com)."""
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 from typing import Optional
 
@@ -13,15 +14,19 @@ from ._common import client, log
 DNS_TIMEOUT = 3.0
 
 
+# Public resolvers first: the host's own resolver (hotspot/venue Wi-Fi) is often slow; system ones as fallback.
+PUBLIC_NS = ["1.1.1.1", "8.8.8.8"]
+
+
 def _resolver() -> dns.asyncresolver.Resolver:
+    system: list[str] = []
     try:
-        r = dns.asyncresolver.Resolver()
-        if not r.nameservers:
-            raise dns.resolver.NoResolverConfiguration
+        system = list(dns.asyncresolver.Resolver().nameservers)
     except Exception:
-        r = dns.asyncresolver.Resolver(configure=False)
-        r.nameservers = ["1.1.1.1", "8.8.8.8"]
-    r.timeout = DNS_TIMEOUT
+        pass
+    r = dns.asyncresolver.Resolver(configure=False)
+    r.nameservers = PUBLIC_NS + [n for n in system if n not in PUBLIC_NS]
+    r.timeout = 1.5  # per server
     r.lifetime = DNS_TIMEOUT
     return r
 
@@ -47,12 +52,14 @@ async def _q(r, name: str, rtype: str) -> tuple[list[str], bool]:
 
 async def fetch_dns(host: str, registrable_domain: str) -> dict:
     r = _resolver()
-    a, nx = await _q(r, host, "A")
-    if not a and not host.startswith("www."):
-        a2, _ = await _q(r, "www." + host, "A")
-        a = a2
-    ns, nx2 = await _q(r, registrable_domain, "NS")
-    mx, _ = await _q(r, registrable_domain, "MX")
+    names = [host] if host.startswith("www.") else [host, "www." + host]
+    (a, nx), (a_www, _), (ns, nx2), (mx, _) = await asyncio.gather(
+        _q(r, names[0], "A"),
+        _q(r, names[-1], "A") if len(names) > 1 else _q(r, names[0], "A"),
+        _q(r, registrable_domain, "NS"),
+        _q(r, registrable_domain, "MX"),
+    )
+    a = a or a_www
     return {"a": a, "ns": ns, "mx": mx, "nxdomain": bool(nx and nx2 and not a)}
 
 

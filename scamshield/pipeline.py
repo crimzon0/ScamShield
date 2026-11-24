@@ -98,7 +98,7 @@ def _transient(res: ScanResult) -> bool:
         return True
     if v.mode == "domain_only" and (not res.detonations or any(d.status in ("timeout", "error") for d in res.detonations)):
         return True
-    if res.intel and any(st == "unavailable" for st in (res.intel.sources or {}).values()):
+    if res.intel and any((res.intel.sources or {}).get(k) == "unavailable" for k in ("enrich", "rdap")):
         return True
     return False
 

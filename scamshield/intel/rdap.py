@@ -11,7 +11,8 @@ from ._common import DAY, client, log, parse_dt
 
 RDAP_ORG = "https://rdap.org/domain/{}"
 IANA_BOOTSTRAP = "https://data.iana.org/rdap/dns.json"
-WHOIS_SERVERS = {"ae": "whois.aeda.net", "abudhabi": "whois.nic.abudhabi", "dubai": "whois.nic.dubai"}
+# .ae has no RDAP; IANA refers to whois.aeda.net.ae (verified 2026-11-24; whois.aeda.net does not answer)
+WHOIS_SERVERS = {"ae": "whois.aeda.net.ae"}
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 _bootstrap: Optional[dict] = None
@@ -139,16 +140,23 @@ def parse_whois_text(txt: str) -> dict:
     ns = sorted({v.split()[0].lower().rstrip(".") for k in ("name server", "nserver", "nameserver") for v in kv.get(k, [])})
     abuse = sorted({e.lower() for k, vs in kv.items() if "abuse" in k for v in vs for e in EMAIL_RE.findall(v)})
     return {"found": True, "via": "whois", "created": created, "registrar": registrar,
-            "abuse_emails": abuse, "nameservers": ns, "raw": {"whois_excerpt": txt[:1500]}}
+            "abuse_emails": abuse, "nameservers": ns,
+            "raw": {"registrant": next((kv[k][0] for k in ("registrant", "registrant organization") if k in kv), ""),
+                    "whois_excerpt": txt[:1500]}}
 
 
 async def fetch_whois(domain: str) -> Optional[dict]:
     tld = domain.rsplit(".", 1)[-1]
+    if tld in WHOIS_SERVERS:  # known port-43 server: ask it directly (fast, python-whois mis-handles .ae)
+        try:
+            return parse_whois_text(await raw_whois(domain, WHOIS_SERVERS[tld], 5))
+        except Exception as e:
+            log.info("raw whois failed for %s: %r", domain, e)
     # 1) python-whois in a thread
     try:
         import whois  # python-whois
 
-        w = await asyncio.wait_for(asyncio.to_thread(whois.whois, domain), 7)
+        w = await asyncio.wait_for(asyncio.to_thread(whois.whois, domain), 6)
         created = w.get("creation_date")
         if w and (created or w.get("registrar") or w.get("name_servers")):
             emails = w.get("emails") or []
@@ -166,8 +174,8 @@ async def fetch_whois(domain: str) -> Optional[dict]:
     except Exception as e:
         log.info("python-whois failed for %s: %r", domain, e)
     # 2) raw port-43 whois (known server, else IANA referral)
-    server = WHOIS_SERVERS.get(tld)
-    if not server:
+    server = None
+    if tld not in WHOIS_SERVERS:
         txt = await raw_whois(tld, "whois.iana.org")
         m = re.search(r"^whois:\s*(\S+)", txt, re.M)
         server = m.group(1) if m else None
@@ -198,3 +206,25 @@ async def registration(domain: str) -> Optional[dict]:
         merged["via"] = "rdap+whois"
         return merged
     return wh or rd
+
+
+# ------------------------------------------------------------------ IP RDAP (hosting abuse contacts)
+async def fetch_ip_rdap(ip: str) -> Optional[dict]:
+    async with client() as c:
+        r = await c.get(f"https://rdap.org/ip/{ip}", headers={"Accept": "application/rdap+json"})
+        if r.status_code != 200:
+            return None
+        j = r.json()
+    abuse: list[str] = []
+    other: list[str] = []
+
+    def walk(ents):
+        for ent in ents or []:
+            roles = ent.get("roles", []) or []
+            mails = [e.lower() for e in _vcard(ent, "email")]
+            (abuse if "abuse" in roles else other).extend(mails)
+            walk(ent.get("entities"))
+
+    walk(j.get("entities"))
+    return {"abuse_emails": sorted(set(abuse)), "other_emails": sorted(set(other))[:5],
+            "name": j.get("name", ""), "country": j.get("country", ""), "handle": j.get("handle", "")}

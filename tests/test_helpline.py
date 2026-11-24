@@ -155,8 +155,9 @@ async def test_unknown_brand_and_check_all():
     assert await check_brand("does_not_exist", save=False) == []
     fs = await check_all(save=False)
     assert {"sandbox_bank", "emirates_nbd", "tamm"} <= {f.brand_id for f in fs}
-    # real brands only appear with fake synthetic numbers, never as official
-    assert all(f.status != "official" for f in fs if f.brand_id != "sandbox_bank")
+    # real brands: fake synthetic numbers are never official; only registry short codes (e.g. 901) are
+    assert all(f.status != "official" or not f.number_e164.startswith("+") for f in fs if f.brand_id != "sandbox_bank")
+    assert any(f.brand_id == "dubai_police" and f.number_e164 == "901" and f.status == "official" for f in fs)
 
 
 def test_place_queries_bilingual_all_cities():
@@ -212,3 +213,28 @@ async def test_live_path_with_mocked_places_and_landing(monkeypatch):
     assert scanned == ["https://sandbox-help.example"]  # official site + unrelated cafe not scanned
     assert not any(f.synthetic for f in fs)
     assert last_sources["places"] == "ok" and last_sources["serpapi"] == "no_key"
+
+
+POLICE = {"id": "dubai_police", "category": "government", "name_en": "Dubai Police", "name_ar": "شرطة دبي",
+          "keywords_en": ["dubai police"], "official_domains": ["dubaipolice.gov.ae"], "phones": [],
+          "short_codes": ["901", "999"]}
+
+
+def test_short_codes_are_official():
+    fs = findings_from_listing({"name": "Dubai Police Station", "phone": "٩٠١", "rating_count": 0,
+                                "url": "https://dubaipolice-fines.example"}, POLICE)
+    assert [(f.number_e164, f.status) for f in fs] == [("901", "official")]
+    assert "901" in fs[0].official_numbers and "999" in fs[0].official_numbers
+
+
+def test_government_mobile_with_no_official_phones_is_likely_scam():
+    fs = findings_from_listing({"name": "شرطة دبي - المخالفات", "phone": "050 000 0501"}, POLICE)
+    assert fs[0].status == "likely_scam" and "mobile_number_for_institution" in fs[0].second_signals
+
+
+def test_registry_phones_all_normalise():
+    from scamshield.brand import load_registry
+    from scamshield.helpline.classify import malformed_phones
+
+    bad = {b["id"]: malformed_phones(b) for b in load_registry() if malformed_phones(b)}
+    assert bad == {}
