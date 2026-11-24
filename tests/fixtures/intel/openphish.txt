@@ -1,4 +1,4 @@
-https://sandbox-bank-login.example/verify
-http://login.sandboxbank-secure.example/a/b
+https://sandbox-bank-login.com/verify
+http://login.sandboxbank-secure.com/a/b
 https://sandbox-phish.vercel.app/
-https://docs.popular.example/forms/x
+https://docs.popular.com/forms/x

@@ -432,12 +432,19 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
                                                  timeout=max(100, (deadline - capture_reserve - time.monotonic()) * 1000)),
                         max(0.1, min(3.0, deadline - capture_reserve - time.monotonic())))
             # Also wait for short first-party timers / meta refresh (<= ~6 s after DOMContentLoaded).
+            waited_timer = False
             while time.monotonic() < deadline - capture_reserve:
                 if time.monotonic() - run.last_nav >= SETTLE_QUIET_S:
                     pending = await _safe(page.evaluate(f"() => window.{_stealth.PROBE} ? window.{_stealth.PROBE}() : 0"),
                                           0.5, 0)
                     if not pending or pending <= 0:
-                        break
+                        if not waited_timer:
+                            break
+                        # a timer just fired: give its navigation a short window to start/commit
+                        waited_timer = False
+                        run.last_nav = time.monotonic() - SETTLE_QUIET_S + 0.8
+                        continue
+                    waited_timer = True
                     await asyncio.sleep(min(0.5, max(0.1, pending / 1000)))
                     continue
                 await asyncio.sleep(0.2)

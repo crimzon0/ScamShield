@@ -1,4 +1,7 @@
 import asyncio
+import os
+
+os.environ.setdefault("SCAMSHIELD_FICTIONAL", "1")
 
 import pytest
 

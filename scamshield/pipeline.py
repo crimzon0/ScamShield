@@ -170,9 +170,13 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
     bl = await _guard(bl_task, 5, list, "blocklist")
     if final != url:
         bl += await _guard(asyncio.to_thread(_blocklist, final), 5, list, "blocklist")
+    in_intel, in_look = intel, None
     if dom and dom != in_dom:
+        in_intel = intel.model_copy(deep=True)
         intel = await _enrich(dom)
         state["intel"] = intel
+        in_look = await _guard(asyncio.to_thread(lookalike, in_dom), 10, None, "lookalike")
+        in_intel.blocklist_hits = list(dict.fromkeys((in_intel.blocklist_hits or []) + bl))
     intel.blocklist_hits = list(dict.fromkeys((intel.blocklist_hits or []) + bl))
 
     brand = None
@@ -189,7 +193,8 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
         except Exception:
             cloak = None
     extra = await _helpline_signals(ok, brand, final)
-    v = score(scan_id, url, dets, intel, brand, look, cloak, extra=extra)
+    v = score(scan_id, url, dets, intel, brand, look, cloak, extra=extra,
+              input_intel=in_intel if in_intel is not intel else None, input_look=in_look)
     return ScanResult(scan_id=scan_id, url=url, detonations=dets, cloak=cloak, intel=intel, brand=brand,
                       lookalike=look, verdict=v)
 

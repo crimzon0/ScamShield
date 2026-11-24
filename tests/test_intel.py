@@ -82,16 +82,16 @@ async def test_fetch_rdap_ok_and_not_found(monkeypatch):
     body = json.loads((FX / "rdap_domain.json").read_text())
 
     def handler(req: httpx.Request):
-        if req.url.path == "/domain/sandbox-bank-login.example":
+        if req.url.path == "/domain/sandbox-bank-login.com":
             return httpx.Response(200, json=body)
-        if req.url.host == "rdap.org" and req.url.path == "/domain/gone.example":
-            return httpx.Response(302, headers={"Location": "https://rdap.registry.example/domain/gone.example"})
+        if req.url.host == "rdap.org" and req.url.path == "/domain/gone.com":
+            return httpx.Response(302, headers={"Location": "https://rdap.registry.com/domain/gone.com"})
         return httpx.Response(404, json={"errorCode": 404})
 
     mock_client(monkeypatch, rdap, handler)
-    ok = await rdap.fetch_rdap("sandbox-bank-login.example")
+    ok = await rdap.fetch_rdap("sandbox-bank-login.com")
     assert ok["registrar"] == "Example Registrar LLC"
-    nf = await rdap.fetch_rdap("gone.example")
+    nf = await rdap.fetch_rdap("gone.com")
     assert nf == {"found": False, "via": "rdap"}
 
 
@@ -102,13 +102,13 @@ async def test_fetch_rdap_bootstrap_fallback(monkeypatch):
         if req.url.host == "rdap.org":
             return httpx.Response(503)
         if req.url.host == "data.iana.org":
-            return httpx.Response(200, json={"services": [[["example"], ["https://rdap.nic.example/"]]]})
-        if req.url.host == "rdap.nic.example":
+            return httpx.Response(200, json={"services": [[["example"], ["https://rdap.nic.com/"]]]})
+        if req.url.host == "rdap.nic.com":
             return httpx.Response(200, json=body)
         return httpx.Response(404)
 
     mock_client(monkeypatch, rdap, handler)
-    ok = await rdap.fetch_rdap("sandbox-bank-login.example")
+    ok = await rdap.fetch_rdap("sandbox-bank-login.com")
     assert ok["created"] == "2026-11-21T09:15:00Z"
 
 
@@ -151,57 +151,57 @@ async def test_crtsh_search_and_cooldown(monkeypatch):
 # ------------------------------------------------------------------ feeds / blocklists / tranco
 def test_blocklist_hits(isolated):
     install_feeds(isolated)
-    install_tranco(isolated, [("popular.example", 50)])
+    install_tranco(isolated, [("popular.com", 50)])
     bh = intel_mod.blocklist_hits
-    assert bh("https://sandbox-bank-login.example/verify") == ["openphish"]  # exact URL
-    assert bh("https://sandbox-bank-login.example/other") == ["openphish"]  # host
-    assert bh("https://www.sandbox-bank-login.example/") == ["openphish"]  # www variant
-    assert bh("https://sandboxbank-otp.example/") == ["phishunt"]
-    assert bh("https://pay.sandboxbank-secure.example/") == ["openphish"]  # sibling subdomain, unpopular reg
+    assert bh("https://sandbox-bank-login.com/verify") == ["openphish"]  # exact URL
+    assert bh("https://sandbox-bank-login.com/other") == ["openphish"]  # host
+    assert bh("https://www.sandbox-bank-login.com/") == ["openphish"]  # www variant
+    assert bh("https://sandboxbank-otp.com/") == ["phishunt"]
+    assert bh("https://pay.sandboxbank-secure.com/") == ["openphish"]  # sibling subdomain, unpopular reg
     assert bh("https://other-app.vercel.app/") == []  # shared host: never by parent
     assert bh("https://sandbox-phish.vercel.app/x") == ["openphish"]
-    assert bh("https://www.popular.example/") == []  # popular registrable domain not tainted by docs.popular
-    assert bh("https://docs.popular.example/forms/x") == ["openphish"]
-    assert bh("https://sandboxbank.example/") == []
+    assert bh("https://www.popular.com/") == []  # popular registrable domain not tainted by docs.popular
+    assert bh("https://docs.popular.com/forms/x") == ["openphish"]
+    assert bh("https://sandboxbank.com/") == []
     assert bh("not a url") == []
 
 
 def test_feed_urls_and_tranco(isolated):
     install_feeds(isolated)
-    install_tranco(isolated, [("popular.example", 50)])
+    install_tranco(isolated, [("popular.com", 50)])
     f = intel_mod.feed_urls(limit=2)
-    assert f["openphish"] == ["https://sandbox-bank-login.example/verify", "http://login.sandboxbank-secure.example/a/b"]
-    assert f["phishunt"] == ["https://sandboxbank-otp.example"]
-    assert feeds.tranco_rank("popular.example") == 50
-    assert feeds.tranco_rank("www.popular.example") == 50
-    assert feeds.tranco_rank("nope.example") is None
+    assert f["openphish"] == ["https://sandbox-bank-login.com/verify", "http://login.sandboxbank-secure.com/a/b"]
+    assert f["phishunt"] == ["https://sandboxbank-otp.com"]
+    assert feeds.tranco_rank("popular.com") == 50
+    assert feeds.tranco_rank("www.popular.com") == 50
+    assert feeds.tranco_rank("nope.com") is None
 
 
 def test_feed_urls_without_files():
     assert intel_mod.feed_urls() == {"openphish": [], "phishunt": []}
-    assert intel_mod.blocklist_hits("https://x.example/") == []
+    assert intel_mod.blocklist_hits("https://x.com/") == []
 
 
 def test_refresh_feed_mocked(isolated, monkeypatch):
     monkeypatch.setattr(settings, "offline", False)
 
     def fake_get(url, **kw):
-        return httpx.Response(200, text="junk line\nhttps://a.example/x\nhttp://b.example/\n",
+        return httpx.Response(200, text="junk line\nhttps://a.com/x\nhttp://b.com/\n",
                               request=httpx.Request("GET", url))
 
     monkeypatch.setattr(feeds.httpx, "get", fake_get)
     st = feeds.refresh_feeds(force=True)
     assert st == {"openphish": "ok", "phishunt": "ok"}
-    assert (isolated / "openphish.txt").read_text().split() == ["https://a.example/x", "http://b.example/"]
+    assert (isolated / "openphish.txt").read_text().split() == ["https://a.com/x", "http://b.com/"]
     assert feeds.refresh_feeds() == {"openphish": "cached", "phishunt": "cached"}  # fresh: no refetch
 
 
 # ------------------------------------------------------------------ enrich
 async def test_enrich_offline_never_raises():
-    i = await intel_mod.enrich("https://Login.Sandbox-Bank-Login.example/verify")
+    i = await intel_mod.enrich("https://Login.Sandbox-Bank-Login.com/verify")
     assert isinstance(i, Intel)
-    assert i.domain == "login.sandbox-bank-login.example"
-    assert i.registrable_domain == "sandbox-bank-login.example"
+    assert i.domain == "login.sandbox-bank-login.com"
+    assert i.registrable_domain == "sandbox-bank-login.com"
     for s in ("rdap", "dns", "crtsh"):
         assert i.sources[s] == "offline"
     assert i.sources["urlscan"] == "no_key" and i.sources["safe_browsing"] == "no_key"
@@ -226,8 +226,12 @@ def _patch_sources(monkeypatch, calls):
         return {"abuse_emails": ["abuse@hosting.example"], "country": "NL"}
 
     def crt(reg_):
+        from scamshield.core import db
+
         calls.append(("crt", reg_))
-        return {"first_seen": "2026-11-21T10:00:00+00:00", "count": 2, "via": "crtsh"}
+        v = {"first_seen": "2026-11-21T10:00:00+00:00", "count": 2, "via": "crtsh"}
+        db.cache_set(f"intel:crtsh:{reg_}", v, 3600)  # the real worker caches its own answer
+        return v
 
     monkeypatch.setattr(intel_mod, "registration", reg)
     monkeypatch.setattr(intel_mod, "fetch_dns", dns_)
@@ -241,10 +245,10 @@ def _patch_sources(monkeypatch, calls):
 async def test_enrich_full_mocked(isolated, monkeypatch):
     monkeypatch.setattr(settings, "offline", False)
     install_feeds(isolated)
-    install_tranco(isolated, [("popular.example", 50)])
+    install_tranco(isolated, [("popular.com", 50)])
     calls = []
     _patch_sources(monkeypatch, calls)
-    i = await intel_mod.enrich("sandbox-bank-login.example")
+    i = await intel_mod.enrich("sandbox-bank-login.com")
     assert i.age_days == 3 and i.registrar == "Example Registrar LLC"
     assert i.abuse_emails == ["abuse@registrar.example"]
     assert i.ip == "203.0.113.7" and i.asn == "AS64500" and i.asn_org == "Example Hosting"
@@ -256,7 +260,7 @@ async def test_enrich_full_mocked(isolated, monkeypatch):
     assert i.sources["crtsh"] == "ok"
     # second call is served from the SQLite cache
     n = len(calls)
-    i2 = await intel_mod.enrich("sandbox-bank-login.example")
+    i2 = await intel_mod.enrich("sandbox-bank-login.com")
     assert i2.sources["rdap"] == "cached" and i2.sources["dns"] == "cached" and i2.sources["crtsh"] == "cached"
     assert i2.age_days == 3 and len(calls) == n
 
@@ -279,7 +283,7 @@ async def test_enrich_not_found_and_failures(monkeypatch):
     monkeypatch.setattr(intel_mod, "fetch_dns", boom)
     monkeypatch.setattr(intel_mod, "_crtsh_bg", lambda r: None)
     monkeypatch.setattr(crtsh, "_certspotter", nothing)
-    i = await intel_mod.enrich("never-registered-sandbox.example")
+    i = await intel_mod.enrich("never-registered-sandbox.com")
     assert i.sources["rdap"] == "not_found" and i.raw_rdap["found"] is False
     assert i.sources["dns"] == "unavailable" and i.sources["asn"] == "unavailable"
     assert i.sources["crtsh"] == "unavailable" and i.sources["certspotter"] == "unavailable"
@@ -297,7 +301,7 @@ async def test_enrich_time_cap(monkeypatch):
         await asyncio.sleep(5)
 
     monkeypatch.setattr(intel_mod, "registration", slow)
-    i = await intel_mod.enrich("slow-sandbox.example")
+    i = await intel_mod.enrich("slow-sandbox.com")
     assert i.sources["rdap"] == "unavailable" and i.sources["dns"] == "ok"
 
 
@@ -310,14 +314,14 @@ async def test_keyed_sources(monkeypatch):
         if req.url.host == "urlscan.io":
             assert req.headers["API-Key"] == "test-key"
             return httpx.Response(200, json={"total": 1, "results": [
-                {"page": {"url": "https://sandbox-bank-login.example/"}, "task": {"time": "2026-11-23T00:00:00Z"},
+                {"page": {"url": "https://sandbox-bank-login.com/"}, "task": {"time": "2026-11-23T00:00:00Z"},
                  "result": "https://urlscan.io/api/v1/result/x/"}]})
         return httpx.Response(200, json={"matches": [{"threatType": "SOCIAL_ENGINEERING"}]})
 
     mock_client(monkeypatch, keyed, handler)
-    u = await keyed.fetch_urlscan("sandbox-bank-login.example")
+    u = await keyed.fetch_urlscan("sandbox-bank-login.com")
     assert u["total"] == 1 and u["results"][0]["url"].startswith("https://sandbox")
-    assert await keyed.fetch_safe_browsing("sandbox-bank-login.example") == ["SOCIAL_ENGINEERING"]
+    assert await keyed.fetch_safe_browsing("sandbox-bank-login.com") == ["SOCIAL_ENGINEERING"]
 
 
 # ------------------------------------------------------------------ live (skipped offline)

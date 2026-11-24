@@ -1,12 +1,14 @@
 """Owner: verdict. Rule-based scoring engine: signals -> 0-100 score + bilingual reasons.
 
 Order of rules:
+  0. "bounce": an unknown link domain that redirects to a popular/official site is judged on its own domain.
   1. final URL on an official domain of ANY registry brand (not a shared host) => legitimate (<=10)
-     unless an explicit blocklist hit. (Checked first so that an official page that merely mentions
-     another brand can never be called a scam.)
-  2. brand claimed with confidence >= BRAND_THRESHOLD on a non-official domain => scam (>=85),
-     unless the site is a long-established high-traffic site that does not ask for secrets.
+     unless an explicit blocklist hit.
+  2. brand claimed (confidence >= BRAND_THRESHOLD, not only a domain-keyword guess) on a non-official domain
+     => scam (>=85), unless the site is long-established/high-traffic and does not ask for secrets.
   3. otherwise: weighted signals on top of BASE.
+Pages that returned HTTP >= 400 or a hosting "site not found" page are scored domain-only (content ignored).
+`SCAMSHIELD_IGNORE_BLOCKLIST=1` disables feed hits (ablation for evaluation).
 """
 from __future__ import annotations
 
@@ -16,10 +18,10 @@ import re
 from datetime import datetime, timezone
 from typing import Optional
 
-from scamshield.core.domains import host_of, is_official, is_shared_host, registrable
+from scamshield.core.domains import host_of, is_official, is_shared_host, registrable, registrable_icann
 from scamshield.core.schemas import BrandMatch, CloakDiff, Detonation, Intel, LookalikeResult, Signal, Verdict
 
-BRAND_THRESHOLD = 0.6
+BRAND_THRESHOLD = 0.4
 BASE = 10
 SCAM, LIKELY, SUSPICIOUS = 80, 60, 35
 
@@ -28,7 +30,7 @@ RISKY_TLDS = {
     "website", "space", "fun", "rest", "monster", "quest", "cyou", "bond", "lol", "mom", "support", "help",
     "tk", "ml", "ga", "cf", "gq", "work", "life", "vip", "win", "loan", "link", "pw", "cc", "ru", "cn", "su",
     "app", "digital", "services", "center", "today", "asia", "club", "biz", "pro", "host", "best", "beauty",
-    "hair", "makeup", "skin", "autos", "boats", "yachts", "homes", "motorcycles",
+    "hair", "makeup", "skin", "autos", "boats", "yachts", "homes", "motorcycles", "ss", "me", "ws", "top",
 }
 SENSITIVE = {"credentials", "card", "otp", "emirates_id", "payment"}
 PHISH_WORDS = re.compile(
@@ -39,7 +41,43 @@ PHISH_WORDS = re.compile(
     r"تحديث بياناتك|تم (إيقاف|تعليق|حظر) حسابك|رمز التحقق|أدخل رقم البطاقة|مخالفة غير مدفوعة|شحنتك|تأكيد هويتك",
     re.I,
 )
-CRED_FIELD = re.compile(r"pass|pwd|otp|pin|cvv|cvc|card|ccnum|expiry|emirates.?id|iban", re.I)
+# Free hosting / site-builder suffixes missing from core SHARED_HOSTS.
+EXTRA_SHARED = {
+    "gitbook.io", "mybluehost.me", "cpanel.site", "cloudapp.azure.com", "azurestaticapps.net", "web.core.windows.net",
+    "blob.core.windows.net", "ipfs.io", "dweb.link", "translate.goog", "framer.website", "webcindario.com",
+    "000webhost.com", "hostingersite.com", "myshopify.com", "jimdosite.com", "site123.me",
+    "wixstudio.io", "notion.site", "gitlab.io", "codesandbox.io", "csb.app",
+    "glide.page", "softr.app", "lovable.app", "start.page", "sharepoint.com", "my.salesforce-sites.com",
+    "s3.amazonaws.com", "storage.googleapis.com", "duckdns.org", "no-ip.org", "ddns.net", "zapto.org", "hopto.org",
+    "serveo.net", "loca.lt", "workers.dev", "pages.dev", "weeblysite.com", "ukit.me", "tiiny.site",
+    "yolasite.com", "webnode.page", "ucoz.net", "github.dev", "vercel.app", "netlify.app", "square.site",
+}
+SHORTENERS = {"bit.ly", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rebrand.ly", "cutt.ly",
+              "s.id", "shorturl.at", "rb.gy", "t.ly", "bitly.com", "lnkd.in", "qrco.de", "flyn.co", "tiny.cc"}
+# Globally phished brand keywords -> display name. Only used to spot the name in an address/title that is NOT theirs.
+GLOBAL_BRANDS = {
+    "paypal": "PayPal", "icloud": "Apple iCloud", "microsoft": "Microsoft", "office365": "Microsoft",
+    "outlook": "Microsoft", "onedrive": "Microsoft", "sharepoint": "Microsoft", "netflix": "Netflix",
+    "amazon": "Amazon", "coinbase": "Coinbase", "binance": "Binance", "metamask": "MetaMask", "trustwallet": "Trust Wallet",
+    "facebook": "Facebook", "instagram": "Instagram", "whatsapp": "WhatsApp", "telegram": "Telegram",
+    "google": "Google", "gmail": "Gmail", "youtube": "YouTube", "linkedin": "LinkedIn", "fedex": "FedEx",
+    "usps": "USPS", "royalmail": "Royal Mail", "roblox": "Roblox", "steamcommunity": "Steam", "santander": "Santander",
+    "allegro": "Allegro", "telekom": "Telekom", "wellsfargo": "Wells Fargo", "hsbc": "HSBC",
+    "citibank": "Citibank", "barclays": "Barclays", "docusign": "DocuSign", "dropbox": "Dropbox", "adobe": "Adobe",
+    "kraken": "Kraken", "bybit": "Bybit", 
+    "careem": "Careem", "talabat": "talabat", "aramex": "Aramex", 
+}
+_KW_RE = re.compile("|".join(sorted(GLOBAL_BRANDS, key=len, reverse=True)))
+HOST_BAIT = re.compile(r"login|log-in|signin|sign-in|verify|verification|secure|account|update|wallet|"
+                       r"recover|unlock|billing|payment|refund|claim|bonus|giveaway|reward|helpdesk|webmail|confirm")
+NOT_FOUND_PAGE = re.compile(
+    r"site not found|page not found|404 not found|deployment (could not be found|not found)|this site can.t be reached|"
+    r"there isn.t a github pages site here|no such app|application (error|not found)|account (has been )?suspended|"
+    r"this (site|account|page) (has been|is) (suspended|disabled|removed|deleted)|domain (is )?(for sale|parked)|"
+    r"web page not available|this deployment is temporarily paused|project not found|error 1001|dns resolution error|"
+    r"site (is )?(unavailable|disabled)|403 forbidden|not found", re.I)
+HOLD_STATUS = re.compile(r"client ?hold|server ?hold|redemption ?period|pending ?delete|inactive", re.I)
+NXDOMAIN = re.compile(r"ERR_NAME_NOT_RESOLVED|NXDOMAIN|getaddrinfo|Name or service not known|ENOTFOUND", re.I)
 
 
 # ------------------------------------------------------------------ helpers
@@ -68,6 +106,10 @@ def _is_ip(host: str) -> bool:
         return False
 
 
+def _shared(host: str) -> bool:
+    return is_shared_host(host) or any(host == x or host.endswith("." + x) for x in EXTRA_SHARED)
+
+
 def _label(s: int) -> str:
     return "scam" if s >= SCAM else "likely_scam" if s >= LIKELY else "suspicious" if s >= SUSPICIOUS else "legitimate"
 
@@ -80,6 +122,16 @@ def _pick_final(url: str, dets: list[Detonation]) -> str:
         if d.final_url:
             return d.final_url
     return url
+
+
+def _is_gone(d: Detonation) -> bool:
+    """Loaded, but the server says the page is gone (HTTP >= 400 or a hosting 'not found/suspended' page)."""
+    if d.status != "ok":
+        return False
+    if d.http_status and d.http_status >= 400:
+        return True
+    head = f"{d.title} {(d.visible_text or '')[:300]}"
+    return len((d.visible_text or "").strip()) < 600 and bool(NOT_FOUND_PAGE.search(head))
 
 
 def _brand_names(brand: Optional[BrandMatch], look: Optional[LookalikeResult]) -> tuple[str, str]:
@@ -107,11 +159,21 @@ ASK_AR = {"credentials": "بيانات الدخول", "card": "بيانات ال
 # ------------------------------------------------------------------ main
 def score(scan_id: str, url: str, dets: list[Detonation], intel: Intel | None, brand: BrandMatch | None,
           look: LookalikeResult | None, cloak: CloakDiff | None = None,
-          extra: list[Signal] | None = None) -> Verdict:
+          extra: list[Signal] | None = None, input_intel: Intel | None = None,
+          input_look: LookalikeResult | None = None) -> Verdict:
     """Combine signals into a 0-100 Verdict with bilingual reasons. Works with dets empty/dead (domain-only).
-    `extra`: additional pre-built signals (e.g. fake helpline numbers found on the page)."""
+    extra: pre-built signals (e.g. fake helpline on page). input_intel/input_look: intel for the input URL's
+    domain when the link redirected to another domain (used to catch bounce-cloaking)."""
     try:
-        return _score(scan_id, url, dets or [], intel, brand, look, cloak, extra or [])
+        dets = dets or []
+        b = _bounce(url, dets, intel, input_intel, brand)
+        if b is not None:
+            fake = [Detonation(url=url, persona=d.persona, status="blank", final_url="", redirect_chain=d.redirect_chain,
+                               error="redirected to an unrelated well-known site") for d in dets]
+            v = _score(scan_id, url, fake, input_intel, None, input_look, cloak, (extra or []) + [b])
+            v.final_url = _pick_final(url, dets)
+            return v
+        return _score(scan_id, url, dets, intel, brand, look, cloak, extra or [])
     except Exception as e:  # never raise
         return Verdict(scan_id=scan_id, url=url, final_url=url, registrable_domain=_safe_reg(url), score=50,
                        label="suspicious", mode="domain_only",
@@ -119,6 +181,30 @@ def score(scan_id: str, url: str, dets: list[Detonation], intel: Intel | None, b
                                        ar="التحليل غير مكتمل بسبب خطأ داخلي.", evidence=str(e)[:200])],
                        summary_en="Suspicious: analysis incomplete, treat with caution.",
                        summary_ar="مشبوه: التحليل غير مكتمل، يرجى الحذر.")
+
+
+def _bounce(url, dets, intel, input_intel, brand) -> Optional[Signal]:
+    """Unknown link domain that redirects to a popular or official site (scanner-evasion cloaking)."""
+    if input_intel is None:
+        return None
+    final = _pick_final(url, dets)
+    in_host, in_dom, dom = host_of(url), registrable(url), registrable(final)
+    if not dom or in_dom == dom or registrable_icann(url) == registrable_icann(final):
+        return None
+    official = _registry_official() + (brand.official_domains if brand else [])
+    if is_official(url, official) or in_dom in SHORTENERS:
+        return None
+    r_in = input_intel.tranco_rank if not _shared(in_host) else None
+    if r_in is not None and r_in <= 1_000_000:
+        return None
+    f_tr = intel.tranco_rank if intel and not _shared(host_of(final)) else None
+    if not (is_official(final, official) or (f_tr is not None and f_tr <= 10_000)):
+        return None
+    return Signal(id="redirect_to_popular_site", weight=20,
+                  en=f"The unknown site {in_dom} immediately sends visitors to the well-known site {dom}, a trick "
+                     f"scam links use to hide from scanners.",
+                  ar=f"الموقع غير المعروف {in_dom} يحوّل الزوار فوراً إلى الموقع المعروف {dom}، وهي حيلة تستخدمها "
+                     f"روابط الاحتيال للتخفي من أدوات الفحص.", evidence=f"{url} -> {final}")
 
 
 def _safe_reg(url: str) -> str:
@@ -132,9 +218,12 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     final = _pick_final(url, dets)
     host = host_of(final)
     dom = registrable(final)
-    ok = [d for d in dets if d.status == "ok"]
+    gone = [d for d in dets if _is_gone(d)]
+    ok = [d for d in dets if d.status == "ok" and not _is_gone(d)]
     mode = "full" if ok else "domain_only"
-    shared = is_shared_host(host)
+    if not ok:
+        brand = brand if (brand and brand.is_official_domain) else None  # page content unusable
+    shared = _shared(host)
     sig: list[Signal] = []
 
     def add(id_, w, en, ar, ev=""):
@@ -150,7 +239,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         bl = list(dict.fromkeys((intel.blocklist_hits or []) + [f"safe_browsing:{t}" for t in intel.safe_browsing or []]))
     tranco = intel.tranco_rank if intel and not shared else None
     age = None
-    if intel:
+    if intel and not shared:
         age = intel.age_days if intel.age_days is not None else _days_since(intel.created)
     asks = set(brand.asks_for) if brand else set()
     for d in ok:
@@ -165,7 +254,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             elif re.search(r"emirates.?id", blob, re.I):
                 asks.add("emirates_id")
     b_en, b_ar = _brand_names(brand, look)
-    brand_conf = brand.confidence if brand and brand.brand_id else 0.0
+    strong_brand = bool(brand and brand.brand_id and set(brand.methods or []) - {"domain_keyword"})
+    brand_conf = brand.confidence if strong_brand else 0.0
 
     # ---------------- rule 1: official domain
     if on_official and not bl:
@@ -174,11 +264,11 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         return _finish(scan_id, url, final, dom, mode, 0, sig, brand, look, forced="legitimate")
 
     # ---------------- rule 2: brand impersonation
-    established = (tranco is not None and tranco <= 100_000) or (age is not None and age > 3 * 365 and not shared)
+    established = (tranco is not None and tranco <= 100_000) or (age is not None and age > 3 * 365)
     big = tranco is not None and tranco <= 10_000
     brand_rule = False
     if brand_conf >= BRAND_THRESHOLD and not on_official:
-        ev = "; ".join(brand.evidence[:3]) if brand else ""
+        ev = "; ".join(brand.evidence[:3])
         if big or (established and not (asks & SENSITIVE)):
             add("brand_mention_established_site", 10,
                 f"Mentions {b_en}, but this is a long-established site that does not ask for sensitive data.",
@@ -188,23 +278,23 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             add("brand_on_unofficial_domain", 75,
                 f"The page presents itself as {b_en}, but {dom} is not an official {b_en} domain.",
                 f"تدّعي الصفحة أنها تابعة لـ{b_ar}، لكن النطاق {dom} ليس نطاقاً رسمياً لـ{b_ar}.", ev)
-    elif brand_conf >= 0.3 and not on_official:
+    elif brand_conf >= 0.2 and not on_official:
         add("weak_brand_claim", 12, f"The page shows some signs of using the {b_en} name.",
-            f"تظهر في الصفحة مؤشرات على استخدام اسم {b_ar}.", "; ".join(brand.evidence[:2]) if brand else "")
+            f"تظهر في الصفحة مؤشرات على استخدام اسم {b_ar}.", "; ".join(brand.evidence[:2]))
 
     # ---------------- weighted signals
     if bl:
         add("blocklist", 60, f"Listed on threat-intelligence blocklists: {', '.join(bl)}.",
             f"مُدرج في قوائم حظر التهديدات: {', '.join(bl)}.", ", ".join(bl))
 
-    if look and look.score >= 0.2 and not on_official and not brand_rule:
-        w = round(45 * look.score) if look.score >= 0.5 else round(20 * look.score)
+    if look and look.score >= 0.2 and not on_official and not brand_rule and not (big and look.score < 0.8):
+        w = round(55 * look.score) if look.score >= 0.5 else round(20 * look.score)
         tech = ", ".join(look.techniques) or "similarity"
         add("lookalike_domain", w,
             f"The domain {dom} imitates {look.closest_official or b_en} ({tech}).",
             f"النطاق {dom} يقلّد {look.closest_official or b_ar} ({tech}).", f"score={look.score:.2f} distance={look.distance}")
 
-    if age is not None and not shared:
+    if age is not None:
         if age < 7:
             add("very_new_domain", 30, f"The domain was registered only {age} day(s) ago.",
                 f"النطاق مسجّل منذ {age} أيام فقط.", f"age_days={age}")
@@ -212,16 +302,22 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             add("new_domain", 18, f"The domain was registered {age} days ago (less than a month).",
                 f"النطاق مسجّل منذ {age} يوماً (أقل من شهر).", f"age_days={age}")
         elif age < 180:
-            add("recent_domain", 6, f"The domain is relatively new ({age} days).",
+            add("recent_domain", 8, f"The domain is relatively new ({age} days).",
                 f"النطاق حديث نسبياً ({age} يوماً).", f"age_days={age}")
         elif age > 5 * 365:
             add("old_domain", -15, f"The domain has existed for over {age // 365} years.",
                 f"النطاق موجود منذ أكثر من {age // 365} سنوات.", f"age_days={age}")
 
-    cfs = _days_since(intel.cert_first_seen) if intel else None
-    if cfs is not None and cfs < 14 and not shared and (age is None or age >= 7):
+    cfs = _days_since(intel.cert_first_seen) if intel and not shared else None
+    if cfs is not None and cfs < 14 and (age is None or age >= 7):
         add("new_certificate", 10, f"The first TLS certificate for this domain appeared {cfs} day(s) ago.",
             f"ظهرت أول شهادة أمان لهذا النطاق منذ {cfs} أيام.", f"cert_first_seen={intel.cert_first_seen}")
+
+    # registry takedown / hold
+    rd_status = " ".join(str(x) for x in ((intel.raw_rdap or {}).get("status") or [])) if intel and not shared else ""
+    if HOLD_STATUS.search(rd_status):
+        add("registry_hold", 40, "The domain registry has put this domain on hold or deletion (typical after abuse reports).",
+            "وضع سجل النطاقات هذا النطاق قيد التعليق أو الحذف (يحدث عادةً بعد بلاغات إساءة).", rd_status)
 
     tld = host.rsplit(".", 1)[-1] if "." in host else ""
     if tld in RISKY_TLDS:
@@ -239,6 +335,31 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         add("punycode", 15, "The domain uses international characters (punycode) that can disguise a fake address.",
             "يستخدم النطاق أحرفاً دولية (Punycode) قد تُخفي عنواناً مزيفاً.", host)
 
+    # global brand names in the address / title
+    label0 = dom.split(".")[0] if dom else ""
+    sub = host[: -len(dom)] if dom and host.endswith(dom) else host
+    scope = host if not shared else sub
+    gm = _KW_RE.search(scope.replace("-", "").replace(".", "")) if not on_official and not established else None
+    gb = None
+    if gm and gm.group(0) not in label0.replace("-", "") or (gm and shared):
+        gb = GLOBAL_BRANDS[gm.group(0)]
+        add("brand_in_hostname", 25, f"The address contains the name \"{gb}\" but is not a {gb} website ({dom}).",
+            f"يحتوي العنوان على اسم «{gb}» لكنه ليس موقعاً تابعاً لـ{gb} ({dom}).", host)
+    elif gm and label0 != gm.group(0):  # combosquat in the registrable label itself, e.g. coinbase-secured.com
+        gb = GLOBAL_BRANDS[gm.group(0)]
+        add("brand_in_hostname", 25, f"The domain {dom} uses the name \"{gb}\" but is not an official {gb} domain.",
+            f"النطاق {dom} يستخدم اسم «{gb}» لكنه ليس نطاقاً رسمياً لـ{gb}.", host)
+    if not gb and not brand_rule and not established:
+        tm = _KW_RE.search(" ".join(d.title.lower() for d in ok))
+        if tm and (asks & SENSITIVE) and tm.group(0) not in label0:
+            gb = GLOBAL_BRANDS[tm.group(0)]
+            add("global_brand_login", 30, f"The page uses the {gb} name and asks for sensitive data, but is not on a {gb} domain.",
+                f"تستخدم الصفحة اسم {gb} وتطلب بيانات حساسة، لكنها ليست على نطاق تابع لـ{gb}.", tm.group(0))
+    bait = sorted(set(HOST_BAIT.findall(scope))) if not established and not on_official else []
+    if bait:
+        add("bait_words_in_hostname", min(15, 6 * len(bait)), f"The address uses bait words ({', '.join(bait)}).",
+            f"يستخدم العنوان كلمات استدراج ({'، '.join(bait)}).", host)
+
     sens = sorted(asks & (SENSITIVE | {"personal_info"}))
     if sens and not brand_rule:
         w = 25 if asks & {"card", "otp", "emirates_id"} else 18 if "credentials" in asks else 8
@@ -247,6 +368,9 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         if w:
             add("asks_sensitive", w, f"The page asks for {', '.join(ASK_EN[a] for a in sens)} on an unverified site.",
                 f"تطلب الصفحة {('، '.join(ASK_AR[a] for a in sens))} على موقع غير موثّق.", ", ".join(sens))
+        if shared and asks & SENSITIVE:
+            add("sensitive_on_free_host", 15, "Sensitive data is requested on a free hosting page, which real "
+                "organisations never do.", "تُطلب بيانات حساسة على صفحة استضافة مجانية، وهذا ما لا تفعله الجهات الرسمية أبداً.", host)
     elif sens and brand_rule:
         add("asks_sensitive", 10, f"It asks for {', '.join(ASK_EN[a] for a in sens)}.",
             f"وتطلب {('، '.join(ASK_AR[a] for a in sens))}.", ", ".join(sens))
@@ -256,8 +380,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         add("tls_error_sensitive", 15, f"The site's security certificate is invalid ({tls_err}) yet it asks for sensitive data.",
             f"شهادة الأمان للموقع غير صالحة ({tls_err}) ومع ذلك يطلب بيانات حساسة.", tls_err)
 
-    for x in extra:
-        sig.append(x)
+    sig.extend(extra)
 
     if "credentials" in asks and final.lower().startswith("http://"):
         add("password_no_https", 20, "A password field is served over an unencrypted (HTTP) connection.",
@@ -274,16 +397,13 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             "يعرض الموقع محتوى مختلفاً لزوار مختلفين (إخفاء)، وهي حيلة احتيال شائعة.", "; ".join(cloak.differences[:3]))
 
     chain = max((d.redirect_chain for d in dets), key=len, default=[])
-    shortener = any(h.kind == "shortener" for h in chain)
+    shortener = any(h.kind == "shortener" for h in chain) or registrable(url) in SHORTENERS
     hops = sum(1 for h in chain if h.kind not in ("start", "final"))
     if shortener or hops >= 3:
-        add("redirects", 8 if not shortener else 10,
+        add("redirects", 10 if shortener else 8,
             f"The link hides its destination behind {'a URL shortener' if shortener else f'{hops} redirects'}.",
             f"يُخفي الرابط وجهته الحقيقية عبر {'خدمة اختصار روابط' if shortener else f'{hops} عمليات تحويل'}.",
             " -> ".join(h.url for h in chain[:6]))
-    if registrable(url) != dom and dom:
-        add("cross_domain_redirect", 3, f"The link redirects to a different domain ({dom}).",
-            f"يحوّل الرابط إلى نطاق مختلف ({dom}).", f"{url} -> {final}")
 
     if tranco is not None:
         if tranco <= 10_000:
@@ -296,10 +416,36 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             add("ranked_site", -10, f"Website appears in the global top-1M list (rank {tranco:,}).",
                 f"الموقع ضمن قائمة أفضل مليون موقع عالمياً (الترتيب {tranco:,}).", f"tranco={tranco}")
 
-    if mode == "domain_only":
-        st = ", ".join(sorted({d.status for d in dets})) or "not loaded"
-        add("page_unavailable", 5, f"The page could not be analysed ({st}); verdict is based on the domain only.",
-            f"تعذّر تحليل الصفحة ({st})؛ الحكم مبني على معلومات النطاق فقط.", st)
+    # ---------------- page gone / dead
+    if gone and not ok:
+        g = gone[0]
+        code = g.http_status or 0
+        if shared:
+            add("platform_takedown", 20, f"The hosting platform reports this page as removed (HTTP {code}); "
+                "free-hosting pages are typically removed after abuse reports.",
+                f"تُفيد منصة الاستضافة بأن هذه الصفحة أُزيلت (HTTP {code})؛ عادةً ما تُزال صفحات الاستضافة المجانية بعد بلاغات إساءة.",
+                f"HTTP {code} {g.title[:60]}")
+        else:
+            add("page_gone", 5, f"The page returned HTTP {code} / 'not found' at scan time (it may already be taken down).",
+                f"أعادت الصفحة الرمز HTTP {code} / «غير موجودة» وقت الفحص (ربما أُزيلت بالفعل).", f"HTTP {code} {g.title[:60]}")
+    elif mode == "domain_only" and not any(x.id == "redirect_to_popular_site" for x in extra):
+        nx = any(NXDOMAIN.search(d.error or "") for d in dets)
+        registered = bool(intel and ((intel.raw_rdap or {}).get("found") or intel.created or intel.cert_count))
+        unreg = bool(intel and (intel.sources or {}).get("rdap") == "not_found" and not shared)
+        if unreg:
+            add("domain_not_registered", 30, "The domain is not registered (any more): the link points to a site that "
+                "was removed or never legitimately existed.",
+                "النطاق غير مسجّل (حالياً): الرابط يشير إلى موقع أُزيل أو لم يكن موجوداً بشكل مشروع.", "RDAP not found")
+        elif nx and shared:
+            add("platform_takedown", 20, f"The free-hosting address {host} no longer exists (likely removed after abuse reports).",
+                f"عنوان الاستضافة المجانية {host} لم يعد موجوداً (أُزيل غالباً بعد بلاغات إساءة).", "NXDOMAIN")
+        elif nx and registered and not established:
+            add("registered_not_resolving", 20, "The domain is registered but no longer resolves (often a pulled scam site).",
+                "النطاق مسجّل لكنه لم يعد يعمل (غالباً موقع احتيال تم إيقافه).", "NXDOMAIN, RDAP registered")
+        else:
+            st = ", ".join(sorted({d.status for d in dets})) or "not loaded"
+            add("page_unavailable", 5, f"The page could not be analysed ({st}); verdict is based on the domain only.",
+                f"تعذّر تحليل الصفحة ({st})؛ الحكم مبني على معلومات النطاق فقط.", st)
 
     total = BASE + sum(s.weight for s in sig)
     if brand_rule:

@@ -26,7 +26,7 @@ JS_PAGE = """<!doctype html><html><head><title>loading</title></head><body>Loadi
 <script>setTimeout(function(){ location.href = '/final'; }, 300);</script></body></html>"""
 
 FP_PAGE = """<!doctype html><html><head><title>fp</title></head><body><pre id="o">hdr=__HDR__</pre><script>
-document.getElementById('o').textContent += '\nwebdriver=' + navigator.webdriver + ' langs=' + navigator.languages.join(',') +
+document.getElementById('o').textContent += ' webdriver=' + navigator.webdriver + ' langs=' + navigator.languages.join(',') +
  ' touch=' + navigator.maxTouchPoints + ' chrome=' + (typeof window.chrome) + ' platform=' + navigator.platform +
  ' brands=' + (navigator.userAgentData ? navigator.userAgentData.brands.map(b => b.brand).join(',') : '') +
  ' st=' + String(setTimeout).indexOf('[native code]');
