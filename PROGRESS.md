@@ -67,3 +67,16 @@ uaepasses.com                     cert 2026-10-06T12:47  flagged 2026-11-24T20:1
 ```
 (crt.sh index lags ~40 d; certstream + NRD cover the fresh window, e.g. trafficrta.xyz registered 2026-11-22.)
 Helpline: `python -m scamshield.helpline --brand tamm --live --no-landing` -> `sources: {'places': 'no_key', 'synthetic': 'ok'}`; [LIKELY_SCAM] tamm +971560000301 (SYNTHETIC, labelled) with EN+AR reasons; 16 phone findings in db. Live Google Maps search is implemented but unverified (no key).
+
+### 3. make eval — PASS (20:33-20:39 UTC, engine fingerprint 70b50785066fa4de, before hard-legit fixes)
+```
+=== ScamShield eval: data/eval/sample.csv  (n=127, is_scam >= likely_scam) ===
+precision 1.000  recall 1.000  F1 1.000  FPR 0.000  accuracy 1.000
+ABLATION (blocklist ignored): precision 1.000  recall 0.814  F1 0.897  FPR 0.000  (TP 48 FN 11 FP 0 TN 68)
+  ablation with threshold >= suspicious: P 1.000  R 0.898  F1 0.946  FPR 0.000
+  domain_only subset (n=28): recall 0.826  FPR 0.000
+FALSE POSITIVES (0):
+official domains FP: 0/112  (not 'legitimate': 0)
+EXIT 0
+```
+Every false negative is listed with reasons in var/verify_eval.log. Will re-run after hard-legit FP fixes.
