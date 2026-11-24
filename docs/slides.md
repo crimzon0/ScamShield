@@ -63,8 +63,8 @@ Speaker notes: The core rule is simple and explainable: the page says "Emirates 
 - **Time to detection** = flagged time - certificate first-seen, shown per hit on the dashboard
 
 **Real hits, 2026-11-24 (one evening, no API keys):**
-- certstream live: `salik.work` (TLD swap of salik.ae) flagged in the same hour its certificate was issued
-- newly registered domains: `adinwealth.org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta.xyz` **likely scam 70** (4 d 20 h / 2 d 20 h after the list date, mostly because we started watching that day)
+- certstream live: `salik[.]work` (TLD swap of salik.ae) flagged in the same hour its certificate was issued
+- newly registered domains: `adinwealth[.]org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta[.]xyz` **likely scam 70** (4 d 20 h / 2 d 20 h after the list date, mostly because we started watching that day)
 - 820+ radar hits in one evening, 71+ scam / likely scam; related domains grouped into networks
 - caveat: some `uaepass` hits are real third-party UAE PASS integrations -> analyst review
 

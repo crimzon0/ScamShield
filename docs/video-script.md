@@ -1,6 +1,6 @@
 # ScamShield: 60-second demo video
 
-Recorded from the real dashboard (`make demo`, http://127.0.0.1:8000). Screen capture at 1920x1080, voice-over recorded separately. Prepare before recording: run the radar backfill and the helpline check once so both tables have rows, and have one scam verdict already in *Recent scans* in case the live scan is slow.
+Recorded from the real dashboard (`make demo` = `.venv/Scripts/python -m scamshield.api.demo`, http://127.0.0.1:8000). Screen capture at 1920x1080, voice-over recorded separately. Prepare before recording: run the radar backfill and the helpline check once so both tables have rows, and have one scam verdict already in *Recent scans* in case the live scan is slow.
 
 Voice-over: 114 words.
 

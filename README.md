@@ -83,7 +83,7 @@ Code map:
 
 ## 4. Key ideas
 
-- **Brand claimed on a non-official domain = scam.** The engine asks two questions: *which brand does this page claim to be?* (Arabic, English and Arabizi keywords in title, text, form labels and URL; favicon and screenshot perceptual hashes; an optional LLM read of the page) and *is the final URL on one of that brand's official registrable domains?* A page that says "Emirates NBD - verify your card" on `enbd-secure-update.xyz` is a scam (+75), whatever else it looks like.
+- **Brand claimed on a non-official domain = scam.** The engine asks two questions: *which brand does this page claim to be?* (Arabic, English and Arabizi keywords in title, text, form labels and URL; favicon and screenshot perceptual hashes; an optional LLM read of the page) and *is the final URL on one of that brand's official registrable domains?* A page that says "Emirates NBD - verify your card" on `enbd-secure-update[.]xyz` is a scam (+75), whatever else it looks like.
 - **Official is legitimate, first.** If the final URL is on an official domain of *any* brand in the registry, the verdict is legitimate (-100) unless a blocklist names it. This rule runs before any other, so a real bank page that mentions another brand can never be called a scam.
 - **Shared hosts never inherit trust.** `foo.vercel.app`, `bar.web.app`, `*.github.io` etc. are compared as their own registrable domain (Public Suffix List with private suffixes). A scam on a free host does not become legitimate because the platform is popular, and hosting on one adds a small risk weight.
 - **An error is never a verdict.** If the page is dead, blank, times out or is cloaked, ScamShield still returns a **domain-only verdict** from domain age (RDAP), look-alike distance to UAE brands, TLD, hosting, first certificate date and blocklists. Dead phishing links are the normal case, not an edge case.
@@ -159,9 +159,13 @@ Set `SCAMSHIELD_OFFLINE=1` to forbid all network access (used by the tests).
 ## 6. Run
 
 ```bash
-make test                                   # full test suite (offline)
-make demo                                   # seed demo data, build UI, serve http://127.0.0.1:8000
+make test     # = .venv/Scripts/python -m pytest -q                 full test suite (offline)
+make demo     # = .venv/Scripts/python -m scamshield.api.demo        seed demo data, build UI, serve http://127.0.0.1:8000
+make scan     # = .venv/Scripts/python -m scamshield.scan data/eval/sample.csv --out predictions.csv
+make eval     # = .venv/Scripts/python -m scamshield.cli.eval data/eval/sample.csv
 ```
+
+No `make`? Every target above is the plain python command after `=`. On Linux/macOS use `.venv/bin/python`.
 
 **Scan a batch of URLs**
 
@@ -189,7 +193,7 @@ The run is resumable: rows already in `--out` are skipped.
 **Evaluate**
 
 ```bash
-make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
+make eval        # = .venv/Scripts/python -m scamshield.cli.eval data/eval/sample.csv
 #   prints precision / recall / F1 / FPR, confusion matrix, every FP and FN with reasons,
 #   the same metrics with blocklist hits ignored (ablation), the domain-only subset,
 #   then scans https://<domain>/ for every official domain in the registry: "official domains FP: x/N".
@@ -209,7 +213,7 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 
 ```bash
 .venv/Scripts/python -m scamshield.radar watchlist                 # watchlist stats (registry terms, permutations, themes)
-.venv/Scripts/python -m scamshield.radar match uaepass-verify.top  # does a domain hit the watchlist?
+.venv/Scripts/python -m scamshield.radar match uaepass-verify.example  # does a domain hit the watchlist?
 .venv/Scripts/python -m scamshield.radar backfill --days 30        # crt.sh backfill, every hit scanned (--no-scan to skip)
 .venv/Scripts/python -m scamshield.radar certstream --minutes 10   # live CT stream (needs `docker compose up -d`)
 .venv/Scripts/python -m scamshield.radar nrd --days 4              # newly registered domains (whoisds daily list)
@@ -266,14 +270,14 @@ Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20
 
 | Source | Domain | Why it matched | Verdict | Time to detection |
 |---|---|---|---|---|
-| newly registered domains | `adinwealth.org` | look-alike of ADIB's `adibwealth.ae` | scam 87 | 4 d 20 h after the NRD list date |
-| newly registered domains | `trafficrta.xyz` | RTA + traffic-fine theme | likely scam 70 | 2 d 20 h after the NRD list date |
-| certstream (live CT) | `salik.work` | TLD swap of `salik.ae` | suspicious 53 | within the hour of certificate issue |
-| crt.sh backfill (`uaepass`) | `uaepasses.com`, `uaepass.digital`, `uaepass.help` ... | UAE PASS keyword on non-official domain | scam / likely scam | not measured (backfill) |
+| newly registered domains | `adinwealth[.]org` | look-alike of ADIB's `adibwealth.ae` | scam 87 | 4 d 20 h after the NRD list date |
+| newly registered domains | `trafficrta[.]xyz` | RTA + traffic-fine theme | likely scam 70 | 2 d 20 h after the NRD list date |
+| certstream (live CT) | `salik[.]work` | TLD swap of `salik.ae` | suspicious 53 | within the hour of certificate issue |
+| crt.sh backfill (`uaepass`) | `uaepasses[.]com`, `uaepass[.]digital`, `uaepass[.]help` ... | UAE PASS keyword on non-official domain | scam / likely scam | not measured (backfill) |
 
-Time to detection is quoted only where the start time is a CT log timestamp or a newly-registered-domain list date. The two NRD figures mostly reflect when we started watching (that afternoon), not how fast the radar can be. The radar also groups related domains into networks (for example the `a-track-au.com` / `p-track-au.com` / `s-track-au.com` cluster).
+Time to detection is quoted only where the start time is a CT log timestamp or a newly-registered-domain list date. The two NRD figures mostly reflect when we started watching (that afternoon), not how fast the radar can be. The radar also groups related domains into networks (for example the `a-track-au[.]com` / `p-track-au[.]com` / `s-track-au[.]com` cluster).
 
-Not all radar verdicts are right. Some `uaepass` hosts look like legitimate third-party UAE PASS integrations: after re-scan `uaepass.hubpay.io` and `uaepass.appchecker.net` are suspicious 59, `uaepass.magure.ai` legitimate 25, and `uaepass.uat.finwall.studio` still scam 88 (unverified either way). Radar hits are not part of the precision numbers above, which is why the pilot keeps an analyst in the loop before any takedown.
+Not all radar verdicts are right. Some `uaepass` hosts look like legitimate third-party UAE PASS integrations: after re-scan `uaepass.hubpay[.]io` and `uaepass.appchecker[.]net` are suspicious 59, `uaepass.magure[.]ai` legitimate 25, and `uaepass.uat.finwall[.]studio` still scam 88 (unverified either way). Radar hits are not part of the precision numbers above, which is why the pilot keeps an analyst in the loop before any takedown.
 
 **Engineering checks:** `make test`: 300 passed, 87 skipped (network-marked) on the final engine, with no `.env` and no API keys; network suites run separately (87/87 passed). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput. Final scoring-engine fingerprint: `db475dd39c6eb6a5`.
 

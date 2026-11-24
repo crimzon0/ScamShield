@@ -9,12 +9,12 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - 20:50 breaker FINAL: offline adversarial 92 passed / 87 skipped (no xfails); network 87 passed (legit_deeplinks 45/45, hard_legit 42/42). Outstanding failures: none.
 - 20:44 verdict FINAL (fingerprint db475dd39c6eb6a5): hard_legit 42/42 legit; holdout no-blocklist P 1.000 R 0.714 F1 0.833 FPR 0 (>=suspicious R 0.857); sample no-blocklist P 1.000 R 0.797 FPR 0; with blocklist 1/1/0 on both. First blind holdout run (20:18): R 0.619.
 - 20:48 radar final rescan: crtsh 45 scam / 26 likely / 41 suspicious / 5 legit / 700 pending; certstream 1/0/3/2; nrd 2 scam 1 likely.
-- 20:21 radar: REAL crt.sh backfill hits (17 from 'uaepass%', scanned): uaepasses.com scam 100 (cert 2026-10-06), uaepass.digital scam 100, uaepass.help scam 97, uaepass.org likely_scam 70, uaepass-auth.directschool.workers.dev likely_scam 72. crt.sh index lags ~40 days (newest not_before 2026-10-15) so backfill parses 120 d; certstream (salik.work, 59 min TTD) + NRD (trafficrta.xyz) cover the fresh window.
+- 20:21 radar: REAL crt.sh backfill hits (17 from 'uaepass%', scanned): uaepasses[.]com scam 100 (cert 2026-10-06), uaepass[.]digital scam 100, uaepass[.]help scam 97, uaepass[.]org likely_scam 70, uaepass-auth.directschool.workers[.]dev likely_scam 72. crt.sh index lags ~40 days (newest not_before 2026-10-15) so backfill parses 120 d; certstream (salik[.]work, 59 min TTD) + NRD (trafficrta[.]xyz) cover the fresh window.
 - 20:18 verdict FINAL-1 eval (fresh forced scans, mobile persona, is_scam = scam|likely_scam):
   - HELD-OUT holdout.csv n=79 (37 legit / 42 scam, unseen, no tuning): blocklist IGNORED P 1.000 R 0.619 F1 0.765 FPR 0.000 (>=suspicious: R 0.786 FPR 0); with blocklist P 1.000 R 1.000 FPR 0
   - SAMPLE sample.csv n=127 (68/59, tuned): ignored P 1.000 R 0.746 FPR 0; with blocklist P 1 R 1 FPR 0
   - Official domains FP 0/109. Breaker legit deep links 45/45 legitimate.
-- 20:16 detonator DONE (19 tests; fast mode 8x concurrency ~1 s/URL). radar: NRD + certstream (docker) live; scanned hits adinwealth.org scam 87, trafficrta.xyz likely_scam 76; crt.sh working query shape found (prefix wildcard).
+- 20:16 detonator DONE (19 tests; fast mode 8x concurrency ~1 s/URL). radar: NRD + certstream (docker) live; scanned hits adinwealth[.]org scam 87, trafficrta[.]xyz likely_scam 76; crt.sh working query shape found (prefix wildcard).
 - 20:09 full offline suite: 252 passed, 46 skipped. intel DONE (16 tests). detonator DONE v2 (17 tests, stealth persona, 16 real URLs p50 7.7s p95 12.5s). breaker: domain suite (V1-V4 fixed by verdict), mechanics 18/19 (shadow DOM -> detonator). docs eval: P1.0 R1.0 FPR0 on n=55 BUT blocklist ablation recall 0.115 -> verdict now working on content-based recall.
 - 20:05 brand DONE: 42 tests; 31 UAE brands / 110 official domains / 60 phones; text EN/AR/Arabizi, lookalike incl. subdomain_brand, favicon pHash for 24 brands, LLM hook (mock-tested). 23 TODO facts in data/registry_todo.md. dashboard DONE v1 (9 tests, browser-verified EN/AR RTL, ZIP/PDF export). docs drafts in. radar: crt.sh %kw% queries returning [] / 429; working alternatives.
 - **19:57 MILESTONE: real end-to-end scan works** (16 min after start; target was 75 min). Lead integration check:
@@ -39,7 +39,7 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - Pilot facts: Aman 8002626 and the u.ae eCrime page are from news/search sources; confirm with Abu Dhabi Police (docs/pilot.md).
 - README team names placeholder; Marp render of docs/slides.md not checked; record the 60 s video.
 - Stop background processes when done: the demo server on :8000, `docker compose down` (certstream container), and radar's collectors. Radar reported PIDs 23408, 19616, 61584, 59928, 45560, 61036; its own attempt to stop the orphaned loop (23408) was blocked by the permission check, so the lead did not do it on its behalf.
-- Open accuracy question: uaepass.uat.finwall.studio still scores scam 88 (possibly a legitimate integrator staging host); unverified.
+- Open accuracy question: uaepass.uat.finwall[.]studio still scores scam 88 (possibly a legitimate integrator staging host); unverified.
 
 ## Done-when verification
 ### 1. make test — PASS (20:24-20:29 UTC, no .env / no API keys)
@@ -58,23 +58,23 @@ EXIT 0
 rows 127 labels {'legitimate': 68, 'scam': 59} modes {'full': 92, 'domain_only': 35}
 dead/blank/timeout/error detonations: 15
    ('https://www.etisalat.ae/en/', ['timeout'], 'legitimate', '0')
-   ('https://stepflow2mt.swedencentral.cloudapp.azure.com/ch/ch_css_mkit/', ['dead'], 'scam', '100')
-   ('https://netflix-dashboard-login.8-219-97-148.cpanel.site', ['blank'], 'scam', '100')
-   ('http://aktiffkan-paylatterz.jmm.my.id/', ['dead'], 'scam', '100')
-   ('https://ac20s.lat/', ['dead'], 'scam', '100')
-   ('https://hawkinsinc.microsoft-alerts.org', ['blank'], 'scam', '100')
+   ('hxxp://stepflow2mt.swedencentral.cloudapp.azure[.]com/ch/ch_css_mkit/', ['dead'], 'scam', '100')
+   ('hxxp://netflix-dashboard-login.8-219-97-148.cpanel[.]site', ['blank'], 'scam', '100')
+   ('hxxp://aktiffkan-paylatterz.jmm.my[.]id/', ['dead'], 'scam', '100')
+   ('hxxp://ac20s[.]lat/', ['dead'], 'scam', '100')
+   ('hxxp://hawkinsinc.microsoft-alerts[.]org', ['blank'], 'scam', '100')
 ```
 Every input row has a verdict, input order preserved, all rows have EN+AR reasons; 15 dead/blank/timeout pages still got verdicts (domain-only). Note: an earlier run silently resumed a stale predictions.csv; fixed by using a fresh file (verdict adding fingerprint check to resume).
 
 ### 5. Radar real crt.sh hits + helpline check — PASS (20:31 UTC)
 DB: 478 radar hits {crtsh: 471, certstream: 5, nrd: 2}; 29 scanned so far {scam 10, likely_scam 8, suspicious 8, legitimate 3} (refresh loop scans 25 every 4 min). Real crt.sh look-alikes, e.g.:
 ```
-emiratesnbd.com-verify-net.bond   cert 2026-10-09T06:16  flagged 2026-11-24T20:27  scam 100
-emiratesnbd.com-verify-io.bond    cert 2026-10-09T20:04  flagged 2026-11-24T20:27  scam 100
-emiratesnbdgov.com                cert 2026-10-12T16:17  flagged 2026-11-24T20:27  likely_scam 70
-uaepasses.com                     cert 2026-10-06T12:47  flagged 2026-11-24T20:19  scam 100
+emiratesnbd.com-verify-net[.]bond   cert 2026-10-09T06:16  flagged 2026-11-24T20:27  scam 100
+emiratesnbd.com-verify-io[.]bond    cert 2026-10-09T20:04  flagged 2026-11-24T20:27  scam 100
+emiratesnbdgov[.]com                cert 2026-10-12T16:17  flagged 2026-11-24T20:27  likely_scam 70
+uaepasses[.]com                     cert 2026-10-06T12:47  flagged 2026-11-24T20:19  scam 100
 ```
-(crt.sh index lags ~40 d; certstream + NRD cover the fresh window, e.g. trafficrta.xyz registered 2026-11-22.)
+(crt.sh index lags ~40 d; certstream + NRD cover the fresh window, e.g. trafficrta[.]xyz registered 2026-11-22.)
 Helpline: `python -m scamshield.helpline --brand tamm --live --no-landing` -> `sources: {'places': 'no_key', 'synthetic': 'ok'}`; [LIKELY_SCAM] tamm +971560000301 (SYNTHETIC, labelled) with EN+AR reasons; 16 phone findings in db. Live Google Maps search is implemented but unverified (no key).
 
 ### 3. make eval — PASS (20:33-20:39 UTC, engine fingerprint 70b50785066fa4de, before hard-legit fixes)
@@ -97,7 +97,7 @@ Every false negative is listed with reasons in var/verify_eval.log. Will re-run 
 [demo] helpline: 9 findings across 12 brands
 [demo] ScamShield running at http://127.0.0.1:8000  (API docs: http://127.0.0.1:8000/docs)
 ```
-UI scan of https://aramex.p-track-au.com/ (holdout scam row) -> scam 100 with EN reasons (+60 openphish, +50 imitates aramex.com subdomain_brand, +30 domain 1 day old) and AR reasons after the toggle (<html dir="rtl" lang="ar">, mirrored layout); screenshot served; redirect chain shown. https://www.rta.ae/ -> legitimate 0 (official domain; brand RTA via arabic+logo_hash+screenshot_hash).
+UI scan of hxxp://aramex.p-track-au[.]com/ (holdout scam row) -> scam 100 with EN reasons (+60 openphish, +50 imitates aramex.com subdomain_brand, +30 domain 1 day old) and AR reasons after the toggle (<html dir="rtl" lang="ar">, mirrored layout); screenshot served; redirect chain shown. https://www.rta.ae/ -> legitimate 0 (official domain; brand RTA via arabic+logo_hash+screenshot_hash).
 Lead re-check via curl: /api/health ok; / 200 text/html; /api/scans/5c8df41f307d -> 100 scam, 4 reasons with Arabic, screenshot URL; case export: zip 200 application/zip 150582 B, pdf 200 application/pdf 119217 B (%PDF-1.4). ZIP: screenshots, dom, har, favicon, redirect_chain, rdap_whois, dns_hosting, brand_match, verdict, report.pdf, takedown_en/ar, manifest.json + manifest.sha256.
 
 ### FINAL re-verification on final engine (fingerprint db475dd39c6eb6a5), 20:44-20:57 UTC, no API keys
