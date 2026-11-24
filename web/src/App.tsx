@@ -417,7 +417,7 @@ function Kpi({ value, label, sub }: { value: React.ReactNode; label: string; sub
 function RadarKpis({ rows }: { rows: RadarRow[] }) {
   const { t } = useI18n();
   const live = rows.filter((r) => !r.is_fixture);
-  const base = live.length ? live : rows;
+  const base = live; // fixture rows never count towards results
   const ttd = base.map((r) => r.time_to_detection_seconds).filter((x): x is number => x != null && x >= 0);
   const counts: Record<string, number> = {};
   base.forEach((r) => { const k = r.label || "unlabelled"; counts[k] = (counts[k] || 0) + 1; });

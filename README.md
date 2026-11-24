@@ -202,10 +202,17 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 .venv/Scripts/python -m scamshield.helpline --synthetic                        # all brands, demo data
 ```
 
-**Radar** (crt.sh backfill; from the dashboard: *Early-warning radar -> Run crt.sh backfill*, or `POST /api/radar/backfill`)
+**Radar** (also from the dashboard: *Early-warning radar -> Run crt.sh backfill*, or `POST /api/radar/backfill`)
 
 ```bash
-.venv/Scripts/python -c "import asyncio; from scamshield.radar import backfill_crtsh; print(asyncio.run(backfill_crtsh(days=7)))"
+.venv/Scripts/python -m scamshield.radar watchlist                 # watchlist stats (registry terms, permutations, themes)
+.venv/Scripts/python -m scamshield.radar match uaepass-verify.top  # does a domain hit the watchlist?
+.venv/Scripts/python -m scamshield.radar backfill --days 30        # crt.sh backfill, every hit scanned (--no-scan to skip)
+.venv/Scripts/python -m scamshield.radar certstream --minutes 10   # live CT stream (needs a certstream server)
+.venv/Scripts/python -m scamshield.radar nrd --days 4              # newly registered domains (whoisds daily list)
+.venv/Scripts/python -m scamshield.radar search                    # sponsored / organic results (needs SERPAPI_KEY)
+.venv/Scripts/python -m scamshield.radar feed --limit 50           # hits with first_seen, flagged_at, time to detection
+.venv/Scripts/python -m scamshield.radar siblings <domain>         # domains sharing IP / name server / cert / favicon
 ```
 
 **Police case file**
