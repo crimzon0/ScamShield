@@ -105,6 +105,11 @@ Speaker notes: Fines, tolls, government sign-in and bank OTP pages are the UAE s
 # Results (measured)
 
 <!-- RT:BEGIN -->
+| Fresh blind set 2026-11-25 (n=180, never tuned on), blocklists ignored | Precision | Recall | FPR |
+|---|---|---|---|
+| **LLM on, cut-off 35 (suspicious) — recommended alert threshold** | **0.984** | **0.566** | **0.014** |
+| LLM on, likely_scam | 0.964 | 0.255 | 0.014 |
+
 | Held-out set (n=79) | Precision | Recall | FPR |
 |---|---|---|---|
 | **First blind run, blocklists ignored (headline)** | **1.000** | **0.619** | **0.000** |
@@ -112,7 +117,8 @@ Speaker notes: Fines, tolls, government sign-in and bank OTP pages are the UAE s
 | After one round of generalisation (not blind) | 1.000 | 0.714 | 0.000 |
 | Blocklists used | 1.000 | 1.000 | 0.000 |
 
-- **Official UAE domains flagged as scam: 0 / 112** · zero false positives in every run
+- **Official UAE domains flagged as scam: 0 / 112**; with the LLM on, **0 / 199** official + risky legitimate UAE pages flagged
+- One false positive on the fresh set: a real RAKBANK co-branded page on airarabia.com
 - Adversarial: **45/45** UAE official deep links and **42/42** risky-looking real UAE login pages legitimate; 92 offline attack cases pass
 - Tuned sample (n=127), blocklists ignored: precision 1.000, recall 0.797
 <!-- RT:END -->

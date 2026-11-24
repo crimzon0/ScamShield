@@ -121,3 +121,18 @@ Held-out (verdict, same engine): blocklists ignored P 1.000 R 0.714 F1 0.833 FPR
 
 ### 6. Docs — PASS
 README.md, docs/slides.md (8 Marp slides), docs/video-script.md (60 s), docs/pilot.md exist; README/slides/video quote the measured numbers above (headline: blind held-out P 1.000 R 0.619 FPR 0, official 0/112).
+
+## 2026-11-25 — keys round (lead)
+
+Keys added to `.env` (gitignored; verified absent from git history and working tree). Smoke test, one real call each: Anthropic LLM 200 OK; Google Places 200 with phone numbers (so the SerpApi Maps fallback was not needed); Safe Browsing 200 (test URL matched SOCIAL_ENGINEERING); SerpApi account OK (Free plan, 250/month).
+
+1. **LLM FP gate** — LLM on, real calls: hard_legit 0/42, deeplinks 0/45, official 0/112 flagged (before and after gate). One LLM-only bump (smilesuae.ae 10 -> 22) -> gate added in `score()`: LLM brand evidence only corroborates a verdict already >= suspicious without it (`llm_uncorroborated` 0-weight signal otherwise). 6 offline tests. `llm.py` retries 429/5xx; `SCAMSHIELD_NO_LLM=1` ablation switch; LLM state is in the pipeline fingerprint.
+2. **Fresh blind set** `data/eval/blind_20261125.csv` (106 scam published after 2026-11-24 20:57 UTC / 74 legit), frozen before scanning, sha256 0f185889…. Blocklists ignored:
+   - no LLM: likely_scam P 0.960 R 0.226 FPR 0.014; suspicious P 0.983 R 0.547
+   - LLM on: likely_scam P 0.964 R 0.255 FPR 0.014; suspicious P 0.984 R 0.566
+   - LLM changed 0 labels on identical detonations. Single FP: RAKBANK co-brand page on airarabia.com (scam 85). Official 0/112.
+   - Recommended cut-off 35 (suspicious) for alerts; likely_scam for takedown. Sweep: data/eval/blind_20261125_sweep.md.
+3. **Helpline live** — 0/33 registry brands are `verified: true`, so the verified-only live run checked 0 listings. Needs a human to verify registry phones first.
+7. **Hygiene** — no key in history; plain python next to each make target in README; live scam domains defanged in README/docs/PROGRESS.
+Offline `make test`: 308 passed, 88 skipped.
+Submission deck: docs/deck/ScamShield_Aegis.pdf. Pushed to https://github.com/crimzon0/ScamShield.

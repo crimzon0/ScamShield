@@ -235,6 +235,28 @@ make eval        # = .venv/Scripts/python -m scamshield.cli.eval data/eval/sampl
 ## 7. Measured results
 
 <!-- RESULTS:BEGIN -->
+### Fresh time-split blind set (2026-11-25), the most honest number
+
+180 URLs (106 scam / 74 legit) in `data/eval/blind_20261125.csv`, frozen before scanning (sha256 in `data/eval/blind_20261125_README.md`) and never tuned on. Scams are phishing URLs first published after 2026-11-24 20:57 UTC (urlscan public `phishing` tag, CERT.pl, PhishStats, PhishTank). Legit rows are fresh deep pages from 25 UAE official sites (banks, government, telecom, airlines, couriers) plus 3 global sites, all taken from the sites' own links and sitemaps. No UAE-targeted phishing appeared in the feeds in that window, so the scam half measures global phishing.
+
+| Mode | Blocklists | Threshold | Precision | Recall | F1 | FPR |
+|---|---|---|---|---|---|---|
+| no LLM | ignored | likely_scam (60) | 0.960 | 0.226 | 0.366 | 0.014 |
+| no LLM | ignored | suspicious (35) | 0.983 | 0.547 | 0.703 | 0.014 |
+| **LLM on** | **ignored** | **suspicious (35)** | **0.984** | **0.566** | **0.719** | **0.014** |
+| LLM on | ignored | likely_scam (60) | 0.964 | 0.255 | 0.403 | 0.014 |
+| LLM on | used | suspicious (35) | 0.984 | 0.594 | 0.741 | 0.014 |
+
+- **Recommended cut-off: 35 (label `suspicious`) for alerts, `likely_scam` for takedown/evidence.** Every cut-off from 30 to 85 has the same single false positive and official pages all score 0, so raising the threshold buys no precision. Full sweep: `data/eval/blind_20261125_sweep.md`.
+- **The one false positive** is a real RAKBANK co-branded credit-card page on airarabia.com (scam 85): a partner page that the "brand on non-official domain" rule does not yet understand.
+- **The LLM changed 0 labels** on this set: it corroborated what the keyword rules found. The apparent +3 TPs between runs is re-scan variance of live pages (7 labels differed between two scans ~40 min apart).
+- **Biggest misses:** dead/blank/timeout pages judged on the domain only (43), crypto drainers with no brand claim (23), and kits that redirect to the impersonated brand's real site (they inherit its reputation).
+- **Official-domain sweep with the LLM on:** 0/112 flagged.
+
+**LLM false-positive gate.** Before trusting the LLM we ran it on the three false-positive suites (112 official domains, 42 risky legitimate UAE logins, 45 official deep links): **0/199 flagged**. One legitimate page (smilesuae.ae) got a small score bump from LLM evidence alone, so LLM brand evidence is now gated: it can only corroborate a verdict that is already at least `suspicious` without it, and can never raise a legitimate page's score.
+
+### Earlier sets (2026-11-24)
+
 Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20:43 UTC. `is_scam` = label `likely_scam` or `scam` unless stated. Raw output: `data/eval/last_eval.json`, `data/eval/last_eval_holdout.json`.
 
 | Set | Blocklists | Threshold | Precision | Recall | F1 | FPR |
@@ -279,7 +301,7 @@ Time to detection is quoted only where the start time is a CT log timestamp or a
 
 Not all radar verdicts are right. Some `uaepass` hosts look like legitimate third-party UAE PASS integrations: after re-scan `uaepass.hubpay[.]io` and `uaepass.appchecker[.]net` are suspicious 59, `uaepass.magure[.]ai` legitimate 25, and `uaepass.uat.finwall[.]studio` still scam 88 (unverified either way). Radar hits are not part of the precision numbers above, which is why the pilot keeps an analyst in the loop before any takedown.
 
-**Engineering checks:** `make test`: 300 passed, 87 skipped (network-marked) on the final engine, with no `.env` and no API keys; network suites run separately (87/87 passed). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput. Final scoring-engine fingerprint: `db475dd39c6eb6a5`.
+**Engineering checks:** `make test` (offline, `SCAMSHIELD_OFFLINE=1`): 308 passed, 88 skipped (network-marked). Network suites run separately (87/87 passed; with the LLM on, 0/199 false positives). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput.
 
 ## 8. Limitations (honest)
 
@@ -287,7 +309,7 @@ Not all radar verdicts are right. Some `uaepass` hosts look like legitimate thir
 - **Feed overlap.** Scam URLs come from OpenPhish and phishunt, which are also blocklist sources in `intel`. The headline number therefore ignores blocklists (`--ignore-blocklist`); with them, recall on these sets is trivially high.
 - **Feed labels are not hand-verified,** and many feed URLs were already dead, so a large share of the scam set is decided by the domain-only path.
 - **Few of the eval scams are UAE-branded.** Public feeds on a given day contain mostly global brands. The UAE-specific logic (registry, Arabic keywords, look-alikes) is exercised by the official-domain sweep, the legitimate UAE deep links, the fixtures and the radar's live hits, more than by the scam half of the eval.
-- **Only one blind run.** The held-out set was blind exactly once (recall 0.619). The global-brand list was then broadened with its misses in mind, so later held-out numbers are not blind; a fresh time-split set is needed.
+- **Blind runs.** The held-out set was blind exactly once (recall 0.619); a fresh time-split set (2026-11-25, 180 URLs) was then built and never tuned on (recall 0.566 at the suspicious cut-off, 0.255 at likely_scam). Recall on brand-new global phishing at likely_scam is low; most misses are dead pages and phishing with no brand claim.
 - **Registry is unverified by a human.** All 31 real brands carry `verified: false`; some facts were confirmed only from search excerpts because the official site blocked automated fetches (`data/registry_todo.md`, 23 open items).
 - **Keyless mode.** Without an LLM key the brand claim uses keyword rules; without a Places key the helpline demo uses **labelled synthetic** listings; without SerpApi there is no ads radar.
 - **Time to detection** is computed from certificate notBefore or the registration date given by the source. CAs often backdate notBefore (Let's Encrypt by one hour), so live certstream hits read ~59 minutes when the real lag is minutes. crt.sh's index lagged by weeks during the hackathon, so backfill hits measure coverage, not speed; we quote time to detection only for CT-log and NRD-list-date hits.
