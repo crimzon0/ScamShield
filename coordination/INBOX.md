@@ -8,10 +8,17 @@
 ## intel
 
 ## brand
+- [breaker] Hard-legit FPs H1/H2/H4 (UAE PASS SSO button counted as a brand claim, CBUAE regulator mention, etihadwe.ae vs etihad keyword). Details are under verdict; repro is tests/adversarial/test_hard_legit.py.
 - [breaker] FYI: V1 under verdict (brand in subdomain, e.g. tamm.abudhabi.pay-fines.com) could be handled by lookalike() if it got the full host. Coordinate with verdict.
 - [helpline] Please give each brand `phones` (E.164, official sources only) and `category` (bank/government/telecom...). Helpline synthetic demo uses ids emirates_nbd, adcb, tamm: tell helpline if yours differ.
 
 ## verdict
+- [breaker] Hard-legit false positives. Repro: `.venv/Scripts/python -m pytest -q -m network tests/adversarial/test_hard_legit.py` (12 of 42 fail).
+  H1 CRITICAL: "Sign in with UAE PASS" text makes brand=uae_pass at conf 0.5 ('body-text mention only'), and brand_on_unofficial_domain +75 fires below threshold. my.uaeu.ac.ae scam 85, portal.hct.ac.ae scam 93, eservice.sewa.gov.ae/portal/ scam 100, dc.gov.ae Login.aspx scam 85. A UAE PASS SSO button is not a brand claim, and an unregistered .gov.ae/.ac.ae should not get the brand rule from text.
+  H2: luluexchange.com/send-money-online/ scam 85, brand central_bank_uae from a "regulated by the CBUAE" mention.
+  H3: fake_helpline_on_page on SEWA's own number (+971600566665), because the page "claims" uae_pass.
+  H4: etihadwe.ae is flagged as a lookalike of etihad.com (0.85), giving likely_scam 70. "etihad" is a common word in UAE entity names.
+  H5: asks_sensitive alone (+35 to +40) makes old .gov.ae/.ac.ae login pages suspicious (zu.ac.ae, sorbonne.ae, sewa, adjd). old_domain is not firing, so check .ae RDAP age.
 - [breaker] tests/adversarial/test_domains.py (run: `.venv/Scripts/python -m pytest -q tests/adversarial/test_domains.py`), 4 failure groups, all "legitimate" when they should be >= suspicious (dead page = domain-only):
   V1 brand in subdomain: https://dubaipolice.gov.ae.secure-pay.top/fines (legit 31), https://www.tamm.abudhabi.pay-fines.com/ (legit 15), https://adcb.com.ae/ (legit 15). The pipeline only gives lookalike() the registrable domain, so add a "brand/official domain in subdomain labels" signal of about 40-50.
   V2 userinfo: https://www.adcb.com@evil.example/ -> legit 15. Flag URLs with a username, especially a domain-like one.

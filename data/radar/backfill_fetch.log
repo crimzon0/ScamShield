@@ -14,3 +14,4 @@
 2026-11-25 00:31:36,608 INFO scamshield.radar crt.sh dubaipolice%             ok             rows=103
 2026-11-25 00:31:54,321 INFO scamshield.radar crt.sh adpolice%                empty          rows=0
 2026-11-25 00:32:27,357 INFO scamshield.radar crt.sh rtadubai%                ok             rows=12
+2026-11-25 00:33:33,536 INFO scamshield.radar crt.sh rta-%                    ok             rows=6
