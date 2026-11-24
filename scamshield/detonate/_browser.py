@@ -15,9 +15,24 @@ def _loop_state() -> dict[str, Any]:
     loop = asyncio.get_running_loop()
     st = _state.get(loop)
     if st is None:
-        st = {"lock": asyncio.Lock(), "sem": asyncio.Semaphore(_MAX_CONCURRENT), "pw": None, "browser": None}
+        st = {"lock": asyncio.Lock(), "sem": asyncio.Semaphore(_MAX_CONCURRENT), "sem_n": _MAX_CONCURRENT, "pw": None, "browser": None}
         _state[loop] = st
     return st
+
+
+def set_concurrency(n: int) -> None:
+    """Max simultaneous detonations per process (default 5). Applies to loops created later and,
+    if called inside a running loop with no detonation in flight, to the current loop too."""
+    global _MAX_CONCURRENT
+    _MAX_CONCURRENT = max(1, min(16, int(n)))
+    try:
+        st = _loop_state()
+        sem = st["sem"]
+        if not sem.locked() and getattr(sem, "_value", 0) == st.get("sem_n", _MAX_CONCURRENT):
+            st["sem"] = asyncio.Semaphore(_MAX_CONCURRENT)
+            st["sem_n"] = _MAX_CONCURRENT
+    except RuntimeError:  # no running loop
+        pass
 
 
 def semaphore() -> asyncio.Semaphore:

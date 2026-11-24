@@ -471,7 +471,8 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
             det.har_path = str(har)
 
 
-async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: str | None = None) -> Detonation:
+async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: str | None = None,
+                   budget: float | None = None) -> Detonation:
     """Load url in headless Chromium as persona. Never raises; hard cap settings.detonate_timeout.
     Artifacts under settings.artifacts_dir/<scan_id>/<persona>/. status in ok|dead|blank|timeout|error."""
     if persona not in PERSONA_CONFIG:
@@ -502,7 +503,11 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
             except Exception:
                 pass
         run = _Run(det, out_dir)
-        budget = max(3.0, float(settings.detonate_timeout))
+        # budget: per-call override of settings.detonate_timeout (e.g. ~10 s for large CLI batches)
+        try:
+            budget = max(3.0, float(budget)) if budget is not None else max(3.0, float(settings.detonate_timeout))
+        except (TypeError, ValueError):
+            budget = max(3.0, float(settings.detonate_timeout))
         async with _browser.semaphore():
             # the cap is per detonation; time queued for a slot is not counted
             t0 = time.monotonic()

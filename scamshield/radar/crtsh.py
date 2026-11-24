@@ -162,7 +162,7 @@ async def collect_terms(days: int = 30, limit_terms: Optional[int] = None, force
     waited = 0.0
     for i, t in enumerate(tl):
         prev = st.get(t, {})
-        fresh = prev.get("status") in ("ok", "empty") and time.time() - prev.get("ts", 0) < FRESH_HOURS * 3600
+        fresh = prev.get("status") == "ok" and time.time() - prev.get("ts", 0) < FRESH_HOURS * 3600
         if fresh and not force:
             statuses[t] = "cached:" + prev["status"]
             continue

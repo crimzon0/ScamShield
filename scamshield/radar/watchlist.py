@@ -25,6 +25,7 @@ DEFAULT_STOP = {"bank", "login", "secure", "police", "dubai", "abudhabi", "emira
 # ASCII terms shorter than this (tamm, adcb, rta, icp, salik, ...) must be a whole host token, or a token
 # made of the term plus a scam-typical affix (tamm-pay, adcbverify, uaesalik), never an arbitrary substring.
 SUBSTRING_MIN = 7
+PERM_MIN_LABEL = 7
 AFFIXES = sorted({
     "pay", "payment", "payments", "fine", "fines", "login", "signin", "gov", "ae", "uae", "online", "verify",
     "verification", "portal", "service", "services", "secure", "security", "update", "bank", "app", "web", "my",
@@ -36,8 +37,11 @@ AFFIXES = sorted({
 
 
 def _token_hit(term: str, tokens: list[str]) -> bool:
+    """Short ASCII term vs host tokens (public suffix excluded). 3-letter terms (rta, icp, moi, dib) also
+    need a scam/UAE context token elsewhere in the host (rta-fines, icp-uae); 4+ letters may stand alone."""
+    ctx = len(term) > 3 or any(t in AFFIXES for t in tokens if t != term)
     for tok in tokens:
-        if tok == term:
+        if tok == term and ctx:
             return True
         if tok.startswith(term) and tok[len(term):] in AFFIXES:
             return True
@@ -249,7 +253,9 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
                 continue
             # homoglyphs are matched via confusable skeleton (see skeleton()), not enumerated: dnstwist's
             # homoglyph fuzzer yields ~30k names per domain.
-            for fz, pl in _fuzz_labels(dnstwist, lab):
+            # short labels (salik, mohre) explode into common words (salio, more); only long labels get
+            # the cheap fuzzers. Short ones still get tld-swap + homoglyph skeleton below.
+            for fz, pl in (_fuzz_labels(dnstwist, lab) if len(lab) >= PERM_MIN_LABEL else ()):
                 if len(pl) >= MIN_LEN and pl != lab and pl not in stop:
                     perms.setdefault(pl, (b["id"], fz, r))
             # same label on another TLD (tld swap)
@@ -312,7 +318,8 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         if not host.isascii():  # homoglyph combosquat: еmiratesnbd-login.com
             squashed = squashed + "|" + _squash(skeleton(host))
         dotted = host.replace(".", "-")
-        tokens = [t for t in dotted.split("-") if t]
+        ext = _extract(host)
+        tokens = [t for t in ".".join(x for x in (ext.subdomain, ext.domain) if x).replace(".", "-").split("-") if t]
         for e in wl["keywords"]:
             t = e["term"]
             if "-" in t:

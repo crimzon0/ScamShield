@@ -39,7 +39,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="scamshield.cli.eval")
     ap.add_argument("labelled")
     ap.add_argument("--predictions", default=None)
-    ap.add_argument("--out", default="var/eval_predictions.csv")
+    ap.add_argument("--out", default="var/verdict_eval_predictions.csv")
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--threshold", default="likely_scam", choices=list(LABEL_RANK))
     ap.add_argument("--personas", nargs="+", default=None)
@@ -93,6 +93,11 @@ def main(argv=None) -> int:
     print(f"              pred_scam  pred_legit")
     print(f"  truth_scam  {m['tp']:>9}  {m['fn']:>10}")
     print(f"  truth_legit {m['fp']:>9}  {m['tn']:>10}")
+    by_thr = {}
+    for thr in ("likely_scam", "suspicious"):
+        mm = metrics([(t, is_scam(pmap[u].get("label", ""), thr)) for u, t in truth.items() if u in pmap])
+        by_thr[thr] = {k: round(mm[k], 4) for k in ("precision", "recall", "f1", "fpr")}
+        print(f"  threshold >= {thr:<11}: P {mm['precision']:.3f}  R {mm['recall']:.3f}  F1 {mm['f1']:.3f}  FPR {mm['fpr']:.3f}")
     modes = Counter(pmap[u].get("mode") for u in truth if u in pmap)
     labels = Counter(pmap[u].get("label") for u in truth if u in pmap)
     print("modes:", dict(modes), " labels:", dict(labels))
@@ -112,11 +117,14 @@ def main(argv=None) -> int:
             ab = {(p.get("url") or "").strip(): rescore(p, a.threshold) for p in preds}
             abl_pairs = [(t, is_scam(ab[u].get("label", ""), a.threshold)) for u, t in truth.items() if u in ab]
             abl = metrics(abl_pairs)
+            abl_s = metrics([(t, is_scam(ab[u].get("label", ""), "suspicious")) for u, t in truth.items() if u in ab])
             do = [(t, is_scam(ab[u].get("label", ""), a.threshold)) for u, t in truth.items()
                   if u in ab and ab[u].get("mode") == "domain_only"]
             dm = metrics(do)
             print(f"\nABLATION (blocklist ignored): precision {abl['precision']:.3f}  recall {abl['recall']:.3f}  "
                   f"F1 {abl['f1']:.3f}  FPR {abl['fpr']:.3f}  (TP {abl['tp']} FN {abl['fn']} FP {abl['fp']} TN {abl['tn']})")
+            print(f"  ablation with threshold >= suspicious: P {abl_s['precision']:.3f}  R {abl_s['recall']:.3f}  "
+                  f"F1 {abl_s['f1']:.3f}  FPR {abl_s['fpr']:.3f}")
             print(f"  domain_only subset (n={len(do)}): recall {dm['recall']:.3f}  FPR {dm['fpr']:.3f}  "
                   f"(TP {dm['tp']} FN {dm['fn']} FP {dm['fp']} TN {dm['tn']})")
             for u, t in truth.items():
@@ -148,6 +156,8 @@ def main(argv=None) -> int:
                                 "mode": p.get("mode")} for p in fns[:20]]}
     if abl:
         rep["ablation_no_blocklist"] = {k: round(abl[k], 4) for k in ("precision", "recall", "f1", "fpr")}
+        rep["ablation_no_blocklist_suspicious"] = {k: round(abl_s[k], 4) for k in ("precision", "recall", "f1", "fpr")}
+    rep["by_threshold"] = by_thr
     try:
         import json
 

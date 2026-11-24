@@ -7,6 +7,7 @@ Every stage is wrapped: an error is never a verdict, and scan_url never raises.
 from __future__ import annotations
 
 import asyncio
+import re
 import logging
 import time
 import uuid
@@ -27,6 +28,8 @@ CACHE_TTL = 6 * 3600  # reuse a scan of the same URL within this window
 
 def _normalize(url: str) -> str:
     u = (url or "").strip()
+    if re.match(r"^[a-z][a-z0-9+.-]*:(?!//)", u, re.I) and not re.match(r"^[^:/]+:\d+", u):
+        return u  # javascript:, data:, mailto: ... -> rejected by invalid_url_verdict
     if u and "://" not in u:
         u = "http://" + u
     return u
@@ -128,6 +131,11 @@ async def scan_url(url: str, personas: tuple[str, ...] = DEFAULT_PERSONAS, save:
     """Never raises. Always returns a ScanResult with a Verdict."""
     scan_id = uuid.uuid4().hex[:12]
     url_n = _normalize(url)
+    from scamshield.score import invalid_url_verdict
+
+    bad = invalid_url_verdict(scan_id, url_n or (url or ""))
+    if bad is not None:
+        return ScanResult(scan_id=scan_id, url=url_n or (url or ""), verdict=bad)
     try:
         if not force and save:
             hit = _recent(url_n, cache_ttl)
@@ -175,7 +183,7 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
         in_intel = intel.model_copy(deep=True)
         intel = await _enrich(dom, host_of(final))
         state["intel"] = intel
-        in_look = await _guard(asyncio.to_thread(lookalike, in_dom), 10, None, "lookalike")
+        in_look = await _guard(asyncio.to_thread(lookalike, host_of(url) or in_dom), 10, None, "lookalike")
         in_intel.blocklist_hits = list(dict.fromkeys((in_intel.blocklist_hits or []) + bl))
     intel.blocklist_hits = list(dict.fromkeys((intel.blocklist_hits or []) + bl))
 
@@ -183,7 +191,7 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
     if ok:
         best = max(ok, key=lambda d: len(d.visible_text or ""))
         brand = await _guard(match_brand(best), 20, None, "match_brand")
-    look = await _guard(asyncio.to_thread(lookalike, dom), 10, None, "lookalike")
+    look = await _guard(asyncio.to_thread(lookalike, host_of(final) or dom), 10, None, "lookalike")
     if brand and look is None:
         look = brand.lookalike
     cloak = None
@@ -236,7 +244,7 @@ async def _domain_only(scan_id: str, url: str, state: dict, reason: str) -> Scan
     intel = state.get("intel") or await _enrich(dom, host_of(final))
     if not intel.blocklist_hits:
         intel.blocklist_hits = _blocklist(url)
-    look = await _guard(asyncio.to_thread(lookalike, dom), 5, None, "lookalike")
+    look = await _guard(asyncio.to_thread(lookalike, host_of(final) or dom), 5, None, "lookalike")
     # force domain-only: ignore page content we may have partially collected
     dets_do = [d if d.status != "ok" else d.model_copy(update={"status": "timeout"}) for d in dets]
     v = score(scan_id, url, dets_do, intel, None, look, None)

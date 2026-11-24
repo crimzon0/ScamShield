@@ -98,12 +98,38 @@ def _days_since(dt: Optional[datetime]) -> Optional[int]:
     return max(0, (datetime.now(timezone.utc) - dt).days)
 
 
+_OBF_IP = re.compile(r"^(0x[0-9a-f]+|\d+)(\.(0x[0-9a-f]+|\d+)){0,3}$", re.I)
+
+
 def _is_ip(host: str) -> bool:
+    """Plain IPv4/IPv6 and obfuscated forms browsers accept (0x7f000001, 3232235777, 0177.0.0.1)."""
     try:
         ipaddress.ip_address(host.strip("[]"))
         return True
     except ValueError:
-        return False
+        return bool(host) and bool(_OBF_IP.match(host))
+
+
+def invalid_url_verdict(scan_id: str, url: str) -> Optional[Verdict]:
+    """Non-http(s) or unparsable input: never 'legitimate'; suspicious with an invalid_url reason."""
+    from urllib.parse import urlsplit
+
+    u = (url or "").strip()
+    try:
+        sp = urlsplit(u)
+        host = (sp.hostname or "").strip(".")
+        ok = sp.scheme.lower() in ("http", "https") and host and " " not in u.split("?")[0] and             ("." in host or _is_ip(host) or ":" in host)
+    except Exception:
+        ok = False
+    if ok:
+        return None
+    return Verdict(scan_id=scan_id, url=u, final_url=u, registrable_domain="", score=50, label="suspicious",
+                   mode="domain_only",
+                   reasons=[Signal(id="invalid_url", weight=40, en="This is not a valid web link (http/https), so it "
+                                   "could not be checked. Do not open it.",
+                                   ar="هذا ليس رابط ويب صالحاً (http/https)، لذا تعذّر فحصه. لا تفتحه.", evidence=u[:200])],
+                   summary_en="Suspicious (50/100): not a valid web link; it could not be checked.",
+                   summary_ar="مشبوه (50/100): ليس رابط ويب صالحاً؛ تعذّر فحصه.")
 
 
 def _shared(host: str) -> bool:
@@ -215,6 +241,9 @@ def _safe_reg(url: str) -> str:
 
 
 def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
+    bad = invalid_url_verdict(scan_id, url)
+    if bad is not None:
+        return bad
     final = _pick_final(url, dets)
     host = host_of(final)
     dom = registrable(final)
@@ -283,6 +312,11 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             f"تظهر في الصفحة مؤشرات على استخدام اسم {b_ar}.", "; ".join(brand.evidence[:2]))
 
     # ---------------- weighted signals
+    warn = next((n for d in dets for n in (d.notes or []) if "phishing-warning interstitial" in n), "")
+    if warn:
+        add("provider_phishing_warning", 70, "The hosting provider itself shows a 'suspected phishing' warning for this site.",
+            "يعرض مزوّد الاستضافة نفسه تحذيراً بأن هذا الموقع «يُشتبه في أنه احتيالي».", warn)
+
     if bl:
         add("blocklist", 60, f"Listed on threat-intelligence blocklists: {', '.join(bl)}.",
             f"مُدرج في قوائم حظر التهديدات: {', '.join(bl)}.", ", ".join(bl))
@@ -331,6 +365,18 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     if shared:
         add("shared_host", 12, f"Hosted on a free/shared hosting platform ({host}) where anyone can publish a page.",
             f"مستضاف على منصة استضافة مجانية/مشتركة ({host}) يمكن لأي شخص النشر عليها.", host)
+
+    try:
+        from urllib.parse import urlsplit
+
+        ui = urlsplit(url).username or ""
+    except Exception:
+        ui = ""
+    if ui:
+        strong = "." in ui or bool(_KW_RE.search(ui.lower()))
+        add("userinfo_trick", 45 if strong else 25,
+            f"The link hides its real destination: everything before '@' (\"{ui[:60]}\") is ignored, the site is really {host}.",
+            f"الرابط يخفي وجهته الحقيقية: كل ما قبل «@» («{ui[:60]}») يتم تجاهله، والموقع الحقيقي هو {host}.", url[:200])
 
     if _is_ip(host):
         add("ip_host", 25, "The link uses a raw IP address instead of a domain name.",
@@ -454,7 +500,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     total = BASE + sum(s.weight for s in sig)
     if brand_rule:
         total = max(total, 85)
-    elif bl:
+    elif bl or warn:
         total = max(total, 80)
     return _finish(scan_id, url, final, dom, mode, total, sig, brand, look)
 
