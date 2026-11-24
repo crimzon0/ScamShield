@@ -6,6 +6,7 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - [x] Phase 0 scaffold, core contract, stubs, CLAUDE.md, Makefile (done 19:44:54 UTC, commit c4558db)
 
 ## Team log
+- 20:09 full offline suite: 252 passed, 46 skipped. intel DONE (16 tests). detonator DONE v2 (17 tests, stealth persona, 16 real URLs p50 7.7s p95 12.5s). breaker: domain suite (V1-V4 fixed by verdict), mechanics 18/19 (shadow DOM -> detonator). docs eval: P1.0 R1.0 FPR0 on n=55 BUT blocklist ablation recall 0.115 -> verdict now working on content-based recall.
 - 20:05 brand DONE: 42 tests; 31 UAE brands / 110 official domains / 60 phones; text EN/AR/Arabizi, lookalike incl. subdomain_brand, favicon pHash for 24 brands, LLM hook (mock-tested). 23 TODO facts in data/registry_todo.md. dashboard DONE v1 (9 tests, browser-verified EN/AR RTL, ZIP/PDF export). docs drafts in. radar: crt.sh %kw% queries returning [] / 429; working alternatives.
 - **19:57 MILESTONE: real end-to-end scan works** (16 min after start; target was 75 min). Lead integration check:
   - https://www.tamm.abudhabi/ -> legitimate 0 (brand tamm, official_domain), 6.7 s
