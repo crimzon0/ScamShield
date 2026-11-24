@@ -54,7 +54,11 @@ def store_hit(hit: RadarHit) -> RadarHit:
         old = existing_hit(hit.domain, hit.source)
         if old is not None:
             hit.flagged_at = min(_aware(old.flagged_at), _aware(hit.flagged_at))
-            hit.first_seen = min(_aware(old.first_seen), _aware(hit.first_seen))
+            nb, ob = hit.extra.get("first_seen_basis"), old.extra.get("first_seen_basis")
+            if nb and nb != ob:  # the basis changed (e.g. not_before -> ct_log): trust the new measurement
+                hit.first_seen = _aware(hit.first_seen)
+            else:
+                hit.first_seen = min(_aware(old.first_seen), _aware(hit.first_seen))
             if hit.scan_id is None and old.scan_id:
                 hit.scan_id, hit.score, hit.label = old.scan_id, old.score, old.label
             merged = dict(old.extra)

@@ -11,3 +11,5 @@
 2026-11-25 00:28:04,809 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern dubaipolice%)
 2026-11-25 00:29:04,811 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern dubaipolice%)
 2026-11-25 00:30:04,816 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern dubaipolice%)
+2026-11-25 00:31:36,608 INFO scamshield.radar crt.sh dubaipolice%             ok             rows=103
+2026-11-25 00:31:54,321 INFO scamshield.radar crt.sh adpolice%                empty          rows=0

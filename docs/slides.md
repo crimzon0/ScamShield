@@ -51,21 +51,24 @@ link -> detonate (headless Chromium, 3 personas: UAE mobile ad click, desktop, c
 - **An error is never a verdict:** dead, blank or cloaked page -> domain-only verdict.
 
 <!--
-Speaker notes: The core rule is simple and explainable: the page says "Emirates NBD", but the domain is not Emirates NBD's. The registry has 31 real UAE brands with official domains and numbers, each with a source link. Most feed URLs are dead within hours, so the domain-only path is the normal case.
+Speaker notes: The core rule is simple and explainable: the page says "Emirates NBD", but the domain is not Emirates NBD's. The registry has 31 real UAE brands, 110 official domains and 60 official numbers, each with a source link. Most feed URLs are dead within hours, so the domain-only path is the normal case.
 -->
 
 ---
 
 # Early-warning radar
 
-- Watches Certificate Transparency (crt.sh backfill; certstream live) for UAE brand terms and look-alikes: `uaepass`, `tamm-`, `rta-fine`, `salik`, `adpolice`, homoglyphs, punycode
+- Watches Certificate Transparency (certstream live, crt.sh backfill) and newly registered domain lists for UAE brand terms and look-alikes: `uaepass`, `tamm-`, `rta-fine`, `salik`, `adpolice`, homoglyphs, punycode
 - Every hit is scanned by the same pipeline
 - **Time to detection** = flagged time - certificate first-seen, shown per hit on the dashboard
 
-[[RADAR_LINE]]
+**Real hits, 2026-11-24 (one evening, no API keys):**
+- certstream live: `salik.work` (TLD swap of salik.ae) flagged in the same hour its certificate was issued
+- newly registered domains: `adinwealth.org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta.xyz` **likely scam 70**
+- crt.sh backfill on `uaepass`: 11 hosts scored scam / likely scam (e.g. `uaepasses.com`, `uaepass.digital` scam 100); some are real third-party UAE PASS integrations -> analyst review
 
 <!--
-Speaker notes: A phishing site needs an HTTPS certificate, and certificates are public. That gives us a window between certificate issue and the first SMS. We record both timestamps, so time to detection is measured, not claimed.
+Speaker notes: A phishing site needs an HTTPS certificate, and certificates are public. That gives us a window between certificate issue and the first SMS. We record both timestamps, so time to detection is measured, not claimed. Honest note: certificate notBefore is often backdated (Let's Encrypt by one hour), so a ~59-minute reading from certstream really means minutes. Backfill hits are weeks old only because we started watching today.
 -->
 
 ---
@@ -101,19 +104,21 @@ Speaker notes: Fines, tolls, government sign-in and bank OTP pages are the UAE s
 # Results (measured)
 
 <!-- RT:BEGIN -->
-| | Precision | Recall | FPR |
+| Held-out set (n=79) | Precision | Recall | FPR |
 |---|---|---|---|
-| Full pipeline (n=55) | 1.000 | 1.000 | 0.000 |
-| Blocklists ignored (ablation) | 1.000 | 0.115 | 0.000 |
+| **First blind run, blocklists ignored (headline)** | **1.000** | **0.619** | **0.000** |
+| First blind run, blocklists ignored, >= suspicious | 1.000 | 0.786 | 0.000 |
+| After one round of generalisation (not blind) | 1.000 | 0.714 | 0.000 |
+| Blocklists used | 1.000 | 1.000 | 0.000 |
 
-- **Official UAE domains flagged as scam: 0 / 109**
-- Recall with blocklists is mostly feed overlap: without them we catch 3/26, and 10 more are marked "suspicious"
+- **Official UAE domains flagged as scam: 0 / 109** · zero false positives in every run
+- Tuned sample (n=127), blocklists ignored: precision 1.000, recall 0.814
 <!-- RT:END -->
 
-Caveats: small set (55 URLs); scam URLs come from public feeds, so we also report a run with blocklists ignored; feed labels not hand-verified.
+Caveats: small sets (79 held-out, 127 tuned); scam URLs come from the same public feeds our blocklist uses, so the headline ignores blocklists; feed labels not hand-verified.
 
 <!--
-Speaker notes: Numbers come from `make eval` on data/eval/sample.csv, run on 2026-11-24, ~20:03 UTC. The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there.
+Speaker notes: Numbers come from `make eval` on data/eval/holdout.csv and sample.csv, latest run 2026-11-24 20:27 UTC. The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there. The headline is the first blind held-out run (20:18 UTC, recall 0.619). We then broadened the global-brand list with those misses in mind, so the "after generalisation" row is not blind and we say so.
 -->
 
 ---

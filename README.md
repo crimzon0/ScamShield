@@ -191,8 +191,11 @@ The run is resumable: rows already in `--out` are skipped.
 ```bash
 make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 #   prints precision / recall / F1 / FPR, confusion matrix, every FP and FN with reasons,
-#   then scans https://<domain>/ for every official domain in the registry: "official domains FP: x/N"
-.venv/Scripts/python -m scamshield.cli.eval data/eval/sample.csv --ignore-blocklist   # ablation without feed hits
+#   the same metrics with blocklist hits ignored (ablation), the domain-only subset,
+#   then scans https://<domain>/ for every official domain in the registry: "official domains FP: x/N".
+#   Writes data/eval/last_eval.json.
+.venv/Scripts/python -m scamshield.cli.eval data/eval/holdout.csv --no-official   # held-out set
+#   options: --threshold suspicious, --ignore-blocklist, --rescore (re-score stored scans, no network), --force
 ```
 
 **Fake helplines**
@@ -228,34 +231,59 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 ## 7. Measured results
 
 <!-- RESULTS:BEGIN -->
-All numbers below are from real runs of `make eval` on `data/eval/sample.csv` (2026-11-24, ~20:03 UTC). Threshold: `likely_scam` or above counts as scam.
+Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20:27 UTC. `is_scam` = label `likely_scam` or `scam` unless stated. Raw output: `data/eval/last_eval.json`, `data/eval/last_eval_holdout.json`.
 
-| Run | n | Precision | Recall | F1 | FPR | TP / FN / FP / TN |
+| Set | Blocklists | Threshold | Precision | Recall | F1 | FPR |
 |---|---|---|---|---|---|---|
-| Full pipeline (blocklists on) | 55 | 1.000 | 1.000 | 1.000 | 0.000 | 26 / 0 / 0 / 29 |
-| Ablation: blocklists ignored (`--ignore-blocklist`) | 55 | 1.000 | 0.115 | 0.207 | 0.000 | 3 / 23 / 0 / 29 |
+| **Held-out, first blind run** (n=79: 37 legit / 42 scam, 2026-11-24 20:18 UTC) | **ignored** | likely_scam | **1.000** | **0.619** | **0.765** | **0.000** |
+| Held-out, first blind run | ignored | suspicious | 1.000 | 0.786 | 0.880 | 0.000 |
+| Held-out, after one round of generalisation (no longer blind) | ignored | likely_scam | 1.000 | 0.714 | 0.833 | 0.000 |
+| Held-out, after generalisation | ignored | suspicious | 1.000 | 0.857 | 0.923 | 0.000 |
+| Held-out | used | likely_scam | 1.000 | 1.000 | 1.000 | 0.000 |
+| Sample, tuned on (n=127: 68 legit / 59 scam) | ignored | likely_scam | 1.000 | 0.814 | 0.897 | 0.000 |
+| Sample | ignored | suspicious | 1.000 | 0.898 | 0.946 | 0.000 |
+| Sample | used | likely_scam | 1.000 | 1.000 | 1.000 | 0.000 |
 
-**Official-domain sweep:** the home page of every official domain in the registry was scanned: **0/109 flagged as scam** (one, `moi-cpc.gov.ae`, was labelled `suspicious`: it redirects to `moi-cpc.ae` and the page timed out).
+**Official-domain sweep:** the home page of every official domain of every real brand in the registry was scanned: **0/109 flagged as scam.**
 
 **How to read this honestly**
 
-- **No false positives** on the 29 legitimate URLs (UAE banks, government, telecom, airlines, a news page that mentions banks) or on the 109 official-domain home pages. This is the property we optimised hardest.
-- **The headline recall comes almost entirely from feed overlap.** The 26 scam URLs were taken from OpenPhish and phishunt, and `intel` checks the same feeds, so a blocklist hit decides most of them. With blocklists ignored, recall drops to **0.115** (3 of 26); 10 of the missed scams are still labelled `suspicious` (score 35-59), the rest `legitimate`. Most of these are dead or removed pages on free hosts (`pages.dev`, `netlify.app`, `vercel.app`) or non-UAE brands (Coinbase, Binance, Santander, iCloud, Microsoft), where our UAE registry gives no brand signal.
-- In practice ScamShield is meant to run *with* feeds and the radar together; the ablation shows how much the page/domain analysis adds on its own, and where to improve (global-brand registry, free-host scoring, Tranco/RDAP lookup on sub-domains of shared hosts).
-- n = 55 is small. Treat these numbers as a regression check, not a benchmark.
+- **Headline = first blind run on the held-out set, blocklists ignored: precision 1.000, recall 0.619 (26 of 42 scams), F1 0.765, FPR 0.000.** That is what the page and domain analysis achieved on URLs it had never seen.
+- After that run we broadened the global-brand keyword list (from public brand rankings, but informed by the held-out misses). The held-out set is therefore **no longer blind**; on it, recall rose to 0.714 (30 of 42). We show both and treat 0.619 as the honest number.
+- **Why we ignore blocklists for the headline:** all scam URLs come from the public OpenPhish and phishunt feeds, and `intel` checks the same feeds. With blocklists on, recall is 1.000, but that mostly measures our feed lookup, not detection. In deployment feeds stay on, so the "used" row is what an analyst would see on already-reported links; the "ignored" row is the fair estimate for brand-new links nobody has reported.
+- **No false positives** in any run: not on UAE bank / government / police / telecom pages, not on globally phished brands' real sites (Apple, PayPal, Netflix, Coinbase, Binance, WhatsApp), not on news pages that mention banks, and not on the official-domain sweep.
+- The **held-out set** was built after tuning on `sample.csv`, from domains not in the sample. It is not time-split (the feeds had not rotated on 2026-11-25), so "unseen" means unseen domains, not a later time period.
+- Feed labels are not hand-verified; sets are small (79 and 127 URLs). These are regression numbers, not a benchmark.
+- Most misses without blocklists: old compromised sites hosting a kit in a sub-path, kits that show nothing to our mobile persona, brands outside our registry and global keyword list, and dead pages on registered-but-not-new domains (these usually reach `suspicious`, not `likely_scam`). Details in `data/eval/README.md`.
 <!-- RESULTS:END -->
+
+**Early-warning radar, real hits (2026-11-24, one evening, no API keys):**
+
+| Source | Domain | Why it matched | Verdict |
+|---|---|---|---|
+| certstream (live CT) | `salik.work` | TLD swap of `salik.ae` | suspicious 53, flagged within the hour of certificate issue |
+| newly registered domains | `adinwealth.org` | look-alike of ADIB's `adibwealth.ae` | scam 87 |
+| newly registered domains | `trafficrta.xyz` | RTA + traffic-fine theme | likely scam 70 |
+| crt.sh backfill (`uaepass`) | `uaepasses.com`, `uaepass.digital`, `uaepass.help` ... | UAE PASS keyword on non-official domain | 11 hosts scam / likely scam |
+
+Not all radar verdicts are right: several of the 11 `uaepass` hosts look like legitimate third-party UAE PASS integrations (for example `uaepass.hubpay.io`, `uaepass.uat.finwall.studio`, `uaepass.magure.ai`), which a brand-keyword rule cannot tell apart from phishing. Radar hits are not part of the precision numbers above, and this is why the pilot keeps an analyst in the loop before any takedown.
+
+**Engineering checks:** `make test`: 273 passed, 45 skipped (network-marked) with no `.env` and no API keys (PROGRESS.md, 20:29 UTC). Detonation of 16 real URLs: p50 7.7 s, p95 12.5 s per URL.
 
 ## 8. Limitations (honest)
 
-- **Small evaluation set.** 55 URLs (29 legitimate, 26 scam). Enough to catch regressions and false positives on UAE official sites, not enough for a statistically strong accuracy claim.
-- **Feed overlap.** The scam URLs come from OpenPhish and phishunt, which are also blocklist sources in `intel`. We report an ablation with blocklists ignored (`--ignore-blocklist`) so the detector is not graded on its own lookup.
-- **Feed labels are not hand-verified,** and many feed URLs were already dead, so much of the scam set is decided by the domain-only path.
-- **Few of the scams are UAE-branded.** Public feeds on a given day contain mostly global brands. The UAE-specific logic (registry, Arabic keywords, look-alikes) is exercised by the official-domain sweep, the fixtures and the radar, more than by the scam half of the eval.
-- **Registry is unverified by a human.** All 31 real brands carry `verified: false`; some facts were confirmed only from search excerpts because the official site blocked automated fetches (`data/registry_todo.md`).
+- **Small evaluation sets.** 127 tuning URLs and 79 held-out URLs. Enough to catch regressions and false positives on UAE official sites, not enough for a statistically strong accuracy claim.
+- **Feed overlap.** Scam URLs come from OpenPhish and phishunt, which are also blocklist sources in `intel`. The headline number therefore ignores blocklists (`--ignore-blocklist`); with them, recall on these sets is trivially high.
+- **Feed labels are not hand-verified,** and many feed URLs were already dead, so a large share of the scam set is decided by the domain-only path.
+- **Few of the eval scams are UAE-branded.** Public feeds on a given day contain mostly global brands. The UAE-specific logic (registry, Arabic keywords, look-alikes) is exercised by the official-domain sweep, the legitimate UAE deep links, the fixtures and the radar's live hits, more than by the scam half of the eval.
+- **Only one blind run.** The held-out set was blind exactly once (recall 0.619). The global-brand list was then broadened with its misses in mind, so later held-out numbers are not blind; a fresh time-split set is needed.
+- **Registry is unverified by a human.** All 31 real brands carry `verified: false`; some facts were confirmed only from search excerpts because the official site blocked automated fetches (`data/registry_todo.md`, 23 open items).
 - **Keyless mode.** Without an LLM key the brand claim uses keyword rules; without a Places key the helpline demo uses **labelled synthetic** listings; without SerpApi there is no ads radar.
+- **Time to detection** is computed from certificate notBefore or the registration date given by the source. CAs often backdate notBefore (Let's Encrypt by one hour), so live certstream hits read ~59 minutes when the real lag is minutes. crt.sh's index lagged by weeks during the hackathon, so backfill hits measure coverage, not speed.
 - **Visual similarity** relies on reference favicon hashes (`data/brand_assets/hashes.json`, 24 of 31 brands); screenshot similarity coverage is partial.
 - **Cloaking** that targets specific IP ranges (for example only UAE residential IPs) is not defeated from a data-centre IP; personas change user agent, locale, time zone and referrer only.
-- **Rules, not a trained model.** Weights were set by hand and tuned on the same small set; a pilot should re-tune them on labelled ADP data.
+- **Known misses:** old compromised sites hosting a kit in a sub-path, kits that show a blank page to our persona, brands outside the registry, some radar hits on wildcard-DNS hosts (e.g. `sslip.io`).
+- **Rules, not a trained model.** Weights were set by hand and tuned on a small set; a pilot should re-tune them on labelled ADP data.
 
 ## 9. Pilot path (summary)
 

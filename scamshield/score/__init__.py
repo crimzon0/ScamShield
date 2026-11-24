@@ -229,6 +229,31 @@ def _sso_target(ok: list[Detonation], official: list[str]) -> str:
     return ""
 
 
+def _registry_token(scope: str):
+    """(token, name_en, name_ar) when a registry brand token (first label of an official domain, >= 4 chars)
+    appears in an attacker-chosen hostname part at a label/word boundary (start or end of a label, or next to
+    '-' or a digit)."""
+    try:
+        from scamshield.brand import load_registry
+
+        brands = load_registry()
+    except Exception:
+        return None
+    labels = re.split(r"[.]", scope.lower())
+    for b in brands:
+        if b.get("fictional"):
+            continue
+        toks = {d.split(".")[0].lower() for d in (b.get("official_domains") or []) if d.count(".") == 1}
+        for t in sorted(toks, key=len, reverse=True):
+            if len(t) < 4:
+                continue
+            for lab in labels:
+                if t in lab and (lab.startswith(t) or lab.endswith(t) or
+                                 re.search(r"(^|[-\d])" + re.escape(t) + r"($|[-\d])", lab)):
+                    return t, b.get("name_en", t), b.get("name_ar", b.get("name_en", t))
+    return None
+
+
 def _brand_official(brand, look) -> list[str]:
     doms = list(brand.official_domains or []) if brand else []
     bid = (brand.brand_id if brand and brand.brand_id else None) or (look.brand_id if look else None)
@@ -415,6 +440,10 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
 
     if look and look.score >= 0.2 and not on_official and not brand_rule and not (big and look.score < 0.8):
         w = round(55 * look.score) if look.score >= 0.5 else round(20 * look.score)
+        tok = (look.closest_official or "").split(".")[0].lower()
+        lab = (dom.split(".")[0] if dom else "").lower()
+        if set(look.techniques or []) <= {"keyword", "combosquat"} and tok and tok in lab and                 not re.search(r"(^|[-\d])" + re.escape(tok) + r"($|[-\d])", lab) and                 not (lab.startswith(tok) or lab.endswith(tok)):
+            w = min(w, 20)  # brand token buried inside a longer word (e.g. al-mashreq-medical), weak evidence
         if sso:
             w = min(w, 15)
         tech = ", ".join(look.techniques) or "similarity"
@@ -513,6 +542,16 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             re.search(r"(^|\.)(com|net|org|gov|edu|co|ae|abudhabi|dubai)(\.|$)", sub):
         add("embedded_fake_domain", 35, f"The address starts with what looks like another website's name ({sub}), but the "
             f"real site is {dom}.", f"يبدأ العنوان بما يشبه اسم موقع آخر ({sub})، لكن الموقع الحقيقي هو {dom}.", host)
+    if shared and not gb and scope:
+        rt = _registry_token(scope)
+        if rt:
+            gb = rt[1]
+            add("brand_in_hostname", 50, f"A free hosting address uses the name of {rt[1]} ({rt[0]}), but it is not an "
+                f"official {rt[1]} website.", f"عنوان استضافة مجانية يستخدم اسم {rt[2]} ({rt[0]})، لكنه ليس موقعاً رسمياً لـ{rt[2]}.",
+                host)
+    if not on_official and re.search(r"(^|[.-])(\d{1,3})[-.](\d{1,3})[-.](\d{1,3})[-.](\d{1,3})([.-]|$)", (scope if shared else sub) or ""):
+        add("ip_in_hostname", 15, "The address embeds a raw server IP address in its name (throwaway hosting).",
+            "يتضمّن العنوان عنوان IP لخادم داخل اسمه (استضافة مؤقتة).", host)
     if shared and not gb:
         try:
             from urllib.parse import urlsplit
@@ -628,9 +667,18 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
                 f"تعذّر تحليل الصفحة ({st})؛ الحكم مبني على معلومات النطاق فقط.", st)
 
     total = BASE + sum(s.weight for s in sig)
-    if sso and not (bl or warn):
+    # third-party integrator subdomain (uaepass.<partner>.io) on an established parent, page collects no secrets
+    integrator = bool(look and "subdomain_brand" in (look.techniques or []) and not shared and sub and
+                      ((age is not None and age > 365) or tranco is not None) and not (asks & SECRETS)
+                      and not (bl or warn))
+    if integrator:
+        add("integrator_subdomain", 0, f"The brand name is only a subdomain label on an established domain ({dom}) and "
+            f"the page asks for no password, OTP or card; often a partner integration, so it is not rated a scam.",
+            f"اسم الجهة مجرد جزء فرعي على نطاق قائم منذ مدة ({dom}) والصفحة لا تطلب كلمة مرور أو رمز تحقق أو بطاقة؛ "
+            f"غالباً تكامل لشريك، لذا لا يُصنَّف احتيالاً.", host)
+    if (sso or integrator) and not (bl or warn):
         total = min(total, LIKELY - 1)
-    if brand_rule:
+    elif brand_rule:
         total = max(total, 85)
     elif bl or warn:
         total = max(total, 80)

@@ -185,3 +185,43 @@ def test_footer_link_to_official_homepage_is_not_sso(tmp_path):
                    official_domains=["sandboxbank.example"], asks_for=[])
     v = score("t22", url, [d], Intel(domain="sandbox-bank-rewards.example", age_days=3), b, None)
     assert v.label == "scam"
+
+
+def test_registry_brand_on_sslip_with_ip_is_scam():
+    url = "https://adcbupdate.6983254321app.ovinramavol.tkdev.35-204-139-184.sslip.io/"
+    d = _det(url, status="timeout")
+    v = score("t30", url, [d], Intel(domain="sslip.io", age_days=4000), None, None)
+    ids = {r.id for r in v.reasons}
+    assert {"brand_in_hostname", "ip_in_hostname"} <= ids
+    assert v.label in ("scam", "likely_scam")
+
+
+def test_brand_token_buried_in_word_is_weak():
+    url = "https://almashreqmedical.example/"
+    look = LookalikeResult(domain="almashreqmedical.example", brand_id="mashreq", closest_official="mashreq.com",
+                           techniques=["keyword", "combosquat"], score=0.85)
+    v = score("t31", url, [_det(url)], Intel(domain="almashreqmedical.example", age_days=4000), None, look)
+    lw = next(r.weight for r in v.reasons if r.id == "lookalike_domain")
+    assert lw <= 20 and v.label in ("legitimate", "suspicious")
+
+
+def _sub_look(host):
+    return LookalikeResult(domain=host, brand_id="sandbox_bank", closest_official="sandboxbank.example",
+                           techniques=["subdomain_brand"], score=0.9)
+
+
+def test_integrator_subdomain_on_established_parent_capped():
+    url = "https://sandboxbank.partnerpay.io/"
+    b = BrandMatch(brand_id="sandbox_bank", name_en="Sandbox Bank", confidence=0.8, methods=["text"],
+                   official_domains=["sandboxbank.example"], asks_for=[])
+    v = score("t40", url, [_det(url)], Intel(domain="partnerpay.io", age_days=900), b, _sub_look(url))
+    assert v.score <= 59 and v.label != "scam" and v.label != "likely_scam"
+
+
+def test_integrator_rule_keeps_young_parent_and_secret_forms():
+    url = "https://sandboxbank.partnerpay.io/"
+    v = score("t41", url, [_det(url)], Intel(domain="partnerpay.io", age_days=10), None, _sub_look(url))
+    assert v.label in ("scam", "likely_scam")
+    d = _det(url, form_fields=[FormField(name="otp", label="OTP")])
+    v2 = score("t42", url, [d], Intel(domain="partnerpay.io", age_days=900), None, _sub_look(url))
+    assert v2.label in ("scam", "likely_scam")

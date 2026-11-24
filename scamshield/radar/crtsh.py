@@ -56,15 +56,21 @@ def parse_crtsh(rows: list[dict], days: int = 30, now: Optional[datetime] = None
         nb = parse_dt(r.get("not_before"))
         if nb is None or nb < cutoff:
             continue
+        # prefer the CT-log entry time when crt.sh gives it (Let's Encrypt backdates notBefore by 1 h)
+        et = parse_dt(r.get("entry_timestamp"))
+        seen_at, basis = (et, "ct_log") if et else (nb, "not_before")
         names = split_names(r.get("name_value", "")) + split_names(r.get("common_name", ""))
         for n in dict.fromkeys(names):
             m = match_detail(n, include_fictional=include_fictional)
             if not m:
                 continue
             reg = hit_domain(m)
-            e = out.setdefault(reg, {"first_seen": nb, "hosts": [], "cert_ids": [], "issuers": [], "match": m})
-            if nb < e["first_seen"]:
-                e["first_seen"] = nb
+            e = out.setdefault(reg, {"first_seen": seen_at, "basis": basis, "cert_not_before": nb, "hosts": [],
+                                     "cert_ids": [], "issuers": [], "match": m})
+            if seen_at < e["first_seen"]:
+                e["first_seen"], e["basis"] = seen_at, basis
+            if nb < e["cert_not_before"]:
+                e["cert_not_before"] = nb
             if m["host"] not in e["hosts"]:
                 e["hosts"].append(m["host"])
             cid = r.get("id")
@@ -241,7 +247,7 @@ def hits_from_raw(days: int = 30, terms: Optional[list[str]] = None) -> list[Rad
         host = next((h for h in e["hosts"] if h == reg), None) or e["hosts"][0]
         hits.append(hit_from_match(reg, "crtsh", e["first_seen"], e["match"], extra={
             "hosts": e["hosts"][:20], "cert_ids": e["cert_ids"][:20], "issuers": e["issuers"][:5],
-            "scan_host": host, "crtsh_url": f"https://crt.sh/?id={e['cert_ids'][0]}" if e["cert_ids"] else ""}))
+            "scan_host": host, "first_seen_basis": e["basis"], "cert_not_before": e["cert_not_before"].isoformat(), "crtsh_url": f"https://crt.sh/?id={e['cert_ids'][0]}" if e["cert_ids"] else ""}))
     hits.sort(key=lambda h: h.first_seen, reverse=True)
     return hits
 

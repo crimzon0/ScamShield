@@ -58,5 +58,17 @@
   "status": "empty",
   "ts": 1795552079.8078039,
   "n": 0
+ },
+ "dubaipolice%": {
+  "term": "dubaipolice",
+  "status": "ok",
+  "ts": 1795552296.60983,
+  "n": 103
+ },
+ "adpolice%": {
+  "term": "adpolice",
+  "status": "empty",
+  "ts": 1795552314.322246,
+  "n": 0
  }
 }

@@ -223,7 +223,7 @@ async def _helpline_signals(ok: list[Detonation], brand, final: str) -> list[Sig
         from scamshield.core.domains import is_official
         from scamshield.score import BRAND_THRESHOLD
 
-        if not ok or not brand or not brand.brand_id or brand.confidence < BRAND_THRESHOLD:
+        if not ok or not brand or not brand.brand_id or brand.confidence < BRAND_THRESHOLD or                 not (set(brand.methods or []) - {"domain_keyword"}):  # needs a content-based brand claim
             return []
         if is_official(final, brand.official_domains or []):
             return []

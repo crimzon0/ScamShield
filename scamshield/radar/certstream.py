@@ -1,6 +1,6 @@
 """Live Certificate Transparency stream (certstream-server-go via docker-compose.yml).
 Matches every name of every new certificate against the watchlist, stores a RadarHit (source 'certstream',
-first_seen = leaf cert not_before, flagged_at = now) and queues it for the pipeline (3 scan workers).
+first_seen = CT log entry time `data.seen` (not_before kept in extra.cert_not_before), flagged_at = now) and queues it for the pipeline (3 scan workers).
 Auto-reconnects with exponential backoff; if the server is unreachable the status file says so and the
 collector keeps retrying (or returns when --minutes elapses). Status: data/radar/certstream_status.json."""
 from __future__ import annotations
@@ -69,7 +69,15 @@ def parse_message(msg: Any) -> list[dict]:
 def hits_from_message(msg: Any, now: Optional[datetime] = None) -> list[RadarHit]:
     out: dict[str, RadarHit] = {}
     for c in parse_message(msg):
-        fs = c["not_before"] or now or utcnow()
+        # first_seen = CT log entry time (data.seen); cert notBefore is backdated (Let's Encrypt: -1 h)
+        seen = None
+        try:
+            if isinstance(c.get("seen"), (int, float)):
+                seen = datetime.fromtimestamp(float(c["seen"]), tz=timezone.utc)
+        except Exception:
+            seen = None
+        fs = seen or c["not_before"] or now or utcnow()
+        basis = "ct_log" if seen else ("not_before" if c["not_before"] else "observed")
         for d in c["domains"]:
             m = match_detail(str(d))
             if not m:
@@ -80,7 +88,8 @@ def hits_from_message(msg: Any, now: Optional[datetime] = None) -> list[RadarHit
             out[reg] = hit_from_match(reg, "certstream", fs, m, extra={
                 "scan_host": m["host"], "hosts": [h for h in c["domains"] if isinstance(h, str)][:20],
                 "cert_index": c["cert_index"], "ct_log": c["log"], "issuers": [c["issuer"]] if c["issuer"] else [],
-                "fingerprint": c["fingerprint"]})
+                "fingerprint": c["fingerprint"], "first_seen_basis": basis,
+                "cert_not_before": c["not_before"].isoformat() if c["not_before"] else None})
     return list(out.values())
 
 

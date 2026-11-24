@@ -118,7 +118,10 @@ def test_crtsh_parsing_from_fixture():
     assert "uaepass-verify.com" in out
     e = out["uaepass-verify.com"]
     assert e["first_seen"] == datetime(2026, 11, 18, 8, 0, tzinfo=timezone.utc)  # earliest not_before
-    assert set(e["cert_ids"]) == {101, 102}
+    assert set(e["cert_ids"]) == {101, 102} and e["basis"] == "not_before"
+    rows2 = [dict(r, entry_timestamp="2026-11-18T09:30:00") for r in rows]
+    e2 = parse_crtsh(rows2, days=30, now=NOW)["uaepass-verify.com"]
+    assert e2["basis"] == "ct_log" and e2["first_seen"] == datetime(2026, 11, 18, 9, 30, tzinfo=timezone.utc)
     assert "docs.uaepass.ae" not in out and "uaepass.ae" not in out  # official
     assert "tamm-fines.top" not in out  # not_before older than 30 days
     assert "tammy-bakery.com" not in out
@@ -183,7 +186,10 @@ def test_certstream_message_parsing():
     assert len(hits) == 1
     h = hits[0]
     assert h.domain == "salik-recharge.online" and h.brand_id == "salik" and h.source == "certstream"
-    assert h.first_seen == datetime.fromtimestamp(1795540000, tz=timezone.utc)
+    # first_seen = CT log entry time (data.seen), not the backdated notBefore
+    assert h.first_seen == datetime.fromtimestamp(1795550000, tz=timezone.utc)
+    assert h.extra["first_seen_basis"] == "ct_log"
+    assert h.extra["cert_not_before"].startswith(datetime.fromtimestamp(1795540000, tz=timezone.utc).isoformat()[:19])
     assert parse_message("not json") == [] and parse_message('{"message_type":"heartbeat"}') == []
 
 
