@@ -76,7 +76,8 @@ class Intel(BaseModel):
     created: Optional[datetime] = None
     age_days: Optional[int] = None
     registrar: str = ""
-    abuse_emails: list[str] = []
+    abuse_emails: list[str] = []  # registrar abuse contacts
+    hosting_abuse_emails: list[str] = []  # IP/ASN holder abuse contacts (RDAP for the IP)
     nameservers: list[str] = []
     a_records: list[str] = []
     mx_records: list[str] = []

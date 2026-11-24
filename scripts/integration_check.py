@@ -8,7 +8,7 @@ async def main():
     for u in URLS:
         t = time.time()
         try:
-            r = await scan_url(u)
+            r = await scan_url(u, force=True)
             v = r.verdict
             d = r.detonations[0] if r.detonations else None
             print(json.dumps({"url": u, "secs": round(time.time()-t,1), "score": v.score, "label": v.label, "mode": v.mode,

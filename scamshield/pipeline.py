@@ -68,6 +68,41 @@ def _blocklist(url: str) -> list[str]:
         return []
 
 
+_FP_DIRS = ("detonate", "intel", "brand", "score")
+
+
+def pipeline_fingerprint() -> str:
+    """Hash of source mtimes of the scoring-relevant modules + registry. Cached scans are reused only when
+    the fingerprint matches (so results produced by stubs/older code are never served)."""
+    import hashlib
+    from pathlib import Path
+
+    from scamshield.core.config import settings
+
+    root = Path(__file__).resolve().parent
+    files = [root / "pipeline.py", settings.registry_path]
+    for d in _FP_DIRS:
+        files += sorted((root / d).rglob("*.py"))
+    h = hashlib.sha1()
+    for f in files:
+        try:
+            h.update(f"{f.name}:{f.stat().st_mtime_ns}:{f.stat().st_size};".encode())
+        except OSError:
+            pass
+    return h.hexdigest()[:16]
+
+
+def _transient(res: ScanResult) -> bool:
+    v = res.verdict
+    if any(r.id in ("scan_error", "scoring_error") for r in v.reasons):
+        return True
+    if v.mode == "domain_only" and (not res.detonations or any(d.status in ("timeout", "error") for d in res.detonations)):
+        return True
+    if res.intel and any(st == "unavailable" for st in (res.intel.sources or {}).values()):
+        return True
+    return False
+
+
 def _recent(url: str, ttl: int):
     try:
         row = db.connect().execute(
@@ -80,7 +115,10 @@ def _recent(url: str, ttl: int):
             created = created.replace(tzinfo=timezone.utc)
         if (datetime.now(timezone.utc) - created).total_seconds() > ttl:
             return None
-        return ScanResult.model_validate_json(row["result_json"])
+        res = ScanResult.model_validate_json(row["result_json"])
+        if db.cache_get(f"scanfp:{res.scan_id}") != pipeline_fingerprint() or _transient(res):
+            return None
+        return res
     except Exception:
         return None
 
@@ -106,6 +144,7 @@ async def scan_url(url: str, personas: tuple[str, ...] = DEFAULT_PERSONAS, save:
     if save:
         try:
             db.save_scan(res)
+            db.cache_set(f"scanfp:{res.scan_id}", pipeline_fingerprint(), ttl=max(cache_ttl, 3600))
         except Exception as e:
             log.warning("save_scan failed: %s", e)
     return res
