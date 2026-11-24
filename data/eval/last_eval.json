@@ -1,32 +1,65 @@
 {
-  "generated_at": "2026-11-24T20:03:58.115312+00:00",
+  "generated_at": "2026-11-24T20:08:49.352296+00:00",
   "dataset": "data/eval/sample.csv",
-  "n": 0,
+  "n": 127,
   "threshold": "likely_scam",
-  "tp": 0,
-  "fp": 0,
+  "tp": 59,
+  "fp": 1,
   "fn": 0,
-  "tn": 0,
-  "precision": 0.0,
-  "recall": 0.0,
-  "f1": 0.0,
-  "fpr": 0.0,
-  "accuracy": 0.0,
+  "tn": 67,
+  "precision": 0.9833,
+  "recall": 1.0,
+  "f1": 0.9916,
+  "fpr": 0.0147,
+  "accuracy": 0.9921,
   "blocklist_ignored": false,
   "official_fp": null,
-  "modes": {},
-  "labels": {},
-  "domain_only": {
-    "recall": 0.0,
-    "fpr": 0.0,
-    "n": 0
+  "modes": {
+    "full": 91,
+    "domain_only": 36
   },
-  "false_positives": [],
+  "labels": {
+    "legitimate": 67,
+    "scam": 60
+  },
+  "domain_only": {
+    "recall": 1.0,
+    "fpr": 0.0,
+    "n": 36
+  },
+  "false_positives": [
+    {
+      "url": "https://www.dubaiholding.com/",
+      "label": "scam",
+      "score": 85,
+      "reasons_en": "The page presents itself as Emirates NBD, but dubaiholding.com is not an official Emirates NBD domain. | It asks for a payment."
+    }
+  ],
   "false_negatives": [],
   "ablation_no_blocklist": {
-    "precision": 0.0,
-    "recall": 0.0,
-    "f1": 0.0,
-    "fpr": 0.0
+    "precision": 0.96,
+    "recall": 0.4068,
+    "f1": 0.5714,
+    "fpr": 0.0147
+  },
+  "ablation_no_blocklist_suspicious": {
+    "precision": 0.9688,
+    "recall": 0.5254,
+    "f1": 0.6813,
+    "fpr": 0.0147
+  },
+  "by_threshold": {
+    "likely_scam": {
+      "precision": 0.9833,
+      "recall": 1.0,
+      "f1": 0.9916,
+      "fpr": 0.0147
+    },
+    "suspicious": {
+      "precision": 0.9833,
+      "recall": 1.0,
+      "f1": 0.9916,
+      "fpr": 0.0147
+    }
   }
 }

@@ -151,6 +151,7 @@ class _Run:
         self.last_nav = time.monotonic()
         self.main_response = None
         self.notes: list[str] = []
+        self.context = None
 
     def add_hop(self, url: str, status: int | None, kind: str | None) -> None:
         self.hops.append({"url": url, "status": status, "kind": kind, "at": utcnow()})
@@ -397,7 +398,8 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
         service_workers="block", record_har_path=str(run.out_dir / "page.har"), record_har_content="omit",
         permissions=[],
     )
-    try:
+    run.context = context  # closed by detonate() outside the hard cap (closing writes the HAR)
+    if True:
         await context.add_init_script(_stealth.init_script(persona))
         page = await context.new_page()
         accept_lang = copts.get("extra_http_headers", {}).get("Accept-Language", "")
@@ -464,11 +466,6 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
                 run.notes.append("anti-bot challenge page (content hidden from scanner)")
             if re.search(r"Suspected phishing|Deceptive site ahead|Phishing site warning", det.title or "", re.I):
                 run.notes.append(f"hosting provider phishing-warning interstitial: {det.title[:80]}")
-    finally:
-        await _safe(context.close(), 4)  # writes the HAR
-        har = run.out_dir / "page.har"
-        if har.exists():
-            det.har_path = str(har)
 
 
 async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: str | None = None,
@@ -516,8 +513,21 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
                 await asyncio.wait_for(_run(run, norm, persona, PERSONA_CONFIG[persona]["referer"], budget),
                                        budget + 1.0)
             except asyncio.TimeoutError:
-                det.status = "timeout"
-                det.error = det.error or f"hard timeout after {budget:.0f}s"
+                got_page = run.main_response is not None and (
+                    det.title or det.visible_text or (run.out_dir / "screenshot.png").exists())
+                if got_page and det.status == "ok":
+                    # the document loaded and evidence was captured; only the tail of capture was cut
+                    if not det.final_url:
+                        det.final_url = run.hops[-1]["url"] if run.hops else det.url
+                    if det.http_status is None:
+                        det.http_status = run.main_response.status
+                    run.notes.append(f"capture cut short by the {budget:.0f}s time limit")
+                else:
+                    det.status = "timeout"
+                    det.error = det.error or f"hard timeout after {budget:.0f}s"
+            finally:
+                if run.context is not None:
+                    await _safe(run.context.close(), 5)
     except Exception as e:  # noqa: BLE001
         if det.status == "ok":
             det.status = "error"

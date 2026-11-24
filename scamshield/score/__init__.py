@@ -68,6 +68,8 @@ GLOBAL_BRANDS = {
     "careem": "Careem", "talabat": "talabat", "aramex": "Aramex", 
 }
 _KW_RE = re.compile("|".join(sorted(GLOBAL_BRANDS, key=len, reverse=True)))
+_TITLE_RE = re.compile(_KW_RE.pattern + "|webmail|roundcube|zimbra|outlook web|office 365|microsoft 365|"
+                       "e-?mail (login|account)|mailbox")
 HOST_BAIT = re.compile(r"login|log-in|signin|sign-in|verify|verification|secure|account|update|wallet|"
                        r"recover|unlock|billing|payment|refund|claim|bonus|giveaway|reward|helpdesk|webmail|confirm")
 NOT_FOUND_PAGE = re.compile(
@@ -393,17 +395,17 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     gb = None
     if gm and gm.group(0) not in label0.replace("-", "") or (gm and shared):
         gb = GLOBAL_BRANDS[gm.group(0)]
-        add("brand_in_hostname", 25, f"The address contains the name \"{gb}\" but is not a {gb} website ({dom}).",
+        add("brand_in_hostname", 50, f"The address contains the name \"{gb}\" but is not a {gb} website ({dom}).",
             f"يحتوي العنوان على اسم «{gb}» لكنه ليس موقعاً تابعاً لـ{gb} ({dom}).", host)
     elif gm and label0 != gm.group(0):  # combosquat in the registrable label itself, e.g. coinbase-secured.com
         gb = GLOBAL_BRANDS[gm.group(0)]
-        add("brand_in_hostname", 25, f"The domain {dom} uses the name \"{gb}\" but is not an official {gb} domain.",
+        add("brand_in_hostname", 50, f"The domain {dom} uses the name \"{gb}\" but is not an official {gb} domain.",
             f"النطاق {dom} يستخدم اسم «{gb}» لكنه ليس نطاقاً رسمياً لـ{gb}.", host)
     if not gb and not brand_rule and not established:
-        tm = _KW_RE.search(" ".join(d.title.lower() for d in ok))
+        tm = _TITLE_RE.search(" ".join(d.title.lower() for d in ok))
         if tm and (asks & SENSITIVE) and tm.group(0) not in label0:
-            gb = GLOBAL_BRANDS[tm.group(0)]
-            add("global_brand_login", 30, f"The page uses the {gb} name and asks for sensitive data, but is not on a {gb} domain.",
+            gb = GLOBAL_BRANDS.get(tm.group(0), tm.group(0).title())
+            add("global_brand_login", 40, f"The page uses the {gb} name and asks for sensitive data, but is not on a {gb} domain.",
                 f"تستخدم الصفحة اسم {gb} وتطلب بيانات حساسة، لكنها ليست على نطاق تابع لـ{gb}.", tm.group(0))
     bait = sorted(set(HOST_BAIT.findall(scope))) if not established and not on_official else []
     if bait:
@@ -412,7 +414,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
 
     sens = sorted(asks & (SENSITIVE | {"personal_info"}))
     if sens and not brand_rule:
-        w = 25 if asks & {"card", "otp", "emirates_id"} else 18 if "credentials" in asks else 8
+        young = (age is None or age < 365) and not established
+        w = (40 if young else 25) if asks & {"card", "otp", "emirates_id"} else (35 if young else 18) if "credentials" in asks else 8
         if big:
             w = 0
         if w:

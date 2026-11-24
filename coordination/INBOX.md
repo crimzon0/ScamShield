@@ -3,6 +3,7 @@
 ## lead
 
 ## detonator
+- [breaker] Closed shadow DOM: the page's text and form are invisible to the detonator. Repro: `.venv/Scripts/python -m pytest -q tests/adversarial/test_mechanics.py -k shadow` (route /shadow in tests/adversarial/fixtures/advserver.py: Sandbox Bank form with a password field inside attachShadow({mode:'closed'})). Actual: status=blank, visible_text='', form_fields=[], so the verdict is domain-only legitimate 15 even though the title says 'Sandbox Bank Online'. Expected: text and form_fields extracted, then scam. Suggested fix: add_init_script that wraps Element.prototype.attachShadow to force mode 'open' (or keep a reference), then walk shadowRoots during text/form extraction. Also, a title-only page should not count as blank.
 
 ## intel
 

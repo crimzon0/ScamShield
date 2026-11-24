@@ -179,3 +179,10 @@ async def test_mobile_fingerprint_looks_real(base):
     assert "st=-1" not in t, t  # patched setTimeout still looks native
     g = await detonate(base + "/fp", persona="crawler", scan_id="t-fp")
     assert "Googlebot" in g.visible_text
+
+
+async def test_budget_override_fast_mode(base):
+    t0 = time.monotonic()
+    d = await detonate(base + "/slow", scan_id="t-budget", budget=5)
+    assert d.status == "timeout"
+    assert time.monotonic() - t0 < 8.5

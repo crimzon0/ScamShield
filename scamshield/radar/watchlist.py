@@ -268,7 +268,12 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
     kw = [e for e in entries if e["kind"] == "keyword"]
     # longest first so the most specific term wins
     kw.sort(key=lambda e: -len(e["term"]))
+    import re as _re
+
+    cores = sorted({_squash(e["term"]) for e in kw if _squash(e["term"])}, key=len, reverse=True)
+    prefilter = _re.compile("|".join(_re.escape(c) for c in cores)) if cores else None
     return {"entries": entries, "keywords": kw, "perms": perms, "skel": skel, "official": official,
+            "prefilter": prefilter,
             "official_by_brand": official_by_brand}
 
 
@@ -301,6 +306,12 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         wl = _wl(include_fictional)
         if wl["official"] and is_official(host, wl["official"]):
             return None
+        squashed0 = _squash(host)
+        if host.isascii() and wl["prefilter"] is not None and not wl["prefilter"].search(squashed0):
+            # fast path (certstream/NRD volume): no keyword core anywhere -> only a permutation can match
+            lab0 = registrable_of(host).split(".")[0]
+            if lab0 not in wl["perms"]:
+                return None
         reg = registrable_of(host)
         label = reg.split(".")[0]
         # 1) permutation of an official registrable label (on the registrable part)

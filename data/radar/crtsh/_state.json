@@ -1,7 +1,12 @@
 {
  "emiratesnbd": {
-  "status": "error:http_404",
-  "ts": 1795550728.7546055,
+  "status": "empty",
+  "ts": 1795550711.5700793,
+  "n": 0
+ },
+ "enbd": {
+  "status": "empty",
+  "ts": 1795550841.7696269,
   "n": 0
  }
 }

@@ -12,6 +12,10 @@ Routes
   /blank                 empty body
   /huge                  ~6 MB of text followed by the phishing form
   /slow                  sleeps 60 s before answering
+  /iframe                benign shell that embeds /phish in a full-size iframe
+  /shadow                phishing form inside a closed shadow root
+  /jsdelay               benign "checking your browser" page, JS redirect to /phish after 4 s
+  /aronly                Arabic-only phishing page (brand named only as بنك التجربة)
   /shared/sandboxbank-login/   phish served under a path (shared-host-like)
 """
 from __future__ import annotations
@@ -50,6 +54,20 @@ DELAYED = """<!doctype html><html><head><meta charset="utf-8"><title>Loading...<
  document.getElementById('app').innerHTML = '<h1>Sandbox Bank - بنك التجربة</h1>' +
   '<p>Your account is suspended. Verify your account.</p>' + atob('__FORM_B64__');
 }, 3000);</script></body></html>"""
+
+SHADOW = """<!doctype html><html><head><meta charset="utf-8"><title>Sandbox Bank Online</title></head><body>
+<div id="host"></div><script>
+var r = document.getElementById('host').attachShadow({mode: 'closed'});
+r.innerHTML = '<h1>Sandbox Bank - بنك التجربة</h1>' +
+  '<p>Your account is suspended. Verify your account.</p>' + atob('__FORM_B64__');
+</script></body></html>"""
+
+ARONLY = f"""<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<title>بنك التجربة - الخدمات المصرفية عبر الإنترنت</title></head>
+<body><h1>بنك التجربة</h1><p>تم إيقاف حسابك مؤقتاً. يرجى تحديث بياناتك وإدخال رمز التحقق المرسل إلى هاتفك خلال 24 ساعة.</p>
+<form onsubmit="return false"><label>رقم الهوية الإماراتية</label><input name="eid" type="text">
+<label>كلمة المرور</label><input name="pw" type="password"><label>رمز التحقق</label><input name="code" type="text">
+<button>متابعة</button></form></body></html>"""
 
 BLANK = "<!doctype html><html><head><title></title></head><body></body></html>"
 
@@ -133,6 +151,18 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/slow":
             time.sleep(60)
             return self._send(200, BENIGN)
+        if p == "/iframe":
+            return self._send(200, "<!doctype html><html><head><meta charset='utf-8'><title>Secure portal</title></head>"
+                                   "<body style='margin:0'><iframe src='/phish' style='border:0;width:100vw;height:100vh'>"
+                                   "</iframe></body></html>")
+        if p == "/shadow":
+            return self._send(200, SHADOW.replace("__FORM_B64__", _b64_form()))
+        if p == "/jsdelay":
+            return self._send(200, "<!doctype html><html><head><title>Just a moment...</title></head><body>"
+                                   "Checking your browser before accessing the site.<script>setTimeout(function(){"
+                                   "location.href='/phish'},4000)</script></body></html>")
+        if p == "/aronly":
+            return self._send(200, ARONLY)
         return self._send(404, "<html><body>not found</body></html>")
 
 
