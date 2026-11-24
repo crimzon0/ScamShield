@@ -44,6 +44,8 @@ def main(argv=None) -> int:
     s.add_argument("--no-scan", action="store_true")
     sub.add_parser("watchlist", help="print watchlist stats")
     sub.add_parser("prune", help="drop stored hits the current matcher no longer accepts")
+    rs = sub.add_parser("rescan", help="re-scan already-scanned hits (force) with the current engine")
+    rs.add_argument("--limit", type=int, default=1000)
     sp = sub.add_parser("scan-pending", help="scan stored hits that have no scan yet")
     sp.add_argument("--limit", type=int, default=200)
     m = sub.add_parser("match")
@@ -94,6 +96,15 @@ def main(argv=None) -> int:
         todo = todo[: a.limit]
         hits = asyncio.run(scan_hits(todo))
         print(f"scanned {len(hits)} hits")
+        _print_hits(hits)
+    elif a.cmd == "rescan":
+        from scamshield.core import db
+
+        from .common import scan_hits
+
+        todo = [h for h in db.list_radar_hits(100000) if h.scan_id][: a.limit]
+        hits = asyncio.run(scan_hits(todo, force=True))
+        print(f"rescanned {len(hits)} hits")
         _print_hits(hits)
     elif a.cmd == "prune":
         from scamshield.core import db

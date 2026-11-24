@@ -47,3 +47,28 @@ Known limitations (misses without the blocklist):
 - Phishing kits that show no brand, no form and no bait words to our mobile persona (blank landing pages, gated kits).
 - Brands outside the UAE registry and the built-in global keyword list (e.g. zoom, trezor, cashapp, spotify, bbva).
 - Dead pages whose domain is registered and not new: domain-only signals alone usually reach "suspicious", not "likely".
+
+## FINAL results (2026-11-25, supersedes the table above)
+
+Code version: pipeline fingerprint `70b50785066fa4de` (score + brand + intel + detonate + registry, 33 brands).
+Commands (fresh forced scans, then re-scored with the current brand/score code, no network):
+
+    .venv/Scripts/python -m scamshield.cli.eval data/eval/sample.csv  --force --fast --concurrency 8
+    .venv/Scripts/python -m scamshield.cli.eval data/eval/holdout.csv --force --fast --concurrency 8 --no-official --out var/verdict_holdout_predictions.csv
+    .venv/Scripts/python -m scamshield.cli.eval data/eval/<set>.csv --predictions <preds.csv> --rescore --rebrand --no-official
+
+`is_scam` = scam or likely_scam unless noted. Global brand keyword list: ~140 substring + ~35 boundary-matched
+names from public brand-phishing rankings (not fitted to the held-out misses).
+
+| set | blocklist | P | R | F1 | FPR |
+|---|---|---|---|---|---|
+| **holdout (headline)** | **ignored** | **1.000** | **0.714** | **0.833** | **0.000** |
+| holdout | ignored, threshold >= suspicious | 1.000 | 0.857 | 0.923 | 0.000 |
+| holdout | used | 1.000 | 1.000 | 1.000 | 0.000 |
+| sample (tuned on) | ignored | 1.000 | 0.814 | 0.897 | 0.000 |
+| sample (tuned on) | ignored, threshold >= suspicious | 1.000 | 0.898 | 0.946 | 0.000 |
+| sample (tuned on) | used | 1.000 | 1.000 | 1.000 | 0.000 |
+
+Official domains (every non-fictional registry domain as `https://<domain>/`): **FP 0/112**.
+Domain-only subset without blocklist: holdout recall 0.455 (n=16), sample 0.826 (n=31), FPR 0 on both.
+False positives on either set: none.

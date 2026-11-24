@@ -170,6 +170,7 @@ async def test_backfill_time_to_detection_and_scan(monkeypatch, tmp_path):
     assert {h.domain for h in stored} == doms
     f = feed()
     assert f and "time_to_detection_seconds" in f[0] and f[0]["time_to_detection_human"].endswith("m")
+    assert f[0]["first_seen_basis"] == "not_before" and f[0]["ttd_measured"] is False
     # re-run keeps the original flagged_at (honest time-to-detection)
     first = {h.domain: h.flagged_at for h in stored}
     await crtsh.backfill_crtsh(days=30, scan=False, fetch=False)

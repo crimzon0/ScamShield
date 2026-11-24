@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from scamshield.core.schemas import RadarHit
 
-from .common import feed, humanize_seconds, scan_hits, store_hit, time_to_detection_seconds
+from .common import MEASURED_BASES, feed, humanize_seconds, scan_hits, store_hit, time_to_detection_seconds, ttd_measured
 from .watchlist import decode_host, match, match_detail, query_terms, skeleton, watchlist
 
 
@@ -49,4 +49,4 @@ def siblings(domain: str) -> list[dict]:
 
 __all__ = ["watchlist", "match", "match_detail", "query_terms", "decode_host", "skeleton", "backfill_crtsh",
            "run_certstream", "collect_nrd", "collect_search", "siblings", "feed", "time_to_detection_seconds",
-           "humanize_seconds", "store_hit", "scan_hits"]
+           "humanize_seconds", "store_hit", "scan_hits", "ttd_measured", "MEASURED_BASES"]

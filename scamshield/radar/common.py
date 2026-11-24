@@ -118,13 +118,19 @@ def hit_from_match(domain: str, source: str, first_seen: datetime, m: dict, extr
                     first_seen=_aware(first_seen), flagged_at=flagged_at or utcnow(), extra=ex)
 
 
-async def scan_hit(hit: RadarHit, sem: Optional[asyncio.Semaphore] = None) -> RadarHit:
+async def scan_hit(hit: RadarHit, sem: Optional[asyncio.Semaphore] = None, force: bool = False) -> RadarHit:
     """Run the hit through scamshield.pipeline.scan_url and store scan_id/score/label. Never raises."""
     async def _run():
         from scamshield.pipeline import scan_url
 
         host = hit.extra.get("scan_host") or hit.domain
-        res = await asyncio.wait_for(scan_url("https://" + host), SCAN_TIMEOUT)
+        kw = {}
+        if force:
+            import inspect
+
+            if "force" in inspect.signature(scan_url).parameters:
+                kw["force"] = True
+        res = await asyncio.wait_for(scan_url("https://" + host, **kw), SCAN_TIMEOUT)
         hit.scan_id = res.scan_id
         hit.score = res.verdict.score
         hit.label = res.verdict.label
@@ -146,9 +152,20 @@ async def scan_hit(hit: RadarHit, sem: Optional[asyncio.Semaphore] = None) -> Ra
     return store_hit(hit)
 
 
-async def scan_hits(hits: Iterable[RadarHit], concurrency: int = SCAN_CONCURRENCY) -> list[RadarHit]:
+async def scan_hits(hits: Iterable[RadarHit], concurrency: int = SCAN_CONCURRENCY,
+                    force: bool = False) -> list[RadarHit]:
     sem = asyncio.Semaphore(concurrency)
-    return list(await asyncio.gather(*(scan_hit(h, sem) for h in hits)))
+    return list(await asyncio.gather(*(scan_hit(h, sem, force=force) for h in hits)))
+
+
+MEASURED_BASES = ("ct_log", "nrd_list_date")
+
+
+def ttd_measured(hit: Any) -> bool:
+    """True only when first_seen is a measured publication time (CT log entry / NRD list date), not an
+    estimate (cert notBefore, LE-backdate adjustment, observation time)."""
+    ex = hit.get("extra", {}) if isinstance(hit, dict) else hit.extra
+    return ex.get("first_seen_basis") in MEASURED_BASES
 
 
 def feed(limit: int = 200, source: Optional[str] = None) -> list[dict]:
@@ -161,6 +178,8 @@ def feed(limit: int = 200, source: Optional[str] = None) -> list[dict]:
             d = h.model_dump(mode="json")
             d["time_to_detection_seconds"] = time_to_detection_seconds(h)
             d["time_to_detection_human"] = humanize_seconds(d["time_to_detection_seconds"])
+            d["first_seen_basis"] = h.extra.get("first_seen_basis", "not_before")
+            d["ttd_measured"] = ttd_measured(h)
             out.append(d)
             if len(out) >= limit:
                 break

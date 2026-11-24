@@ -7,3 +7,4 @@
 2026-11-25 00:28:02,068 INFO scamshield.radar certstream connected: ws://localhost:8080/
 2026-11-25 00:28:31,868 INFO scamshield.radar certstream HIT etisalat.ae.rproxy.govskope.ca term=etisalat brand=etisalat_eand
 2026-11-25 00:29:14,270 INFO scamshield.radar certstream HIT aramexservice.com term=aramex brand=aramex
+2026-11-25 00:32:22,557 INFO scamshield.radar certstream connected: ws://localhost:8080/

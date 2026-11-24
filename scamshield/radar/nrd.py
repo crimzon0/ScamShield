@@ -54,7 +54,7 @@ def match_domains(domains: Iterable[str], list_date: date) -> list[RadarHit]:
         reg = hit_domain(m)
         if reg not in hits:
             hits[reg] = hit_from_match(reg, "nrd", first_seen, m, extra={
-                "nrd_list": list_date.isoformat(), "nrd_feed": "whoisds", "scan_host": m["host"]})
+                "nrd_list": list_date.isoformat(), "nrd_feed": "whoisds", "first_seen_basis": "nrd_list_date", "scan_host": m["host"]})
     return list(hits.values())
 
 
