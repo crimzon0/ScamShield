@@ -266,3 +266,104 @@ def test_mention_only_is_not_claim():
                    evidence=["body-text mention only"], official_domains=["adcb.com"])
     v = score("t54", url, [_det(url)], Intel(domain="example.com", age_days=2000), b, None)
     assert "brand_on_unofficial_domain" not in {r.id for r in v.reasons}
+
+
+# ------------------------------------------------------------------ LLM gate (fake llm_json; offline)
+def _fake_llm(monkeypatch, brand_id, asks=("card", "otp"), conf=1.0):
+    from scamshield.core import llm as llm_mod
+    from scamshield.core.config import settings
+
+    seen = []
+
+    def fake(prompt, schema):
+        seen.append(prompt)
+        return {"brand_claimed": brand_id, "brand_id": brand_id, "asks_for": list(asks), "language": "en",
+                "confidence": conf}
+
+    monkeypatch.setattr(settings, "offline", False)
+    monkeypatch.setattr(llm_mod, "llm_available", lambda: True)
+    monkeypatch.setattr(llm_mod, "llm_json", fake)
+    return seen
+
+
+async def _llm_scan(monkeypatch, url, bid, intel, look=None, asks=("card", "otp"), **kw):
+    from scamshield.brand import match_brand
+
+    seen = _fake_llm(monkeypatch, bid, asks)
+    d = _det(url, **kw)
+    b = await match_brand(d)
+    return b, score("tl", url, [d], intel, b, look), seen
+
+
+async def test_llm_only_evidence_cannot_flag(monkeypatch):
+    # unknown site, no brand text, no forms; the (fake) LLM claims Sandbox Bank and card+OTP requests
+    url = "https://www.small-merchant.example/checkout"
+    b, v, seen = await _llm_scan(monkeypatch, url, "sandbox_bank", None,
+                                 title="Checkout", visible_text="Thank you for shopping with us.")
+    assert seen and all("<page>" in p and "</page>" in p for p in seen)
+    assert b.llm_used and "llm" in b.methods and b.brand_id == "sandbox_bank"  # LLM evidence is recorded ...
+    assert v.label == "legitimate", [(r.id, r.weight) for r in v.reasons]  # ... but cannot flag on its own
+    assert "llm_uncorroborated" in {r.id for r in v.reasons}
+    assert "brand_on_unofficial_domain" not in {r.id for r in v.reasons}
+    # the same with an LLM-only claim but an established domain
+    _, v2, _ = await _llm_scan(monkeypatch, url, "sandbox_bank", Intel(domain="small-merchant.example", age_days=3000),
+                               title="Checkout", visible_text="Thank you for shopping with us.")
+    assert v2.label == "legitimate"
+
+
+async def test_llm_brand_on_login_page_of_legit_site_not_likely_scam(monkeypatch):
+    # legit established non-registry login page (password form); LLM wrongly says it is Sandbox Bank
+    url = "https://portal.some-company.example/login"
+    _, v, _ = await _llm_scan(monkeypatch, url, "sandbox_bank", Intel(domain="some-company.example", age_days=3000),
+                              asks=("credentials", "otp"), title="Employee portal", visible_text="Sign in",
+                              form_fields=[FormField(name="username"), FormField(name="password", type="password")])
+    assert v.label not in ("scam", "likely_scam"), [(r.id, r.weight) for r in v.reasons]
+
+
+async def test_official_domain_stays_legitimate_whatever_llm_says(monkeypatch):
+    url = "https://secure.sandboxbank.example/login"
+    b, v, _ = await _llm_scan(monkeypatch, url, "sandbox_bank", None, asks=("credentials", "otp", "card"),
+                              title="Login", form_fields=[FormField(name="password", type="password")])
+    assert v.label == "legitimate" and v.score <= 10
+    # LLM claims a *different* brand on the official domain: still legitimate
+    from scamshield.brand import load_registry
+
+    other = next((x["id"] for x in load_registry() if x["id"] != "sandbox_bank" and not x.get("fictional")), None)
+    if other:
+        _, v2, _ = await _llm_scan(monkeypatch, url, other, None, asks=("card",), title="Login")
+        assert v2.label == "legitimate"
+
+
+async def test_llm_still_corroborates_independent_signals(monkeypatch):
+    # young look-alike domain with a card form: non-LLM evidence already flags it; LLM agreeing keeps it a scam
+    url = "https://sandbox-bank-login.example/verify"
+    b, v, _ = await _llm_scan(monkeypatch, url, "sandbox_bank", fixtures.intel(), fixtures.lookalike(),
+                              title="Verify your card", form_fields=[FormField(name="card", label="Card number"),
+                                                                     FormField(name="cvv", label="CVV")])
+    assert v.label == "scam" and "llm_uncorroborated" not in {r.id for r in v.reasons}
+
+
+def test_strip_llm_recovers_non_llm_brand():
+    from scamshield.score import strip_llm
+
+    b = BrandMatch(brand_id="sandbox_bank", name_en="Sandbox Bank", confidence=round(1 - 0.8 * 0.55, 3),
+                   methods=["llm", "text"], llm_used=True, asks_for=["credentials", "card"],
+                   evidence=["'Sandbox Bank' in title", "LLM: page claims to be 'Sandbox (Bank)' (1.00)",
+                             "LLM: page asks for card"])
+    s = strip_llm(b)
+    assert s.methods == ["text"] and abs(s.confidence - 0.2) < 0.01 and s.asks_for == ["credentials"]
+    assert not any(e.startswith("LLM:") for e in s.evidence) and b.methods == ["llm", "text"]  # original untouched
+    only = strip_llm(BrandMatch(brand_id="adcb", confidence=0.4, methods=["llm"], llm_used=True,
+                                evidence=["LLM: page claims to be 'ADCB' (0.90)"]))
+    assert only.brand_id is None and only.confidence == 0.0
+    plain = BrandMatch(brand_id="adcb", confidence=0.9, methods=["text"])
+    assert strip_llm(plain) is plain
+
+
+async def test_llm_cannot_raise_legit_score(monkeypatch):
+    # LLM-only brand claim on an unknown page with no other signal: no weak_brand_claim points either
+    url = "https://www.rewards-portal.example/"
+    _, v, _ = await _llm_scan(monkeypatch, url, "sandbox_bank", Intel(domain="rewards-portal.example", age_days=3000),
+                              asks=(), title="Rewards", visible_text="Earn points")
+    ids = {r.id for r in v.reasons}
+    assert v.label == "legitimate" and "weak_brand_claim" not in ids and "llm_uncorroborated" in ids

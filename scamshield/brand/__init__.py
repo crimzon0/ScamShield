@@ -82,6 +82,13 @@ async def match_brand(det: Detonation) -> BrandMatch:
         return BrandMatch(lookalike=look, evidence=[f"brand matcher error: {e}"])
 
 
+# Evidence strings that record LLM-only contributions; score.strip_llm() parses them to rebuild the
+# non-LLM BrandMatch (the LLM may corroborate a verdict, never create one on its own).
+LLM_WEIGHT = 0.45
+LLM_CLAIM_PREFIX = "LLM: page claims to be "
+LLM_ASKS_PREFIX = "LLM: page asks for "
+
+
 def _llm_signal(det: Detonation, parts: dict, brands: list[dict]) -> dict | None:
     from scamshield.core.llm import llm_available, llm_json
 
@@ -193,19 +200,21 @@ async def _match_brand(det: Detonation) -> BrandMatch:
 
     # LLM (optional; None without key)
     llm_used = False
+    llm_asks: list[str] = []  # asks found ONLY by the LLM (recorded so scoring can discount LLM-only evidence)
     llm = await asyncio.to_thread(_llm_signal, det, parts, brands) if not settings.offline else None
     if llm:
         llm_used = True
         for a in llm.get("asks_for") or []:
             if a not in asks:
                 asks.append(a)
+                llm_asks.append(a)
         if llm.get("brand_id"):
             bid = llm["brand_id"]
-            w = 0.45 * llm["confidence"]
+            w = LLM_WEIGHT * llm["confidence"]
             r = scored.setdefault(bid, {"id": bid, "confidence": 0.0, "methods": [], "evidence": [], "hits": 0})
             r["confidence"] = round(1 - (1 - r["confidence"]) * (1 - w), 3)
             r["methods"] = sorted(set(r["methods"]) | {"llm"})
-            r["evidence"].append(f"LLM: page claims to be '{llm.get('brand_claimed')}' ({llm['confidence']:.2f})")
+            r["evidence"].append(f"{LLM_CLAIM_PREFIX}'{llm.get('brand_claimed')}' ({llm['confidence']:.2f})")
             r["hits"] += 1
 
     # domain keyword (from lookalike) as weak brand evidence
@@ -241,16 +250,17 @@ async def _match_brand(det: Detonation) -> BrandMatch:
         if len(ranked) > 1:
             chosen["evidence"] = chosen["evidence"] + [f"runner-up: {ranked[1]['id']} ({ranked[1]['confidence']:.2f})"]
 
+    llm_ev = [LLM_ASKS_PREFIX + ", ".join(llm_asks)] if llm_asks else []
     if chosen is None:
         return BrandMatch(asks_for=asks, lookalike=look, llm_used=llm_used,
-                          evidence=[r["evidence"][0] for r in ranked[:2] if r["evidence"]])
+                          evidence=[r["evidence"][0] for r in ranked[:2] if r["evidence"]] + llm_ev)
     if challenge_from:
         chosen["evidence"] = list(chosen["evidence"]) + [f"final host is a bot-challenge page reached from official {host_of(url)}"]
     b = get_brand(chosen["id"]) or {}
     off = list(b.get("official_domains", []))
     return BrandMatch(
         brand_id=chosen["id"], name_en=b.get("name_en", ""), name_ar=b.get("name_ar", ""),
-        confidence=float(chosen["confidence"]), methods=list(chosen["methods"]), evidence=list(chosen["evidence"]),
+        confidence=float(chosen["confidence"]), methods=list(chosen["methods"]), evidence=list(chosen["evidence"]) + llm_ev,
         official_domains=off, is_official_domain=bool(url) and is_official(url, off),
         asks_for=asks, lookalike=look, llm_used=llm_used,
     )

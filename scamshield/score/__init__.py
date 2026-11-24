@@ -301,6 +301,38 @@ ASK_AR = {"credentials": "بيانات الدخول", "card": "بيانات ال
           "emirates_id": "رقم الهوية الإماراتية", "payment": "دفع مبلغ", "personal_info": "معلومات شخصية"}
 
 
+# ------------------------------------------------------------------ LLM gate
+_LLM_CONF_RE = re.compile(r"\((\d(?:\.\d+)?)\)\s*$")
+
+
+def strip_llm(brand: Optional[BrandMatch]) -> Optional[BrandMatch]:
+    """The BrandMatch as it would be without the LLM (brand confidence, methods and asks found only by the LLM
+    removed). Returns the same object when the LLM contributed nothing."""
+    if not brand or not brand.llm_used:
+        return brand
+    from scamshield.brand import LLM_ASKS_PREFIX, LLM_CLAIM_PREFIX, LLM_WEIGHT
+
+    ev = list(brand.evidence or [])
+    claim = [e for e in ev if (e or "").startswith(LLM_CLAIM_PREFIX)]
+    llm_asks = {a.strip() for e in ev if (e or "").startswith(LLM_ASKS_PREFIX)
+                for a in e[len(LLM_ASKS_PREFIX):].split(",") if a.strip()}
+    in_methods = "llm" in (brand.methods or [])
+    if not claim and not llm_asks and not in_methods:
+        return brand
+    upd: dict = {"evidence": [e for e in ev if e not in claim and not (e or "").startswith(LLM_ASKS_PREFIX)],
+                 "asks_for": [a for a in brand.asks_for or [] if a not in llm_asks]}
+    if in_methods:
+        conf = brand.confidence
+        m = _LLM_CONF_RE.search(claim[0]) if claim else None
+        w = LLM_WEIGHT * float(m.group(1)) if m else LLM_WEIGHT
+        conf = max(0.0, 1 - (1 - conf) / (1 - w)) if w < 1 else 0.0
+        methods = [x for x in brand.methods if x != "llm"]
+        upd.update(methods=methods, confidence=round(conf, 3))
+        if not methods and not brand.is_official_domain:  # brand attributed by the LLM alone
+            upd.update(brand_id=None, name_en="", name_ar="", official_domains=[], confidence=0.0)
+    return brand.model_copy(update=upd)
+
+
 # ------------------------------------------------------------------ main
 def score(scan_id: str, url: str, dets: list[Detonation], intel: Intel | None, brand: BrandMatch | None,
           look: LookalikeResult | None, cloak: CloakDiff | None = None,
@@ -318,7 +350,23 @@ def score(scan_id: str, url: str, dets: list[Detonation], intel: Intel | None, b
             v = _score(scan_id, url, fake, input_intel, None, input_look, cloak, (extra or []) + [b])
             v.final_url = _pick_final(url, dets)
             return v
-        return _score(scan_id, url, dets, intel, brand, look, cloak, extra or [])
+        v = _score(scan_id, url, dets, intel, brand, look, cloak, extra or [])
+        base_brand = strip_llm(brand)
+        if base_brand is brand:
+            return v
+        # LLM gate: the LLM may only corroborate. If the verdict without any LLM evidence is 'legitimate',
+        # the LLM can neither flag the page (suspicious / likely_scam / scam) nor raise its score on its own.
+        base = _score(scan_id, url, dets, intel, base_brand, look, cloak, extra or [])
+        if base.label != "legitimate" or v.score <= base.score:
+            return v
+        base.reasons.append(Signal(
+            id="llm_uncorroborated", weight=0,
+            en="The AI model suggested a brand claim or sensitive-data request, but no independent signal "
+               "(domain, form, age, visuals, cloaking) confirms it, so it is not counted.",
+            ar="أشار نموذج الذكاء الاصطناعي إلى ادعاء علامة تجارية أو طلب بيانات حساسة، لكن لا يوجد مؤشر مستقل "
+               "(النطاق أو النموذج أو العمر أو الشكل أو الإخفاء) يؤكد ذلك، لذا لم يُحتسب.",
+            ev="; ".join(e for e in brand.evidence or [] if (e or "").startswith("LLM:"))[:300]))
+        return base
     except Exception as e:  # never raise
         return Verdict(scan_id=scan_id, url=url, final_url=url, registrable_domain=_safe_reg(url), score=50,
                        label="suspicious", mode="domain_only",
