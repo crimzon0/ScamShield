@@ -320,6 +320,8 @@ def helpline(limit: int = 500):
     names = {b["id"]: {"name_en": b.get("name_en", ""), "name_ar": b.get("name_ar", "")} for b in _registry()}
     out = []
     for f in db.list_phone_findings(limit=max(1, min(limit, 2000))):
+        if isinstance(f.found_at, str):  # db.list_phone_findings assigns the raw ISO string
+            f.found_at = _parse_dt(f.found_at) or _now()
         d = _dump(f)
         d.update({"brand_" + k: v for k, v in names.get(f.brand_id, {}).items()})
         out.append(d)
