@@ -1,0 +1,850 @@
+[
+ {
+  "url": "https://allegro.aukcja316.shop/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:56:36+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://smbac-japanlogincheck.index0001.wanghengduiyu.com/U94Nhi7ItBcob7ICiqRyvCx1HQTL7bgENpu3H5eTU22Lj9p52",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:29.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "404 Not Found",
+  "prio": 1
+ },
+ {
+  "url": "http://allegrolokalnie.id-hjjfk5as78jg.rest",
+  "source": "phishtank",
+  "first_published": "2026-11-24T21:02:27+00:00",
+  "basis": "feed_timestamp:submission_time",
+  "target": "Allegro",
+  "prio": 1
+ },
+ {
+  "url": "http://sp28ct11-lazkaro-biz.pages.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T20:57:33.481Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "meta",
+  "prio": 1
+ },
+ {
+  "url": "https://olx.shslpskl.top/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:56:39+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://zedelivery-desconto.vercel.app/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:41.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "Z\u00e9 Delivery - Link Exclusivo",
+  "prio": 1
+ },
+ {
+  "url": "http://allegro.pl-oferta9845654.shop",
+  "source": "phishtank",
+  "first_published": "2026-11-24T21:03:17+00:00",
+  "basis": "feed_timestamp:submission_time",
+  "target": "Allegro",
+  "prio": 1
+ },
+ {
+  "url": "https://sp28ct11-ravkaro-biz.pages.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T20:57:50.535Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "meta",
+  "prio": 1
+ },
+ {
+  "url": "https://allegro.oferta-9514.sbs",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:46.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "http://allegro.id-hjjfk5as78jg.rest",
+  "source": "phishtank",
+  "first_published": "2026-11-24T21:06:26+00:00",
+  "basis": "feed_timestamp:submission_time",
+  "target": "Allegro",
+  "prio": 1
+ },
+ {
+  "url": "https://phantom-wallet.cf911a931df2b26448.workers.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T20:57:55.337Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-phantom",
+  "prio": 1
+ },
+ {
+  "url": "https://olx.kupuje.sbs/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:50.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "Suspected Phishing | Cloudflare",
+  "prio": 1
+ },
+ {
+  "url": "https://jurnper.exchange/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:02:56.788Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-jumperexchange",
+  "prio": 1
+ },
+ {
+  "url": "https://allegro.id-ungfjh4kf9zf.rest/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:58.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "Suspected Phishing | Cloudflare",
+  "prio": 1
+ },
+ {
+  "url": "http://sp28ct11-vemzuni-biz.pages.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:03:22.074Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "meta",
+  "prio": 1
+ },
+ {
+  "url": "https://citas.sre.gob.mx.requisi.to/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:01:06.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "M\u00e9xico Local+ \u2014 Plataforma de Informaci\u00f3n Ciudadana",
+  "prio": 1
+ },
+ {
+  "url": "https://sp28ct11-vazmelo-biz.pages.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:03:35.642Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "meta",
+  "prio": 1
+ },
+ {
+  "url": "https://allegro.ofartaa-944312.top",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:01:16.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://s0lscan.github.io/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:05:27.059Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-solscan",
+  "prio": 1
+ },
+ {
+  "url": "https://att-103444-106506.square.site/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:01:19.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "Att-Home | AT&T",
+  "prio": 1
+ },
+ {
+  "url": "http://google-marbleshine.ca/__MACOSX/fb-marbleshine/wp-includes/Requests/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:07:39.386Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://ze-delivery-shop.vercel.app/",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:01:36.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "Z\u00e9 Delivery  - Fa\u00e7a seu pedido!",
+  "prio": 1
+ },
+ {
+  "url": "http://google-marbleshine.ca.marlucorp.ca/__MACOSX/fb-marbleshine/wp-includes/Requests/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:07:51.433Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://v2-velodrome.com-walletconnect.workers.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:08:24.119Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-velodrome",
+  "prio": 1
+ },
+ {
+  "url": "https://matadorbet830.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:11:40.690Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-impersonation",
+  "prio": 1
+ },
+ {
+  "url": "https://apps-trexorcdn.zite.so/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:12:39.108Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://exod-apps-web.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:13:35.203Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-exodus",
+  "prio": 1
+ },
+ {
+  "url": "http://usaa.professionaldocumentservicesinc.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:13:39.155Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "usaa",
+  "prio": 1
+ },
+ {
+  "url": "https://torndao.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:14:49.583Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-tornadocash",
+  "prio": 1
+ },
+ {
+  "url": "https://rabby-wallet.cf8ab0ef35ac38292e.workers.dev/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:17:47.902Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-rabbywallet",
+  "prio": 1
+ },
+ {
+  "url": "http://dev.scotiabankrewards.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:18:37.357Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://ssosigninattcomilogin2s2sbq.cyrdomaincertificate.workers.dev/home.php",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:20:27.280Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://trezo-started.teleporthq.app/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:23:20.552Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://aerodrome.finance-v2.ink/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:26:37.275Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-aerodrome",
+  "prio": 1
+ },
+ {
+  "url": "https://trezor-app.net/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:26:51.492Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://ganobet389.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:32:18.131Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-impersonation",
+  "prio": 1
+ },
+ {
+  "url": "http://zoom-zoom-eng-prod-us01.us-east-1.aws.snowflake.app/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:33:31.712Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "zoom",
+  "prio": 1
+ },
+ {
+  "url": "https://solscan0.github.io/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:36:46.519Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-solscan",
+  "prio": 1
+ },
+ {
+  "url": "http://mailserver.usaaxa.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:38:36.899Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "usaa",
+  "prio": 1
+ },
+ {
+  "url": "https://changenow-ex.org/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:38:50.738Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-changenow",
+  "prio": 1
+ },
+ {
+  "url": "https://matadorbet875.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:41:40.974Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-impersonation",
+  "prio": 1
+ },
+ {
+  "url": "https://trezorsuite.im/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:42:52.885Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "http://scotiabankclientrecovery.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:43:16.883Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://fixedfloat.io-swap.ink/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:44:07.466Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-fixedfloat",
+  "prio": 1
+ },
+ {
+  "url": "http://sberbank.pochtabank.prod2.usaaxa.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:45:32.553Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "usaa",
+  "prio": 1
+ },
+ {
+  "url": "https://swap-aerodrome.finance-v2.ink/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:47:09.606Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-aerodrome",
+  "prio": 1
+ },
+ {
+  "url": "https://ref4-sx.me/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:48:34.044Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-stealthex",
+  "prio": 1
+ },
+ {
+  "url": "https://suite-trezo.teleporthq.app/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:51:17.769Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://bowinguphere.shop/img/IdqrJfweTzhF3tSg",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:22.455Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://bowinguphere.shop/img/k8Lt9k0nU3BtXSVJ",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:23.778Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://changenow-trx.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:57:58.299Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-changenow",
+  "prio": 1
+ },
+ {
+  "url": "https://tornadomix.link/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:58:37.529Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-tornadocash",
+  "prio": 1
+ },
+ {
+  "url": "https://appslestore.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:59:06.735Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-ledger",
+  "prio": 1
+ },
+ {
+  "url": "https://trezor-suite-web.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:04:23.767Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://rc-attractivite.fr/login",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:04:31.932Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://tronscan-trx.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:05:36.081Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-tronscan",
+  "prio": 1
+ },
+ {
+  "url": "http://mlg-applec-hepl.vip/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:07:01.580Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 1
+ },
+ {
+  "url": "https://trust-dapp.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:07:12.883Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trustwallet",
+  "prio": 1
+ },
+ {
+  "url": "http://i-zoom-meetings.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:08:36.232Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "zoom",
+  "prio": 1
+ },
+ {
+  "url": "https://trezor-app-login.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:10:06.463Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-trezor",
+  "prio": 1
+ },
+ {
+  "url": "https://changenow-xmr.org/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:10:40.042Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "brand-changenow",
+  "prio": 1
+ },
+ {
+  "url": "https://oakterranest.com/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:07:15+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://prime-assistance.com/?campaign=backupz",
+  "source": "phishstats",
+  "first_published": "2026-11-24T22:00:26.000Z",
+  "basis": "feed_timestamp:date",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://abawuku.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:00:17.890Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://madriopzio.store/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:18:10+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://ulocuku.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:00:54.955Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://truly0-nisi31.cfd/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:18:12+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://telglconm.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:01:06.645Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://bellymybd.com/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:33:33+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://robinhoodtradesignals.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:08:33.716Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://cedarandgraincraft.com/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:33:34+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://telelsek.sbs/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:09:34.279Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://grugncarbo.store/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:33:35+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://v8turbo.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:11:53.394Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://aukcja316.shop/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:56:37+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://teleblnf.sbs/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:13:53.156Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://retitspizz.store/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:56:38+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://graceharborltd.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:16:15.977Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://61fc1343.doreenfroehlich.com/",
+  "source": "cert.pl",
+  "first_published": "2026-11-24T21:58:35+00:00",
+  "basis": "feed_timestamp:InsertDate",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://loravinsaat.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:21:57.817Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://bnmqw.top/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:30:24.349Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://gbnhy.top/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:30:34.849Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://cvfrt.top/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:30:35.135Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://ksisupport.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:30:58.717Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://lzxcv.top/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:31:57.686Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://sgroshi.com.ua/kabinet?landint=https%3A%2F%2Fgroshitut.uno%2F&partner=salesdoubler&subpartner=061379&utm_source=salesdoubler&utm_medium=cps_st&utm_term=061379&offer=st&clickid=838642970&utm_content=https%3A%2F%2Fcreditum.com.ua%2F",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:32:45.846Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://nxt.nine.ath.cx/login",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:34:55.071Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://telelfpc.sbs/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:43:58.378Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://cerosop.top/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:44:28.084Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://msintunes.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:47:31.853Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://adecco-id-job.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:51:52.275Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://folioscope.tech/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:51:55.624Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://releae.ezgateway.net/op/4623_md/81/234/55/129/282086",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:07.688Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://www.laboscos.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:15.099Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://usgo.kozow.com/op/4623_md/81/229/55/129/90739",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:17.698Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://www.akvacher.com/27RQPKW4/7MHN1FHK/?sub1=55&amp;sub2=R_28_36_56896&amp;sub3=56896_7641070_36_md",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:39.444Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://account.xn--schwabenbhne-llb.de/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:40.899Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://mhxme.com/5PtJZK37938NChC211mlhebzfigj216VIBVPOVAEYXIDJW149109RHCR5556m5",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:44.273Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://juroerary.net/redirect.html?od=1syq6b0354990ed00_vl_Elitevl_1r0d.42mrxv.C0000rfy27i353b011_x42268.fy27iMXdqenotMmtqbGI1Zw0s5tng",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:44.887Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://new235.shop/track/3XkOdk8617oSGB150pedmgnmxyn113HLALIPPRKJJYHKM180905DQYH18764l1",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:45.261Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://doodletoss.com/4GYOqn38649aEtQ170tkkvsppojw216EIZFZVDCRWTEUVJ149109TBUY6226Y5",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:53.986Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://doodletoss.com/4NjoOT38649wdOZ170ggmfqnptkg216TAXHPOYSCDNPCHR149109EXFQ6226G5",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:54:55.515Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "https://mhxme.com/4GjnNy37938yuiA211lckboqlusf216UGBQBJWUIPMUDEX149109AJKL5556o5",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:55:04.568Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://usasurplusstore.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:56:18.232Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://w-op.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T21:58:52.145Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ },
+ {
+  "url": "http://company-robinhood.com/",
+  "source": "urlscan",
+  "first_published": "2026-11-24T22:00:49.397Z",
+  "basis": "feed_timestamp:task.time",
+  "target": "",
+  "prio": 2
+ }
+]

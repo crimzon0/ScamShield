@@ -1,0 +1,188 @@
+[
+ {
+  "url": "https://www.rakbank.ae/en/help-centre/support/faqs",
+  "org": "https://www.rakbank.ae",
+  "status": 200,
+  "final": "https://www.rakbank.ae/en/help-centre/support/faqs"
+ },
+ {
+  "url": "https://www.rakbank.ae/en/everyday-banking/send-pay/money-transfer",
+  "org": "https://www.rakbank.ae",
+  "status": 200,
+  "final": "https://www.rakbank.ae/en/everyday-banking/send-pay/money-transfer"
+ },
+ {
+  "url": "https://www.rakbank.ae/en/digital-banking/get-started/card-activation",
+  "org": "https://www.rakbank.ae",
+  "status": 200,
+  "final": "https://www.rakbank.ae/en/digital-banking/get-started/card-activation"
+ },
+ {
+  "url": "https://dubaipolice.gov.ae/app/services/fine-payment",
+  "org": "https://www.dubaipolice.gov.ae",
+  "status": 200,
+  "final": "https://www.dubaipolice.gov.ae/app/services/fine-payment"
+ },
+ {
+  "url": "https://dubaipolice.gov.ae/app/home/information/view-black-points-traffic-violations",
+  "org": "https://www.dubaipolice.gov.ae",
+  "status": 200,
+  "final": "https://www.dubaipolice.gov.ae/app/home/information/view-black-points-traffic-violations"
+ },
+ {
+  "url": "https://dubaipolice.gov.ae/app/home/aboutus/customer-service-agreement",
+  "org": "https://www.dubaipolice.gov.ae",
+  "status": 200,
+  "final": "https://www.dubaipolice.gov.ae/app/home/aboutus/customer-service-agreement"
+ },
+ {
+  "url": "https://moi.gov.ae/en/e-services/optional-services",
+  "org": "https://www.moi.gov.ae",
+  "status": 200,
+  "final": "https://moi.gov.ae/en/e-services/optional-services"
+ },
+ {
+  "url": "https://moi.gov.ae/en/about-moi/emergency-contacts",
+  "org": "https://www.moi.gov.ae",
+  "status": 200,
+  "final": "https://moi.gov.ae/en/about-moi/emergency-contacts"
+ },
+ {
+  "url": "https://mohre.gov.ae/en/about-us/mohre-minister/contact-minister",
+  "org": "https://www.mohre.gov.ae",
+  "status": 200,
+  "final": "https://mohre.gov.ae/en/about-us/mohre-minister/contact-minister"
+ },
+ {
+  "url": "https://mohre.gov.ae/en/about-us/policies-and-conditions/uae-government-charter-for-future-services",
+  "org": "https://www.mohre.gov.ae",
+  "status": 200,
+  "final": "https://mohre.gov.ae/en/about-us/policies-and-conditions/uae-government-charter-for-future-services"
+ },
+ {
+  "url": "https://mohre.gov.ae/en/media-center/news/23/11/2019/domestic-workers-over-60-years-to-get-employment-contracts-renewed",
+  "org": "https://www.mohre.gov.ae",
+  "status": 200,
+  "final": "https://mohre.gov.ae/en/media-center/news/23/11/2019/domestic-workers-over-60-years-to-get-employment-contracts-renewed"
+ },
+ {
+  "url": "https://www.du.ae/personal/support/articledetail?artid=PROD-16742&amp;lang=en-US",
+  "org": "https://www.du.ae",
+  "status": 200,
+  "final": "https://www.du.ae//personal/support/articledetail?artid=PROD-16742&lang=en-US"
+ },
+ {
+  "url": "https://www.du.ae/personal/mobile/pay-with-du/samsung-apps",
+  "org": "https://www.du.ae",
+  "status": 200,
+  "final": "https://www.du.ae/personal/mobile/pay-with-du"
+ },
+ {
+  "url": "https://www.du.ae/myaccount",
+  "org": "https://www.du.ae",
+  "status": 200,
+  "final": "https://www.du.ae/myaccount"
+ },
+ {
+  "url": "https://dha.gov.ae/en/aboutus/customerHappinessCharter",
+  "org": "https://www.dha.gov.ae",
+  "status": 200,
+  "final": "https://dha.gov.ae/en/aboutus/customerHappinessCharter"
+ },
+ {
+  "url": "https://dha.gov.ae/en/contactus",
+  "org": "https://www.dha.gov.ae",
+  "status": 200,
+  "final": "https://dha.gov.ae/en/contactus"
+ },
+ {
+  "url": "https://www.emirates.com/english/login/sitemap-login-1.xml",
+  "org": "https://www.emirates.com",
+  "status": 200,
+  "final": "https://www.emirates.com/english/login/sitemap-login-1.xml"
+ },
+ {
+  "url": "https://www.emirates.com/english/help/sitemap-help-1.xml",
+  "org": "https://www.emirates.com",
+  "status": 200,
+  "final": "https://www.emirates.com/english/help/sitemap-help-1.xml"
+ },
+ {
+  "url": "https://www.emirates.com/english/manage-booking/sitemap-manage-booking-1.xml",
+  "org": "https://www.emirates.com",
+  "status": 200,
+  "final": "https://www.emirates.com/english/manage-booking/sitemap-manage-booking-1.xml"
+ },
+ {
+  "url": "https://www.etihad.com/en/offers/promotion/exclusive-offer-for-hsbc-tw-card-holders/bin",
+  "org": "https://www.etihad.com",
+  "status": 200,
+  "final": "https://www.etihad.com/en/offers/promotion/exclusive-offer-for-hsbc-tw-card-holders/bin"
+ },
+ {
+  "url": "https://www.etihad.com/en/etihadguest/our-partners/cars-and-hotels/booking-com",
+  "org": "https://www.etihad.com",
+  "status": 200,
+  "final": "https://www.etihad.com/en/etihadguest/our-partners/cars-and-hotels/booking-com"
+ },
+ {
+  "url": "https://www.etihad.com/en/etihadguest/login",
+  "org": "https://www.etihad.com",
+  "status": 200,
+  "final": "https://www.etihad.com/en/etihadguest/login"
+ },
+ {
+  "url": "https://www.flydubai.com/en/book-and-manage/book-and-manage/",
+  "org": "https://www.flydubai.com",
+  "status": 200,
+  "final": "https://www.flydubai.com/en/book-and-manage/book-and-manage/"
+ },
+ {
+  "url": "https://www.flydubai.com/en/flying-with-us/visas-and-passports/",
+  "org": "https://www.flydubai.com",
+  "status": 200,
+  "final": "https://www.flydubai.com/en/flying-with-us/visas-and-passports/"
+ },
+ {
+  "url": "https://www.flydubai.com/en/flying-with-us/ways-to-pay/",
+  "org": "https://www.flydubai.com",
+  "status": 200,
+  "final": "https://www.flydubai.com/en/flying-with-us/ways-to-pay/"
+ },
+ {
+  "url": "https://www.aramex.com/track/shipments",
+  "org": "https://www.aramex.com",
+  "status": 200,
+  "final": "https://www.aramex.com/ae/en/track/shipments"
+ },
+ {
+  "url": "https://www.aramex.com/solutions-services/records-management",
+  "org": "https://www.aramex.com",
+  "status": 404,
+  "final": "https://www.aramex.com/solutions-services/records-management"
+ },
+ {
+  "url": "https://www.aramex.com/support/customer-support",
+  "org": "https://www.aramex.com",
+  "status": 200,
+  "final": "https://www.aramex.com/ae/en/support/help-center"
+ },
+ {
+  "url": "https://www.adpolice.gov.ae/en/Customer-Happiness-Charter",
+  "org": "https://adpolice.gov.ae",
+  "status": 200,
+  "final": "https://www.adpolice.gov.ae/en/Customer-Happiness-Charter"
+ },
+ {
+  "url": "https://www.adpolice.gov.ae/en/ContactUs",
+  "org": "https://adpolice.gov.ae",
+  "status": 200,
+  "final": "https://www.adpolice.gov.ae/en/ContactUs"
+ },
+ {
+  "url": "https://www.adpolice.gov.ae/en/Media-Center/News/2021/06/17/11-Thousand-Benefit-from-Traffic-Awareness-Programs-in-Al-Ain-in-3-Months",
+  "org": "https://adpolice.gov.ae",
+  "status": 200,
+  "final": "https://www.adpolice.gov.ae/en/Media-Center/News/2021/06/17/11-Thousand-Benefit-from-Traffic-Awareness-Programs-in-Al-Ain-in-3-Months"
+ }
+]

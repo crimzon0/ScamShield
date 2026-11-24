@@ -1,0 +1,410 @@
+[
+ {
+  "url": "https://www.emiratesnbd.com/en/accounts",
+  "org": "emirates_nbd",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.emiratesnbd.com/en/accounts",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratesnbd.com/en/loans",
+  "org": "emirates_nbd",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.emiratesnbd.com/en/loans",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratesnbd.com/en/priority-banking/wealth-management-solutions",
+  "org": "emirates_nbd",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.emiratesnbd.com/en/priority-banking/wealth-management-solutions",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.bankfab.com/en-ae/contact-us",
+  "org": "fab",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.bankfab.com/en-ae/contact-us",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.bankfab.com/en-ae/personal/loans/personal-loans/personal-loan",
+  "org": "fab",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.bankfab.com/en-ae/personal/loans/personal-loans/personal-loan",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.bankfab.com/en-ae/personal/promotions/cashback-credit-card-amazon-gift-card",
+  "org": "fab",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.bankfab.com/en-ae/personal/promotions/cashback-credit-card-amazon-gift-card",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.mashreq.com/en/uae/customer-care/",
+  "org": "mashreq",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.mashreq.com/en/uae/customer-care/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.mashreq.com/en/uae/neo/accounts/",
+  "org": "mashreq",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.mashreq.com/en/uae/neo/accounts/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.mashreq.com/en/uae/neo/loans/",
+  "org": "mashreq",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.mashreq.com/en/uae/neo/loans/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.liv.me/en/accounts/account",
+  "org": "liv",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.liv.me/en/accounts/account",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.liv.me/en/personal-loan",
+  "org": "liv",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.liv.me/en/personal-loan",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.liv.me/en/remittances-and-payments",
+  "org": "liv",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.liv.me/en/remittances-and-payments",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratesislamic.ae/en/help-and-support",
+  "org": "emirates_islamic",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.emiratesislamic.ae/en/help-and-support",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://business.emiratesislamic.ae/login",
+  "org": "emirates_islamic",
+  "category": "bank",
+  "status": 200,
+  "final": "https://business.emiratesislamic.ae/login",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratesislamic.ae/en/accounts",
+  "org": "emirates_islamic",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.emiratesislamic.ae/en/accounts",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.dib.ae/about-us/contact-us",
+  "org": "dubai_islamic_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.dib.ae/about-us/contact-us",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.dib.ae/personal/accounts",
+  "org": "dubai_islamic_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.dib.ae/personal/accounts",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.dib.ae/personal/manage-your-wealth/wajaha-private-banking",
+  "org": "dubai_islamic_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.dib.ae/personal/manage-your-wealth/wajaha-private-banking",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.adib.ae/en/personal/accounts",
+  "org": "adib",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.adib.ae/en/personal/accounts",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.adib.ae/en/personal/cards/aldar-cards",
+  "org": "adib",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.adib.ae/en/personal/cards/aldar-cards",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.adib.ae/en/personal/wealth-management",
+  "org": "adib",
+  "category": "bank",
+  "status": 200,
+  "final": "https://www.adib.ae/en/personal/wealth-management",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.cbd.ae/general/contact-us",
+  "org": "cbd",
+  "category": "bank",
+  "status": 403,
+  "final": "https://www.cbd.ae/general/contact-us",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://wio.io/support?from=personal",
+  "org": "wio_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://wio.io/support?from=personal",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://wio.io/manage",
+  "org": "wio_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://wio.io/manage",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://wio.io/loans",
+  "org": "wio_bank",
+  "category": "bank",
+  "status": 200,
+  "final": "https://wio.io/loans",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://adpolice.gov.ae/ContactUs",
+  "org": "abu_dhabi_police",
+  "category": "government",
+  "status": 200,
+  "final": "https://adpolice.gov.ae/ContactUs",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://icp.gov.ae/services/interactive-services/",
+  "org": "icp",
+  "category": "government",
+  "status": 200,
+  "final": "https://icp.gov.ae/services/interactive-services/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://icp.gov.ae/digital-participation/contact-dg/",
+  "org": "icp",
+  "category": "government",
+  "status": 200,
+  "final": "https://icp.gov.ae/digital-participation/contact-dg/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://afkar.icp.gov.ae/frmLogin.aspx",
+  "org": "icp",
+  "category": "government",
+  "status": 200,
+  "final": "https://afkar.icp.gov.ae/frmLogin.aspx",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://u.ae/en/Help",
+  "org": "uae_gov_portal",
+  "category": "government",
+  "status": 200,
+  "final": "https://u.ae/en/Help",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://u.ae/en/information-and-services/jobs/Find-a-job/eservices-for-jobs",
+  "org": "uae_gov_portal",
+  "category": "government",
+  "status": 200,
+  "final": "https://u.ae/en/information-and-services/jobs/Find-a-job/eservices-for-jobs",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://u.ae/en/information-and-services/jobs/Sector-of-employment/employment-in-the-private-sector/payment-of-wages",
+  "org": "uae_gov_portal",
+  "category": "government",
+  "status": 200,
+  "final": "https://u.ae/en/information-and-services/jobs/Sector-of-employment/employment-in-the-private-sector/payment-of-wages",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.dm.gov.ae/help-and-support/",
+  "org": "dubai_municipality",
+  "category": "government",
+  "status": 200,
+  "final": "https://www.dm.gov.ae/help-and-support/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.dm.gov.ae/leasing-properties-renewing-contracts/",
+  "org": "dubai_municipality",
+  "category": "government",
+  "status": 200,
+  "final": "https://www.dm.gov.ae/leasing-properties-renewing-contracts/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://hub.dm.gov.ae/openid/login?usertype=dm_external&locale=en&challenge=2f02",
+  "org": "dubai_municipality",
+  "category": "government",
+  "status": 200,
+  "final": "https://sso.dm.gov.ae/oxauth/authorize.htm?ui_locales=en&scope=openid+profile+email+dubai_municipality+dm_roles&acr_values=dm_external&response_type=code&challenge=2f02&redirect_uri=https%3A%2F%2Fhub.dm.gov.ae%2Fopenid%2Fappcallback&state=0807edf7d85e5d&nonce=n-0S6_WzA2Mj&client_id=9d541103-48bd-45ec-b813-99caf59d4717",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratespost.ae/help-and-support",
+  "org": "emirates_post",
+  "category": "postal",
+  "status": 200,
+  "final": "https://www.emiratespost.ae/help-and-support",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratespost.ae/all-services/renew-corporate-po-box",
+  "org": "emirates_post",
+  "category": "postal",
+  "status": 200,
+  "final": "https://www.emiratespost.ae/all-services/renew-corporate-po-box",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.emiratespost.ae/customer-happiness-charter",
+  "org": "emirates_post",
+  "category": "postal",
+  "status": 200,
+  "final": "https://www.emiratespost.ae/customer-happiness-charter",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://smart.adnocdistribution.ae/login.aspx",
+  "org": "adnoc_distribution",
+  "category": "fuel",
+  "status": 200,
+  "final": "https://smart.adnocdistribution.ae/login.aspx",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.adnocdistribution.ae/en/contact-us",
+  "org": "adnoc_distribution",
+  "category": "fuel",
+  "status": 200,
+  "final": "https://www.adnocdistribution.ae/en/contact-us",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.adnocdistribution.ae/en/car-wash-redefined",
+  "org": "adnoc_distribution",
+  "category": "fuel",
+  "status": 200,
+  "final": "https://www.adnocdistribution.ae/en/car-wash-redefined",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.airarabia.com/en/airrewards/login",
+  "org": "air_arabia",
+  "category": "airline",
+  "status": 200,
+  "final": "https://www.airarabia.com/en/airrewards/login",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.airarabia.com/en/airrewards/rakbank-air-arabia-platinum-credit-card",
+  "org": "air_arabia",
+  "category": "airline",
+  "status": 200,
+  "final": "https://www.airarabia.com/en/airrewards/rakbank-air-arabia-platinum-credit-card",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.airarabia.com/en/plan/booking-with-us/airport-shuttle-service",
+  "org": "air_arabia",
+  "category": "airline",
+  "status": 200,
+  "final": "https://www.airarabia.com/en/plan/booking-with-us/airport-shuttle-service",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.abudhabi.gov.ae/en/contact-us",
+  "org": "abu_dhabi_gov",
+  "category": "government",
+  "status": 200,
+  "final": "https://www.abudhabi.gov.ae/en/contact-us",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://github.com/customer-stories",
+  "org": "github",
+  "category": "global",
+  "status": 200,
+  "final": "https://github.com/customer-stories",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://github.com/enterprise/premium-support",
+  "org": "github",
+  "category": "global",
+  "status": 200,
+  "final": "https://github.com/enterprise/premium-support",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.bbc.com/undefined",
+  "org": "bbc",
+  "category": "global",
+  "status": 404,
+  "final": "https://www.bbc.com/undefined",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.bbc.com/future/article/20261106-how-imaginary-friends-help-us-in-real-life",
+  "org": "bbc",
+  "category": "global",
+  "status": 200,
+  "final": "https://www.bbc.com/future/article/20261106-how-imaginary-friends-help-us-in-real-life",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://www.mozilla.org/en-US/contact/",
+  "org": "mozilla",
+  "category": "global",
+  "status": 200,
+  "final": "https://www.mozilla.org/en-US/contact/",
+  "final_reg_same": true
+ },
+ {
+  "url": "https://support.mozilla.org/?utm_source=www.mozilla.org&amp;utm_medium=referral&amp;utm_campaign=footer&utm_content=support",
+  "org": "mozilla",
+  "category": "global",
+  "status": 200,
+  "final": "https://support.mozilla.org/?utm_source=www.mozilla.org&amp;utm_medium=referral&amp;utm_campaign=footer&utm_content=support",
+  "final_reg_same": true
+ }
+]

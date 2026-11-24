@@ -1,0 +1,180 @@
+{
+  "generated_at": "2026-11-24T22:44:15.785765+00:00",
+  "dataset": "data/eval/blind_20261125.csv",
+  "n": 180,
+  "threshold": "likely_scam",
+  "tp": 27,
+  "fp": 1,
+  "fn": 79,
+  "tn": 73,
+  "precision": 0.9643,
+  "recall": 0.2547,
+  "f1": 0.403,
+  "fpr": 0.0135,
+  "accuracy": 0.5556,
+  "blocklist_ignored": true,
+  "official_fp": {
+    "flagged": 0,
+    "total": 112,
+    "not_legitimate": 0
+  },
+  "modes": {
+    "domain_only": 58,
+    "full": 122
+  },
+  "labels": {
+    "scam": 19,
+    "legitimate": 119,
+    "suspicious": 33,
+    "likely_scam": 9
+  },
+  "domain_only": {
+    "recall": 0.3448,
+    "fpr": 0.0,
+    "n": 58
+  },
+  "false_positives": [
+    {
+      "url": "https://www.airarabia.com/en/airrewards/rakbank-air-arabia-platinum-credit-card",
+      "label": "scam",
+      "score": 85,
+      "reasons_en": "The page presents itself as RAKBANK, but airarabia.com is not an official RAKBANK domain. | It asks for card details, login credentials, OTP / verification code, a payment, personal information."
+    }
+  ],
+  "false_negatives": [
+    {
+      "url": "https://smbac-japanlogincheck.index0001.wanghengduiyu.com/U94Nhi7ItBcob7ICiqRyvCx1HQTL7bgENpu3H5eTU22Lj9p52",
+      "label": "legitimate",
+      "score": 21,
+      "mode": "domain_only"
+    },
+    {
+      "url": "http://allegrolokalnie.id-hjjfk5as78jg.rest",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "full"
+    },
+    {
+      "url": "http://sp28ct11-lazkaro-biz.pages.dev/",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://olx.shslpskl.top/",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "full"
+    },
+    {
+      "url": "https://zedelivery-desconto.vercel.app/",
+      "label": "legitimate",
+      "score": 32,
+      "mode": "full"
+    },
+    {
+      "url": "https://sp28ct11-ravkaro-biz.pages.dev/",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://jurnper.exchange/",
+      "label": "legitimate",
+      "score": 23,
+      "mode": "domain_only"
+    },
+    {
+      "url": "http://sp28ct11-vemzuni-biz.pages.dev/",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://citas.sre.gob.mx.requisi.to/",
+      "label": "legitimate",
+      "score": 18,
+      "mode": "full"
+    },
+    {
+      "url": "https://sp28ct11-vazmelo-biz.pages.dev/",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://s0lscan.github.io/",
+      "label": "legitimate",
+      "score": 30,
+      "mode": "full"
+    },
+    {
+      "url": "http://google-marbleshine.ca/__MACOSX/fb-marbleshine/wp-includes/Requests/",
+      "label": "suspicious",
+      "score": 45,
+      "mode": "full"
+    },
+    {
+      "url": "https://ze-delivery-shop.vercel.app/",
+      "label": "legitimate",
+      "score": 32,
+      "mode": "full"
+    },
+    {
+      "url": "http://google-marbleshine.ca.marlucorp.ca/__MACOSX/fb-marbleshine/wp-includes/Requests/",
+      "label": "suspicious",
+      "score": 45,
+      "mode": "full"
+    },
+    {
+      "url": "https://matadorbet830.com/",
+      "label": "suspicious",
+      "score": 40,
+      "mode": "full"
+    },
+    {
+      "url": "https://apps-trexorcdn.zite.so/",
+      "label": "legitimate",
+      "score": 5,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://exod-apps-web.com/",
+      "label": "legitimate",
+      "score": 33,
+      "mode": "domain_only"
+    },
+    {
+      "url": "http://usaa.professionaldocumentservicesinc.com/",
+      "label": "legitimate",
+      "score": 23,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://torndao.com/",
+      "label": "legitimate",
+      "score": 18,
+      "mode": "full"
+    },
+    {
+      "url": "http://dev.scotiabankrewards.com/",
+      "label": "legitimate",
+      "score": 23,
+      "mode": "domain_only"
+    }
+  ],
+  "by_threshold": {
+    "likely_scam": {
+      "precision": 0.9643,
+      "recall": 0.2547,
+      "f1": 0.403,
+      "fpr": 0.0135
+    },
+    "suspicious": {
+      "precision": 0.9836,
+      "recall": 0.566,
+      "f1": 0.7186,
+      "fpr": 0.0135
+    }
+  }
+}
