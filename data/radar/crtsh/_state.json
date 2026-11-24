@@ -100,5 +100,197 @@
   "status": "ok",
   "ts": 1795553178.3740559,
   "n": 772
+ },
+ "dewa%": {
+  "term": "dewa",
+  "status": "error:ReadTimeout",
+  "ts": 1795554670.761349,
+  "n": 0
+ },
+ "etisalat%": {
+  "term": "etisalat",
+  "status": "ok",
+  "ts": 1795554720.7673914,
+  "n": 2119
+ },
+ "aramex%": {
+  "term": "aramex",
+  "status": "ok",
+  "ts": 1795555052.8940942,
+  "n": 1151
+ },
+ "mashreq%": {
+  "term": "mashreq",
+  "status": "ok",
+  "ts": 1795555363.6015098,
+  "n": 649
+ },
+ "bankfab%": {
+  "term": "bankfab",
+  "status": "ok",
+  "ts": 1795555688.6026788,
+  "n": 1137
+ },
+ "adib%": {
+  "term": "adib",
+  "status": "ok",
+  "ts": 1795556003.130893,
+  "n": 3543
+ },
+ "enbd%": {
+  "term": "enbd",
+  "status": "ok",
+  "ts": 1795556030.39877,
+  "n": 265
+ },
+ "fabbank%": {
+  "term": "fabbank",
+  "status": "ok",
+  "ts": 1795556060.3459308,
+  "n": 25
+ },
+ "firstabudhabibank%": {
+  "term": "firstabudhabibank",
+  "status": "ok",
+  "ts": 1795556080.4367318,
+  "n": 16
+ },
+ "livbank%": {
+  "term": "livbank",
+  "status": "ok",
+  "ts": 1795556159.5035439,
+  "n": 9
+ },
+ "emiratesislamic%": {
+  "term": "emiratesislamic",
+  "status": "ok",
+  "ts": 1795556202.5826917,
+  "n": 26
+ },
+ "dubaiislamic%": {
+  "term": "dubaiislamic",
+  "status": "empty",
+  "ts": 1795556208.401063,
+  "n": 0
+ },
+ "rakbank%": {
+  "term": "rakbank",
+  "status": "ok",
+  "ts": 1795556269.941774,
+  "n": 90
+ },
+ "cbdonline%": {
+  "term": "cbdonline",
+  "status": "ok",
+  "ts": 1795557840.0336916,
+  "n": 95
+ },
+ "cbdbank%": {
+  "term": "cbdbank",
+  "status": "ok",
+  "ts": 1795557896.3050678,
+  "n": 34
+ },
+ "cbuae%": {
+  "term": "cbuae",
+  "status": "ok",
+  "ts": 1795559764.0399103,
+  "n": 78
+ },
+ "sanadak%": {
+  "term": "sanadak",
+  "status": "ok",
+  "ts": 1795559773.2861612,
+  "n": 217
+ },
+ "wiobank%": {
+  "term": "wiobank",
+  "status": "ok",
+  "ts": 1795559851.5419824,
+  "n": 17
+ },
+ "abudhabipolice%": {
+  "term": "abudhabipolice",
+  "status": "ok",
+  "ts": 1795560200.303141,
+  "n": 4
+ },
+ "icpsmart%": {
+  "term": "icpsmart",
+  "status": "ok",
+  "ts": 1795561099.669905,
+  "n": 13
+ },
+ "moiuae%": {
+  "term": "moiuae",
+  "status": "empty",
+  "ts": 1795561730.7570803,
+  "n": 0
+ },
+ "uaemoi%": {
+  "term": "uaemoi",
+  "status": "empty",
+  "ts": 1795562101.7202516,
+  "n": 0
+ },
+ "tdra%": {
+  "term": "tdra",
+  "status": "empty",
+  "ts": 1795562347.4582973,
+  "n": 0
+ },
+ "dubaimunicipality%": {
+  "term": "dubaimunicipality",
+  "status": "ok",
+  "ts": 1795562402.1450675,
+  "n": 2
+ },
+ "adnoc%": {
+  "term": "adnoc",
+  "status": "ok",
+  "ts": 1795563049.3903909,
+  "n": 859
+ },
+ "eand%": {
+  "term": "eand",
+  "status": "empty",
+  "ts": 1795563419.461341,
+  "n": 0
+ },
+ "dutelecom%": {
+  "term": "dutelecom",
+  "status": "ok",
+  "ts": 1795563437.9823081,
+  "n": 17
+ },
+ "flyemirates%": {
+  "term": "flyemirates",
+  "status": "ok",
+  "ts": 1795563456.7773418,
+  "n": 45
+ },
+ "emiratesairline%": {
+  "term": "emiratesairline",
+  "status": "ok",
+  "ts": 1795563481.812616,
+  "n": 39
+ },
+ "etihad%": {
+  "term": "etihad",
+  "status": "ok",
+  "ts": 1795563509.8459003,
+  "n": 2140
+ },
+ "secure-uaepass%": {
+  "term": "uaepass",
+  "status": "empty",
+  "ts": 1795563528.7784977,
+  "n": 0
+ },
+ "login-uaepass%": {
+  "term": "uaepass",
+  "status": "empty",
+  "ts": 1795563544.7336984,
+  "n": 0
  }
 }

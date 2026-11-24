@@ -1,0 +1,405 @@
+{
+ "cap": 100,
+ "used": 57,
+ "log": [
+  {
+   "at": "2026-11-24T22:14:45.657900+00:00",
+   "q": "UAE PASS login",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:04.842588+00:00",
+   "q": "دخول الهوية الرقمية UAE PASS",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:06.084017+00:00",
+   "q": "TAMM traffic fine payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:21.540406+00:00",
+   "q": "TAMM fines payment Abu Dhabi",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:22.905370+00:00",
+   "q": "دفع مخالفات المرور ابوظبي",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:25.077807+00:00",
+   "q": "دفع مخالفات المرور",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:26.125129+00:00",
+   "q": "MOI UAE traffic fines inquiry",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:27.605124+00:00",
+   "q": "Dubai Police fine payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:28.923021+00:00",
+   "q": "دفع مخالفات شرطة دبي",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:31.820262+00:00",
+   "q": "Abu Dhabi Police fines payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:32.831496+00:00",
+   "q": "RTA fine payment online",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:35.458850+00:00",
+   "q": "مخالفات هيئة الطرق والمواصلات دبي دفع",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:42.152954+00:00",
+   "q": "Salik recharge online",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:43.948495+00:00",
+   "q": "Salik fine payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:46.337671+00:00",
+   "q": "تعبئة رصيد سالك",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:47.464485+00:00",
+   "q": "Emirates NBD login",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:50.122048+00:00",
+   "q": "Emirates NBD customer care",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:54.807075+00:00",
+   "q": "Emirates NBD credit card update",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:55.834914+00:00",
+   "q": "تجديد بطاقة الإمارات دبي الوطني",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:56.753057+00:00",
+   "q": "ADCB login",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:58.414091+00:00",
+   "q": "ADCB customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:15:59.762250+00:00",
+   "q": "ADCB card update",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:01.148273+00:00",
+   "q": "بنك أبوظبي التجاري خدمة العملاء",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:03.083491+00:00",
+   "q": "FAB online banking login",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:04.329935+00:00",
+   "q": "FAB customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:08.977347+00:00",
+   "q": "تحديث بيانات بطاقة بنك أبوظبي الأول",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:23.809376+00:00",
+   "q": "ADIB card update",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:24.668177+00:00",
+   "q": "ADIB customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:25.776141+00:00",
+   "q": "تجديد بطاقة مصرف أبوظبي الإسلامي",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:27.602747+00:00",
+   "q": "Mashreq customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:28.954052+00:00",
+   "q": "Dubai Islamic Bank customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:37.155496+00:00",
+   "q": "RAKBANK customer care number",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:39.204439+00:00",
+   "q": "Emirates Post parcel delivery fee",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:40.115837+00:00",
+   "q": "Emirates Post track parcel",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:41.534504+00:00",
+   "q": "بريد الإمارات رسوم توصيل الشحنة",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:43.211481+00:00",
+   "q": "Aramex delivery fee payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:51.137514+00:00",
+   "q": "Aramex customer care number UAE",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:52.638243+00:00",
+   "q": "أرامكس دفع رسوم التوصيل",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:53.686699+00:00",
+   "q": "Etisalat bill payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:55.169667+00:00",
+   "q": "دفع فاتورة اتصالات",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:16:56.571902+00:00",
+   "q": "du bill payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:02.372574+00:00",
+   "q": "دفع فاتورة دو",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:05.990492+00:00",
+   "q": "Emirates ID renewal online",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:08.694357+00:00",
+   "q": "تجديد الهوية الإماراتية",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:09.566280+00:00",
+   "q": "ICP visa status check",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:16.012575+00:00",
+   "q": "DEWA bill payment",
+   "hl": "en",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:17.154313+00:00",
+   "q": "دفع فاتورة ديوا",
+   "hl": "ar",
+   "device": "desktop",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:18.732545+00:00",
+   "q": "UAE PASS login",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:19.839904+00:00",
+   "q": "TAMM traffic fine payment",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:20.967493+00:00",
+   "q": "دفع مخالفات المرور",
+   "hl": "ar",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:26.114025+00:00",
+   "q": "Dubai Police fine payment",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:26.860455+00:00",
+   "q": "Salik recharge online",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:28.009042+00:00",
+   "q": "Emirates Post parcel delivery fee",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:29.544321+00:00",
+   "q": "Aramex delivery fee payment",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:31.094453+00:00",
+   "q": "Emirates NBD customer care",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:32.117826+00:00",
+   "q": "ADCB customer care number",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  },
+  {
+   "at": "2026-11-24T22:17:33.358940+00:00",
+   "q": "Etisalat bill payment",
+   "hl": "en",
+   "device": "mobile",
+   "ok": true
+  }
+ ]
+}

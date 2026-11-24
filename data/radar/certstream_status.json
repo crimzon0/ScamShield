@@ -2,16 +2,16 @@
  "state": "running",
  "url": "ws://localhost:8080/",
  "started_at": "2026-11-24T20:32:22.502921+00:00",
- "messages": 4816459,
- "certs": 4816459,
- "hits": 4,
- "new_hits": 4,
+ "messages": 39819671,
+ "certs": 39819671,
+ "hits": 47,
+ "new_hits": 43,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "dibdirect.com",
-  "term": "dibdirect",
-  "at": "2026-11-24 20:51:54.845689+00:00"
+  "domain": "etisalt.click",
+  "term": "etisalt",
+  "at": "2026-11-24 23:37:04.663797+00:00"
  },
  "queue": 0
 }

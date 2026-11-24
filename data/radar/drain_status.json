@@ -1,0 +1,15 @@
+{
+ "started": "2026-11-24T23:28:28.977084+00:00",
+ "pending_at_start": 87,
+ "scanned": 87,
+ "skipped": 0,
+ "errors": 0,
+ "labels": {
+  "legitimate": 30,
+  "suspicious": 25,
+  "scam": 13,
+  "likely_scam": 19
+ },
+ "finished": "2026-11-24T23:31:07.026953+00:00",
+ "at": "2026-11-24T23:31:07.026958+00:00"
+}

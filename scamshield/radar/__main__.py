@@ -42,6 +42,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("search", help="sponsored/organic search results via SerpApi")
     s.add_argument("--limit", type=int, default=None)
     s.add_argument("--no-scan", action="store_true")
+    s.add_argument("--max-live", type=int, default=None, help="max live SerpApi requests this run (cap 100 total)")
     sub.add_parser("watchlist", help="print watchlist stats")
     sub.add_parser("prune", help="drop stored hits the current matcher no longer accepts")
     rs = sub.add_parser("rescan", help="re-scan already-scanned hits (force) with the current engine")
@@ -82,7 +83,7 @@ def main(argv=None) -> int:
     elif a.cmd == "search":
         from .search import collect_search
 
-        hits = asyncio.run(collect_search(scan=not a.no_scan, limit=a.limit))
+        hits = asyncio.run(collect_search(scan=not a.no_scan, limit=a.limit, max_live=a.max_live))
         print(f"search: {len(hits)} hits")
         _print_hits(hits)
     elif a.cmd == "scan-pending":

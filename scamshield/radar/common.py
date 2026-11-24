@@ -130,7 +130,8 @@ async def scan_hit(hit: RadarHit, sem: Optional[asyncio.Semaphore] = None, force
 
             if "force" in inspect.signature(scan_url).parameters:
                 kw["force"] = True
-        res = await asyncio.wait_for(scan_url("https://" + host, **kw), SCAN_TIMEOUT)
+        target = hit.extra.get("scan_url") or ("https://" + host)  # search hits: the real landing URL
+        res = await asyncio.wait_for(scan_url(target, **kw), SCAN_TIMEOUT)
         hit.scan_id = res.scan_id
         hit.score = res.verdict.score
         hit.label = res.verdict.label

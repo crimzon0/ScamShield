@@ -236,3 +236,82 @@ def test_siblings_shared_ip_and_ns():
     sib = siblings("uaepass-a.top")
     assert [s["domain"] for s in sib] == ["uaepass-b.top"]
     assert sib[0]["shared"]["ip"] == ["198.51.100.7"] and sib[0]["shared"]["ns"] == ["ns1.evil-dns.top"]
+
+
+def test_parse_serp_ads_local_ads_and_organic(monkeypatch):
+    from scamshield.radar import search
+
+    monkeypatch.setattr(search, "_popular", lambda reg: reg == "wikipedia.org")
+    data = {
+        "ads": [{"position": 1, "title": "Pay fines", "link": "https://fines-pay-now.top/pay?x=1"},
+                {"position": 2, "title": "Official", "link": "https://www.tamm.abudhabi/fines"},
+                {"position": 3, "tracking_link": "https://www.googleadservices.com/pagead/aclk?x",
+                 "displayed_link": "quick-fines.shop"}],
+        "local_ads": {"ads": [{"title": "Helpline", "link": "https://helpdesk-uae.site/"}]},
+        "shopping_results": [{"title": "x", "link": "https://cheap-salik.store/p"}],
+        "organic_results": [{"position": 1, "link": "https://en.wikipedia.org/wiki/TAMM"},
+                            {"position": 2, "link": "https://abudhabi.gov.ae/x"},
+                            {"position": 3, "link": "https://finesinfo-blog.com/tamm"},
+                            {"position": 4, "link": "https://tamm-fines.xyz/login"}],
+    }
+    st: dict = {}
+    hits = search.parse_serp(data, "TAMM fines payment", "tamm", "mobile", st)
+    got = {(h.source, h.domain): h for h in hits}
+    assert set(got) == {("search_ads", "fines-pay-now.top"), ("search_ads", "quick-fines.shop"),
+                        ("search_ads", "helpdesk-uae.site"), ("search_ads", "cheap-salik.store"),
+                        ("search_organic", "finesinfo-blog.com"), ("search_organic", "tamm-fines.xyz")}
+    ad = got[("search_ads", "fines-pay-now.top")]
+    assert ad.extra["scan_url"] == "https://fines-pay-now.top/pay?x=1" and ad.extra["device"] == "mobile"
+    assert got[("search_ads", "quick-fines.shop")].extra["scan_url"] == ""  # never click the ad redirector
+    assert got[("search_ads", "helpdesk-uae.site")].extra["serp_block"] == "local_ads"
+    assert got[("search_organic", "finesinfo-blog.com")].extra["match_kind"] == "organic_for_brand_query"
+    assert got[("search_organic", "tamm-fines.xyz")].extra["match_kind"] != "organic_for_brand_query"
+    assert st["search_ads_official"] == 1 and st["search_organic_skipped_popular_or_gov"] == 2
+    assert search.serp_stats(data) == {"ads": 3, "local_ads": 1, "shopping_results": 1, "organic_results": 4}
+
+
+async def test_collect_search_respects_budget(monkeypatch, tmp_path):
+    from scamshield.radar import search
+
+    monkeypatch.setattr(settings, "serpapi_key", "test-key")
+    monkeypatch.setattr(settings, "offline", False)
+    monkeypatch.setattr(search, "BUDGET_PATH", tmp_path / "budget.json")
+    monkeypatch.setattr(search, "STATUS_PATH", tmp_path / "status.json")
+    (tmp_path / "budget.json").write_text(json.dumps({"cap": 100, "used": search.SERPAPI_CAP}))
+    calls = []
+
+    class Boom:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def get(self, *a, **k):
+            calls.append(a)
+            raise AssertionError("must not call SerpApi over budget")
+
+    import httpx
+
+    monkeypatch.setattr(httpx, "AsyncClient", Boom)
+    assert await search.collect_search(scan=False) == []
+    st = json.loads((tmp_path / "status.json").read_text(encoding="utf-8"))
+    assert calls == [] and st["live_requests"] == 0 and st["skipped_budget"] == len(search._plan())
+
+
+def test_drain_helpers():
+    from scamshield.radar.common import store_hit
+    from scamshield.radar.drain import defang, pending_hits
+
+    assert defang("https://evil.example.com/x") == "hxxps://evil[.]example[.]com/x"
+    a = store_hit(RadarHit(domain="a-uaepass.top", source="crtsh", matched_term="uaepass", first_seen=NOW,
+                           flagged_at=NOW, extra={"subdomain_only": True}))
+    b = store_hit(RadarHit(domain="uaepass-b.top", source="crtsh", matched_term="uaepass",
+                           first_seen=NOW - timedelta(days=1), flagged_at=NOW))
+    c = RadarHit(domain="uaepass-c.top", source="crtsh", matched_term="uaepass", first_seen=NOW, flagged_at=NOW,
+                 scan_id="x1", label="scam", score=90)
+    store_hit(c)
+    assert [h.domain for h in pending_hits()] == [a.domain, b.domain]
