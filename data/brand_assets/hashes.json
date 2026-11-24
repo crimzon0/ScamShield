@@ -252,5 +252,14 @@
    "https://www.etihad.com/favicon.ico"
   ]
  },
- "_note": "pHash (imagehash.phash, 64-bit) of favicons fetched only from each brand's official domains by scamshield.brand.build_assets; cross-brand collisions (distance<=10) removed."
+ "_note": "pHash (imagehash.phash, 64-bit) of favicons fetched only from each brand's official domains by scamshield.brand.build_assets; cross-brand collisions (distance<=10) removed.",
+ "emirates_nbd": {
+  "favicon": [],
+  "screenshot_top": [
+   "da2dd24132ed9927"
+  ],
+  "source": [
+   "https://www.emiratesnbd.com/en"
+  ]
+ }
 }
