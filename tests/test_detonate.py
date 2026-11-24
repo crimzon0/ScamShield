@@ -186,3 +186,10 @@ async def test_budget_override_fast_mode(base):
     d = await detonate(base + "/slow", scan_id="t-budget", budget=5)
     assert d.status == "timeout"
     assert time.monotonic() - t0 < 8.5
+
+
+async def test_closed_shadow_dom_extracted(base):
+    d = await detonate(base + "/shadow", scan_id="t-shadow")
+    assert d.status == "ok", (d.status, d.visible_text)
+    assert "Sandbox Bank" in d.visible_text
+    assert any(f.type == "password" for f in d.form_fields)

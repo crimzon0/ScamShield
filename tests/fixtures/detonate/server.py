@@ -32,6 +32,12 @@ document.getElementById('o').textContent += ' webdriver=' + navigator.webdriver 
  ' st=' + String(setTimeout).indexOf('[native code]');
 </script></body></html>"""
 
+SHADOW_PAGE = """<!doctype html><html><head><title></title></head><body><div id="h"></div><script>
+const r = document.getElementById('h').attachShadow({mode: 'closed'});
+r.innerHTML = '<p>Sandbox Bank login - verify your account now</p><label for="p">Password</label>' +
+  '<input id="p" name="password" type="password">';
+</script></body></html>"""
+
 BLANK_PAGE = "<!doctype html><html><head><title></title></head><body></body></html>"
 
 # 1x1 PNG
@@ -85,6 +91,8 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/fp":  # fingerprint echo: what a cloaker would see
             hdr = (self.headers.get("sec-ch-ua", "") + " | " + ua).replace("<", "")
             return self._send(200, FP_PAGE.replace("__HDR__", hdr))
+        if p == "/shadow":
+            return self._send(200, SHADOW_PAGE)
         if p == "/tall":
             return self._send(200, "<html><body><h1>Sandbox Bank tall page</h1>"
                               "<div style='height:30000px;background:linear-gradient(#fff,#00f)'>long</div></body></html>")

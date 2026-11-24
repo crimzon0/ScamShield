@@ -488,7 +488,11 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     chain = max((d.redirect_chain for d in dets), key=len, default=[])
     shortener = any(h.kind == "shortener" for h in chain) or registrable(url) in SHORTENERS
     hops = sum(1 for h in chain if h.kind not in ("start", "final"))
-    if shortener or hops >= 3:
+    if registrable(url) in SHORTENERS and dom == registrable(url) and not ok:
+        add("shortener_unresolved", 30, "This is a shortened link whose real destination could not be revealed "
+            "(the shortener blocked or removed it).",
+            "هذا رابط مختصر تعذّر كشف وجهته الحقيقية (قامت خدمة الاختصار بحظره أو إزالته).", url[:200])
+    elif shortener or hops >= 3:
         add("redirects", 10 if shortener else 8,
             f"The link hides its destination behind {'a URL shortener' if shortener else f'{hops} redirects'}.",
             f"يُخفي الرابط وجهته الحقيقية عبر {'خدمة اختصار روابط' if shortener else f'{hops} عمليات تحويل'}.",
