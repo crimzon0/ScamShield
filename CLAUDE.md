@@ -26,7 +26,7 @@ Run tests: `make test` or `.venv/Scripts/python -m pytest -q tests/<yours>`.
 | owner | folder | functions |
 |---|---|---|
 | detonator | scamshield/detonate/ | `async detonate(url, persona="uae_mobile_ad_click", scan_id=None) -> Detonation`; `cloak_diff(dets) -> CloakDiff`; `PERSONAS` |
-| intel | scamshield/intel/ | `async enrich(domain) -> Intel`; `blocklist_hits(url) -> list[str]` |
+| intel | scamshield/intel/ | `async enrich(domain, host=None) -> Intel` (host = full final host for DNS/ASN/blocklists); `blocklist_hits(url) -> list[str]` |
 | brand | scamshield/brand/, data/registry.json, data/registry_todo.md | `load_registry()`, `get_brand(id)`, `async match_brand(det) -> BrandMatch`, `lookalike(domain) -> LookalikeResult` |
 | verdict | scamshield/score/, scamshield/pipeline.py, scamshield/cli/, scamshield/scan.py, data/eval/ | `score(scan_id,url,dets,intel,brand,look,cloak) -> Verdict`; `async scan_url(url, personas=..., save=True) -> ScanResult`; CLI `python -m scamshield.scan in.csv --out out.csv`; `python -m scamshield.cli.eval` |
 | radar | scamshield/radar/, docker-compose.yml | `watchlist()`, `async backfill_crtsh(days=30, scan=True) -> list[RadarHit]`, certstream/NRD/search collectors, `siblings(domain)` |

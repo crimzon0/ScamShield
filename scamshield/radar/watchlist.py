@@ -198,7 +198,7 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
         for k in b.get("domain_keywords", []):
             t = k.lower().strip().replace(" ", "")
             if len(t) >= 3 and _squash(t) not in stop:
-                add(t, b["id"], "keyword", "en", query=len(_squash(t)) >= 5)
+                add(t, b["id"], "keyword", "en", query=len(_squash(t)) >= 4)
     # registry keywords (EN / Arabizi / Arabic)
     for b in reg:
         for k in b.get("keywords_en", []) + [b.get("name_en", "")]:

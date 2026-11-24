@@ -17,6 +17,8 @@ SHARED_HOSTS = {
     "repl.co", "replit.app", "onrender.com", "surge.sh", "framer.app", "godaddysites.com",
     "sites.google.com", "ngrok.io", "ngrok-free.app", "trycloudflare.com", "square.site", "carrd.co",
     "wordpress.com", "tilda.ws", "mystrikingly.com", "my.canva.site", "firebasestorage.googleapis.com",
+    # free-subdomain providers (DigitalPlat FreeDomain etc.): parent age is meaningless
+    "de5.net", "us.kg", "dpdns.org", "qzz.io", "eu.org", "duckdns.org", "freemyip.com", "no-ip.org", "ddns.net",
     "r2.dev", "fly.dev", "railway.app", "deno.dev", "bubbleapps.io", "typedream.app",
 }
 

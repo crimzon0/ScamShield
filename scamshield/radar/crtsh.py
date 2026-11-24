@@ -28,7 +28,7 @@ STATE_PATH = RAW_DIR / "_state.json"
 CRTSH = "https://crt.sh/"
 COOLDOWN_KEY = "intel:crtsh_cooldown"  # shared with scamshield.intel.crtsh
 QUERY_GAP = 5.0
-TIMEOUT = 20.0
+TIMEOUT = 60.0
 FRESH_HOURS = 6  # a term fetched OK within this window is not re-queried (resume)
 UA = "ScamShield-radar/0.1 (hackathon research; passive CT monitoring)"
 
@@ -166,20 +166,37 @@ async def collect_terms(days: int = 30, limit_terms: Optional[int] = None, force
         if fresh and not force:
             statuses[t] = "cached:" + prev["status"]
             continue
-        while True:
-            status, rows = await fetch_pattern(f"%{t}%", exclude_expired=days <= 90)
-            if status in ("cooldown", "rate_limited") and wait_cooldown and waited < max_wait:
-                log.warning("crt.sh cooling down; waiting 60 s (term %s)", t)
-                await asyncio.sleep(60)
-                waited += 60
-                continue
-            break
+        # crt.sh: a bare word is a full-text search on name tokens ('-' splits tokens, so 'emiratesnbd'
+        # finds emiratesnbd-secure.com); '%term%' is the LIKE form (often empty/timeouts on the big DB).
+        pats = [p for p in (t.strip("-"), f"%{t}%") if p] if "-" not in t.strip("-") else [f"%{t}%"]
+        rows, status, per = [], "empty", {}
+        for j, pat in enumerate(pats):
+            while True:
+                s1, r1 = await fetch_pattern(pat, exclude_expired=days <= 90)
+                if s1 in ("cooldown", "rate_limited") and wait_cooldown and waited < max_wait:
+                    log.warning("crt.sh cooling down; waiting 60 s (pattern %s)", pat)
+                    await asyncio.sleep(60)
+                    waited += 60
+                    continue
+                break
+            per[pat] = s1
+            if r1:
+                rows += r1
+            if s1 == "ok":
+                status = "ok"
+            elif s1 in ("cooldown", "rate_limited") or (s1.startswith("error") and status != "ok"):
+                status = s1 if status != "ok" else status
+            if s1 in ("cooldown", "rate_limited"):
+                break
+            if j < len(pats) - 1:
+                await asyncio.sleep(QUERY_GAP)
+        rows = rows if (rows or status in ("ok", "empty")) else None
         statuses[t] = status
-        log.info("crt.sh %-22s %s %s", t, status, len(rows) if rows else 0)
+        log.info("crt.sh %-22s %s %s %s", t, status, len(rows) if rows else 0, per)
         if rows is not None:
             try:
                 (RAW_DIR / f"{_safe(t)}.json").write_text(json.dumps(
-                    {"term": t, "pattern": f"%{t}%", "fetched_at": utcnow().isoformat(), "rows": rows}),
+                    {"term": t, "patterns": per, "fetched_at": utcnow().isoformat(), "rows": rows}),
                     encoding="utf-8")
             except Exception as e:
                 log.debug("raw save failed: %s", e)
