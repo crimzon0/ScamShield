@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+var/
+node_modules/
+web/dist/
+predictions.csv
+.pytest_cache/

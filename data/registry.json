@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "brands": [
+    {
+      "id": "sandbox_bank",
+      "fictional": true,
+      "category": "bank",
+      "name_en": "Sandbox Bank",
+      "name_ar": "بنك التجربة",
+      "official_domains": ["sandboxbank.example"],
+      "keywords_en": ["sandbox bank", "sandboxbank"],
+      "keywords_ar": ["بنك التجربة"],
+      "arabizi": ["bank el tajroba"],
+      "phones": ["+97180000000"],
+      "sources": ["fictional test brand"],
+      "verified": false
+    }
+  ]
+}
