@@ -21,7 +21,10 @@ from typing import Optional
 from scamshield.core.domains import SHARED_HOSTS, host_of, is_official, is_shared_host, registrable, registrable_icann
 from scamshield.core.schemas import BrandMatch, CloakDiff, Detonation, Intel, LookalikeResult, Signal, Verdict
 
-BRAND_THRESHOLD = 0.4
+BRAND_THRESHOLD = 0.6
+REGULATORS = {"central_bank_uae", "tdra"}  # "regulated by ..." footers are not claims
+SSO_BRANDS = {"uae_pass"}  # "Sign in with UAE PASS" buttons are integrations unless the page collects its secrets
+RESTRICTED = {"gov.ae": ("government", 40), "mil.ae": ("government", 40), "ac.ae": ("academic", 25)}
 BASE = 10
 SCAM, LIKELY, SUSPICIOUS = 80, 60, 35
 
@@ -254,6 +257,15 @@ def _registry_token(scope: str):
     return None
 
 
+def is_mention_only(brand) -> bool:
+    """Brand named only in body text (brand module marks it 'body-text mention only'), with no visual/LLM support."""
+    if not brand or not brand.brand_id:
+        return False
+    if set(brand.methods or []) & {"logo_hash", "screenshot_hash", "favicon_hash", "llm", "official_domain"}:
+        return False
+    return any("mention only" in (e or "") for e in (brand.evidence or []))
+
+
 def _brand_official(brand, look) -> list[str]:
     doms = list(brand.official_domains or []) if brand else []
     bid = (brand.brand_id if brand and brand.brand_id else None) or (look.brand_id if look else None)
@@ -391,7 +403,12 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
                 asks.add("emirates_id")
     b_en, b_ar = _brand_names(brand, look)
     strong_brand = bool(brand and brand.brand_id and set(brand.methods or []) - {"domain_keyword"})
+    if strong_brand and is_mention_only(brand):
+        strong_brand = False  # a brand named only in body text is a mention, not a claim
+    if strong_brand and brand.brand_id in REGULATORS and not (asks & SECRETS):
+        strong_brand = False  # regulator mention ("licensed by the Central Bank of the UAE")
     brand_conf = brand.confidence if strong_brand else 0.0
+    rtld = next((k for k in RESTRICTED if host == k or host.endswith("." + k)), None)
 
     # ---------------- rule 1: official domain
     if on_official and not bl:
@@ -403,6 +420,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     sso = ""
     if ok and not (asks & SECRETS) and not on_official and ((brand_conf >= 0.2) or (look and look.score >= 0.5)):
         sso = _sso_target(ok, _brand_official(brand, look))
+    if not sso and ok and brand and brand.brand_id in SSO_BRANDS and not (asks & SECRETS) and not on_official:
+        sso = f"{brand.brand_id} sign-in button"
     if sso:
         add("sso_integration", 0, f"The page links its sign-in to the official {b_en or 'brand'} site and does not ask "
             f"for a password, OTP or card itself (typical 'Sign in with ...' integration).",
@@ -410,10 +429,23 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             f"أو بيانات بطاقة (تكامل «تسجيل الدخول عبر ...» المعتاد).", sso)
 
     # ---------------- rule 2: brand impersonation
-    established = (tranco is not None and tranco <= 100_000) or (age is not None and age > 3 * 365)
+    cert_age = _days_since(intel.cert_first_seen) if intel and not shared else None  # lower bound of site age
+    established = ((tranco is not None and tranco <= 100_000) or (age is not None and age > 3 * 365)
+                   or (age is None and ((tranco is not None and tranco <= 1_000_000)
+                                        or (cert_age is not None and cert_age > 2 * 365))))
     big = tranco is not None and tranco <= 10_000
+    if rtld:
+        kind, w = RESTRICTED[rtld]
+        established = True
+        big = big or kind == "government"
+        add(f"{kind}_domain", -w, f"The site is on .{rtld}, a {kind} domain that only verified UAE {kind} bodies can register.",
+            f"الموقع على النطاق ‎.{rtld}‎ وهو نطاق {'حكومي' if kind == 'government' else 'أكاديمي'} لا تسجّله إلا الجهات "
+            f"الإماراتية {'الحكومية' if kind == 'government' else 'الأكاديمية'} المعتمدة.", host)
+    if age is None and cert_age is not None and cert_age > 2 * 365 and not rtld:
+        add("long_cert_history", -10, f"Certificates for this domain have been seen for over {cert_age // 365} years.",
+            f"شهادات الأمان لهذا النطاق مرصودة منذ أكثر من {cert_age // 365} سنوات.", f"cert_first_seen={intel.cert_first_seen}")
     brand_rule = False
-    if brand_conf >= BRAND_THRESHOLD and not on_official and not sso:
+    if brand_conf >= BRAND_THRESHOLD and not on_official and not sso and not rtld:
         ev = "; ".join(brand.evidence[:3])
         if big or (established and not (asks & {"credentials", "card", "otp", "emirates_id"})):
             add("brand_mention_established_site", 10,
@@ -424,7 +456,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             add("brand_on_unofficial_domain", 75,
                 f"The page presents itself as {b_en}, but {dom} is not an official {b_en} domain.",
                 f"تدّعي الصفحة أنها تابعة لـ{b_ar}، لكن النطاق {dom} ليس نطاقاً رسمياً لـ{b_ar}.", ev)
-    elif brand_conf >= 0.2 and not on_official:
+    elif brand_conf >= 0.2 and not on_official and not rtld and not sso:
         add("weak_brand_claim", 12, f"The page shows some signs of using the {b_en} name.",
             f"تظهر في الصفحة مؤشرات على استخدام اسم {b_ar}.", "; ".join(brand.evidence[:2]))
 
@@ -577,6 +609,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     sens = sorted(asks & (SENSITIVE | {"personal_info"}))
     if sens and not brand_rule:
         young = (age is None or age < 365) and not established
+        if rtld:
+            w0 = 0
         w = (40 if young else 25) if asks & {"card", "otp", "emirates_id"} else (35 if young else 18) if "credentials" in asks else 8
         if big:
             w = 0

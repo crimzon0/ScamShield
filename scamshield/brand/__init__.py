@@ -120,6 +120,17 @@ def _llm_signal(det: Detonation, parts: dict, brands: list[dict]) -> dict | None
     return out
 
 
+import re as _re
+
+from .normalize import norm as norm_text
+
+_SSO_RE = _re.compile(
+    r"(?:sign|log)\s*-?\s*in\s+(?:with|using|via|through)\s+uae\s*pass|login\s+(?:with|using|via)\s+uae\s*pass|"
+    r"continue\s+with\s+uae\s*pass|uae\s*pass\s+(?:login|sign\s*in)|"
+    r"(?:تسجيل\s+)?الدخول\s+(?:عبر|بواسطه|باستخدام|ب)\s*(?:الهويه\s+الرقميه|يو\s*اي\s*اي\s*باس|uae\s*pass)"
+)
+_UAEPASS_RE = _re.compile(r"uae\s*pass|الهويه\s+الرقميه")
+
 CHALLENGE_HOSTS = {"perfdrive.com", "radwarebotmanager.com", "hcaptcha.com", "challenges.cloudflare.com"}
 
 
@@ -147,6 +158,15 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     parts = page_parts(det)
     asks = detect_asks(" ".join([parts["title"], parts["text"], parts["form"]]), det.form_fields)
     scored = {r["id"]: r for r in score_brands(parts, brands)}
+
+    # UAE PASS single-sign-on buttons ("Sign in with UAE PASS") appear on many legitimate portals: that is a
+    # mention, not a claim, unless the page itself collects the UAE PASS password / OTP.
+    if "uae_pass" in scored and _SSO_RE.search(" ".join([parts["title"], parts["text"]])):
+        collects = any(_UAEPASS_RE.search(norm_text(f"{f.label} {f.placeholder} {f.name}")) for f in det.form_fields or [])             or "otp" in set(detect_asks("", det.form_fields))
+        if not collects:
+            r = scored["uae_pass"]
+            r["confidence"] = min(r["confidence"], 0.15)
+            r["evidence"] = r["evidence"] + ["UAE PASS sign-in button (SSO mention, not a claim)"]
 
     # Prominence: a brand named ONLY in body text (not title, form, URL) is a mention, not a claim
     # (dubaiholding.com: "Dubai Holding became the second-largest shareholder in Emirates NBD").

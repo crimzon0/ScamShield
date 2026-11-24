@@ -320,3 +320,29 @@ def test_reference_hashes_do_not_collide_across_brands():
         for b2, h2 in refs[i + 1:]:
             if b1 != b2:
                 assert h1 - h2 > 2 * SCREEN_MAX, (b1, b2, h1 - h2)
+
+
+@pytest.mark.parametrize("dom", ["etihadwe.ae", "etihadrail.ae", "etihad-esco.ae", "etihadcreditbureau.ae", "emirates.ae",
+                                 "emiratesauction.com", "etihadrail.gov-services.example"])
+def test_weak_dictionary_tokens(dom):
+    assert lookalike(dom).score <= 0.4, lookalike(dom)
+
+
+def test_weak_token_with_context_still_high():
+    assert lookalike("etihad-airways-refund.com").score >= 0.8
+    assert lookalike("etihadguest-miles.top").score >= 0.8
+    assert lookalike("etihadd.com").score >= 0.8  # near-exact typo of etihad.com
+    assert lookalike("emirates-skywards-points.com").score >= 0.8
+
+
+async def test_uae_pass_sso_button_is_mention():
+    m = await match_brand(det("https://eservices.someuniversity.ac.ae/login", "Student Portal",
+                              "Welcome. Sign in with UAE PASS or use your university account.",
+                              [FormField(name="username", label="Username"), FormField(name="password", type="password", label="Password")]))
+    assert m.brand_id != "uae_pass"
+    m_ar = await match_brand(det("https://portal.someentity.gov.ae/", "البوابة", "تسجيل الدخول عبر الهوية الرقمية"))
+    assert m_ar.brand_id != "uae_pass"
+    # a page that collects the UAE PASS credentials itself is a claim
+    m2 = await match_brand(det("https://uaepass-verify.example/", "Sign in", "Login with UAE PASS",
+                               [FormField(name="u", label="UAE PASS username"), FormField(name="otp", label="OTP")]))
+    assert m2.brand_id == "uae_pass" and not m2.is_official_domain

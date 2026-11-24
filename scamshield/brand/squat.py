@@ -94,6 +94,15 @@ def _official_owner(host: str) -> tuple[str | None, str | None]:
     return best if best else (None, None)
 
 
+# Brand tokens that are common words in UAE entity names (اتحاد "union": Etihad Rail, Etihad WE, Etihad Credit
+# Bureau; "emirates": Emirates Steel, Emirates Auction...). Combosquat / TLD swap / subdomain hits on them are
+# capped at 0.4 unless the host also carries that brand's context words. Full-label typos/homoglyphs are not capped.
+WEAK_TOKENS = {
+    "etihad": ("airway", "air", "flight", "fly", "guest", "miles", "ticket", "booking"),
+    "emirates": ("airline", "skywards", "fly", "flight", "ticket", "booking"),
+}
+
+
 def _subdomain_part(host: str) -> str:
     ext = _extract(host)
     if ext.domain and ext.suffix:
@@ -146,8 +155,10 @@ def _lookalike(domain: str) -> LookalikeResult:
 
     best = LookalikeResult(domain=domain)
 
-    def consider(score, bid, closest, dist, techs):
+    def consider(score, bid, closest, dist, techs, token=None):
         nonlocal best
+        if token in WEAK_TOKENS and not any(c in host for c in WEAK_TOKENS[token]):
+            score = min(score, 0.4)  # dictionary-word brand token without brand context (etihadwe.ae, etihadrail.ae)
         if idn and "idn" not in techs:
             techs = techs + ["idn"]
         if score > best.score:
@@ -158,7 +169,7 @@ def _lookalike(domain: str) -> LookalikeResult:
         osk = skeleton(olab)
         dist = Levenshtein.distance(lab, olab)
         if lab == olab and suf != osuf:
-            consider(0.85 if len(olab) >= 6 else 0.6 if len(olab) >= 4 else 0.35, bid, oreg, 0, ["tld_swap"])
+            consider(0.85 if len(olab) >= 6 else 0.6 if len(olab) >= 4 else 0.35, bid, oreg, 0, ["tld_swap"], token=olab)
             continue
         if lab != olab and sk == osk and len(olab) >= 3:
             consider(0.95, bid, oreg, dist, ["homoglyph"] + (["tld_swap"] if suf != osuf else []))
@@ -176,20 +187,20 @@ def _lookalike(domain: str) -> LookalikeResult:
         closest = first.get(bid)
         if lab == k:  # keyword is the whole label but not an official domain (enbd.com, adcb.net)
             if len(k) >= 4:
-                consider(0.45, bid, closest, 0, ["keyword"])  # often a defensive registration by the brand itself
+                consider(0.45, bid, closest, 0, ["keyword"], token=k)  # often a defensive registration by the brand itself
             continue
         if len(k) >= 5:
             if k in lab:
-                consider(0.85 if not shared else 0.9, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"])
+                consider(0.85 if not shared else 0.9, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"], token=k)
             elif ksk in sk:
-                consider(0.88, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat", "homoglyph"])
+                consider(0.88, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat", "homoglyph"], token=k)
             elif len(k) >= 8 and _near_substring(ksk, sk):
-                consider(0.75, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat", "edit_distance"])
+                consider(0.75, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat", "edit_distance"], token=k)
         else:  # short keyword (adcb, tamm, rta, dib): need a whole token or label prefix
             if k in toks or ksk in tok_sk:
-                consider(0.8 if len(k) >= 4 else 0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"])
+                consider(0.8 if len(k) >= 4 else 0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"], token=k)
             elif len(k) == 4 and (lab.startswith(k) or lab.endswith(k)) and len(lab) > len(k) + 2:
-                consider(0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"])
+                consider(0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"], token=k)
     # subdomain_brand: brand token in a subdomain label of a non-official host
     # (aramex.a-track-au.com, emiratesnbd.com.verify-login.xyz, tamm.gov-ae.pay-fines.top)
     sub = _subdomain_part(host)
@@ -200,9 +211,9 @@ def _lookalike(domain: str) -> LookalikeResult:
         for bid, k in cands:
             closest = first.get(bid)
             if len(k) >= 4 and (k in sub_toks or (len(k) >= 6 and any(k in l for l in sub_labels))):
-                consider(0.9, bid, closest, None, ["subdomain_brand", "keyword"])
+                consider(0.9, bid, closest, None, ["subdomain_brand", "keyword"], token=k)
             elif len(k) == 3 and k in sub_labels:
-                consider(0.6, bid, closest, None, ["subdomain_brand", "keyword"])
+                consider(0.6, bid, closest, None, ["subdomain_brand", "keyword"], token=k)
     if idn and best.score == 0.0:
         best = LookalikeResult(domain=domain, techniques=["idn"], score=0.2)
     return best
