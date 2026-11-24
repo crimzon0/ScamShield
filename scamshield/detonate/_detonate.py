@@ -488,7 +488,9 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
         run = _Run(det, out_dir)
         budget = max(3.0, float(settings.detonate_timeout))
         async with _browser.semaphore():
-            t_run = time.monotonic()  # the cap is per detonation; time queued for a slot is not counted
+            # the cap is per detonation; time queued for a slot is not counted
+            t0 = time.monotonic()
+            det.started_at = utcnow()
             try:
                 await asyncio.wait_for(_run(run, norm, persona, PERSONA_CONFIG[persona]["referer"], budget),
                                        budget + 1.5)

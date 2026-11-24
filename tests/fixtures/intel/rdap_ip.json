@@ -1,0 +1,5 @@
+{"objectClassName": "ip network", "handle": "203.0.113.0 - 203.0.113.255", "name": "EXAMPLE-HOSTING", "country": "NL",
+ "entities": [
+   {"roles": ["registrant"], "vcardArray": ["vcard", [["fn", {}, "text", "Example Hosting BV"], ["email", {}, "text", "noc@hosting.example"]]],
+    "entities": [{"roles": ["abuse"], "vcardArray": ["vcard", [["fn", {}, "text", "Abuse"], ["email", {}, "text", "abuse@hosting.example"]]]}]}
+ ]}

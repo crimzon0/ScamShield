@@ -32,7 +32,28 @@ def _warn(ctx, lang):
     return head + "\n" + _lines([w[lang] for w in ws]) + "\n\n"
 
 
+def _not_official(ctx, lang):
+    if not ctx.get("brand_en"):
+        return ""
+    return ("The reported domain is NOT an official domain of this brand.\n" if lang == "en"
+            else "النطاق المُبلّغ عنه ليس نطاقاً رسمياً لهذه العلامة.\n")
+
+
+def _no_takedown(ctx, lang):
+    if lang == "en":
+        return (f"NO TAKEDOWN NOTICE — case {ctx['case_id']}\n\n"
+                f"{ctx['url']} was assessed LEGITIMATE (score {ctx['score']}/100)"
+                f"{' — official domain of ' + ctx['brand_en'] if ctx.get('brand_en') else ''}.\n"
+                f"No takedown request is drafted. Evidence package retained for the record.\n\n{SIGNATURE_EN}\n")
+    return (f"لا يوجد طلب إزالة — القضية {ctx['case_id']}\n\n"
+            f"تم تقييم الرابط {ctx['url']} على أنه موقع سليم (الدرجة {ctx['score']}/100)"
+            f"{' — نطاق رسمي لـ' + (ctx.get('brand_ar') or ctx['brand_en']) if ctx.get('brand_en') else ''}.\n"
+            f"لم تتم صياغة أي طلب إزالة. حُفظت حزمة الأدلة للسجل.\n\n{SIGNATURE_AR}\n")
+
+
 def notice_en(ctx: dict[str, Any]) -> str:
+    if ctx.get("label") == "legitimate":
+        return _no_takedown(ctx, "en")
     to = ", ".join(ctx["registrar_contacts"]) or "(registrar abuse contact not found — look up via RDAP/ICANN)"
     host = ctx["hosting_contact"]
     if not ctx.get("hosting_abuse_emails"):
@@ -59,8 +80,7 @@ Hosting: IP {ctx['ip'] or '-'}, {ctx['asn'] or '-'} {ctx['asn_org'] or ''}, coun
 
 {_platform_en(ctx)}{_warn(ctx, 'en')}Brand impersonated: {ctx['brand_en'] or 'not determined'}
 Official domain(s) of that brand: {', '.join(ctx['official_domains']) or 'not on file'}
-The reported domain is NOT an official domain of this brand.
-
+{_not_official(ctx, 'en')}
 Assessment: {ctx['label_en']} (risk score {ctx['score']}/100)
 Reasons:
 {_lines(ctx['reasons_en'])}
@@ -87,6 +107,8 @@ Reference: {ctx['case_id']}
 
 
 def notice_ar(ctx: dict[str, Any]) -> str:
+    if ctx.get("label") == "legitimate":
+        return _no_takedown(ctx, "ar")
     to = "، ".join(ctx["registrar_contacts"]) or "(لم يُعثر على جهة الإبلاغ عن إساءة الاستخدام لدى المسجّل — يُرجى البحث عبر RDAP/ICANN)"
     hashes = _lines([f"{h['path']}  sha256={h['sha256']}" for h in ctx["key_hashes"]])
     return f"""مسودة — لم تُرسل — تتطلب مراجعة الضابط قبل الاستخدام
@@ -110,8 +132,7 @@ def notice_ar(ctx: dict[str, Any]) -> str:
 
 {_platform_ar(ctx)}{_warn(ctx, 'ar')}العلامة التجارية المنتحَلة: {ctx['brand_ar'] or ctx['brand_en'] or 'غير محددة'}
 النطاقات الرسمية لهذه العلامة: {'، '.join(ctx['official_domains']) or 'غير مسجّلة لدينا'}
-النطاق المُبلّغ عنه ليس نطاقاً رسمياً لهذه العلامة.
-
+{_not_official(ctx, 'ar')}
 التقييم: {ctx['label_ar']} (درجة الخطورة {ctx['score']}/100)
 الأسباب:
 {_lines(ctx['reasons_ar'])}

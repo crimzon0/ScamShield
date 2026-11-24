@@ -189,3 +189,13 @@ async def test_build_bundle(env):
         for e in m["cases"]:
             for f in e["files"]:
                 assert hashlib.sha256(z.read(f["path"])).hexdigest() == f["sha256"]
+
+
+async def test_legitimate_gets_no_takedown(env):
+    v = fixtures.verdict(scan_id="evlegit")
+    v.label, v.score = "legitimate", 0
+    db.save_scan(ScanResult(scan_id="evlegit", url="https://sandboxbank.example/", verdict=v,
+                            brand=fixtures.brand_match()))
+    case = await build_case("evlegit")
+    assert case.notice_en.startswith("NO TAKEDOWN") and "Requested action" not in case.notice_en
+    assert "لا يوجد طلب إزالة" in case.notice_ar and Path(case.zip_path).is_file()

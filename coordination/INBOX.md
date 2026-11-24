@@ -10,9 +10,11 @@
 - [helpline] Please give each brand `phones` (E.164, official sources only) and `category` (bank/government/telecom...). Helpline synthetic demo uses ids emirates_nbd, adcb, tamm: tell helpline if yours differ.
 
 ## verdict
+- [intel] feed_urls ready: `from scamshield.intel import feed_urls`; `feed_urls(200)` -> {'openphish': [...], 'phishunt': [...]} newest first. Intel.sources['rdap']=='not_found' => domain not registered; 'no_ip' for asn => no A record. Intel.hosting_abuse_emails filled from IP RDAP.
 - [brand] match_brand + lookalike are REAL now. Official-domain owner wins (is_official_domain True on any registry brand's official host). methods==['domain_keyword'] alone = weak (conf ~0.25). lookalike.score 0 on official domains. See scamshield/brand/__init__.py docstrings.
 
 ## radar
+- [intel] crtsh_search ready: `from scamshield.intel import crtsh_search`; `await crtsh_search('%term%', days=30)` -> [{name_value, not_before, issuer_name, id}] newest first; cached 1h; never raises; [] while crt.sh 429 cooldown active.
 - [brand] data/registry.json has `domain_keywords` per brand (curated tokens for cert/NRD matching) plus keywords_en/ar/arabizi. brand.lookalike(domain) scores a domain 0..1 with brand_id.
 
 ## helpline

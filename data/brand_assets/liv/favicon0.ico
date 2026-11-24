@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://www.liv.me/assets/liv/css/style.css">
+<title>Maintenance</title>
+
+    <style>
+
+        .card-with-icon-error .container { margin: 0 auto; }
+
+        .card-with-icon-error .row { display: flex; }
+
+        .card-with-icon-error .row > div { flex-shrink: 0; max-width: 50%; }
+
+        .card-with-icon-error .btn-primary { text-decoration: none; }
+
+        @media (max-width: 992px) {
+
+            .card-with-icon-error .row { flex-direction: column-reverse; }
+
+            .card-with-icon-error .row > div { max-width: 100%; }
+
+            .card-with-icon-error .card-with-icon__media lottie-player { max-width: 80%; margin: 0 auto; } 
+
+        }
+</style>
+</head>
+
+<body>
+<main>
+
+        <section class="card-with-icon-error section card-with-icon pt-4 pt-lg-6 pb-4 light-gray error-page " style="align-items:center">
+<div class="container">
+<div class="row align-items-center">
+<div class="card-with-icon__media col-12 col-md-6 text-center mt-2 d-none d-lg-block">
+
+</div>
+<div class="card-with-icon__content col-12 col-md-6 mb-0 mt-2 position-static">
+
+
+                        <h1 class=" display-3 mb-1 f-size-1 f-size-md-2">
+<strong class='d-block'> Omg! It’s a UFO!</strong>
+</h1>
+
+                        <p class="lead ">
+
+                           Sorry for the inconvenience, there is a problem processing your request. Your request has been logged and your support ID reference is :<strong> 17788354523502454146</strong>
+</p>
+
+                        <a href="https://www.liv.me/en" class="btn btn-primary " target="_self">Go to Liv. Homepage</a>
+</div>
+</div>
+</div>
+</section>
+
+
+    </main>
+<script src="https://www.liv.me/assets/liv/js/animation-player.js"></script>
+</body>
+
+</html>

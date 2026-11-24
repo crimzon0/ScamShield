@@ -439,6 +439,32 @@ def case_download(scan_id: str, kind: str):
     return FileResponse(path, media_type=media, filename=f"scamshield_case_{scan_id}.{kind}")
 
 
+class BundleIn(BaseModel):
+    scan_ids: list[str]
+
+
+@app.post("/api/bundle")
+async def bundle(body: BundleIn):
+    """ZIP of several case files (evidence.build_bundle). Returns the file directly."""
+    ids = [s for s in dict.fromkeys(body.scan_ids) if s][:100]
+    if not ids:
+        raise HTTPException(400, "no scan_ids")
+    try:
+        from scamshield import evidence
+
+        build = getattr(evidence, "build_bundle", None)
+        if build is None:
+            from scamshield.evidence.bundle import build_bundle as build
+        path = await build(ids)
+    except Exception as e:
+        log.exception("bundle failed")
+        raise HTTPException(502, f"bundle failed: {e}")
+    f = _safe_file(path, _case_roots())
+    if not f:
+        raise HTTPException(404, "bundle not produced")
+    return FileResponse(f, media_type="application/zip", filename=f.name)
+
+
 @app.get("/api/brands")
 def brands():
     return [{k: b.get(k) for k in ("id", "name_en", "name_ar", "category", "official_domains", "phones",

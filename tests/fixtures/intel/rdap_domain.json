@@ -1,0 +1,23 @@
+{
+  "objectClassName": "domain",
+  "ldhName": "SANDBOX-BANK-LOGIN.EXAMPLE",
+  "handle": "123_DOMAIN",
+  "status": ["client transfer prohibited"],
+  "events": [
+    {"eventAction": "registration", "eventDate": "2026-11-21T09:15:00Z"},
+    {"eventAction": "expiration", "eventDate": "2027-11-21T09:15:00Z"},
+    {"eventAction": "last changed", "eventDate": "2026-11-21T09:16:00Z"}
+  ],
+  "entities": [
+    {"objectClassName": "entity", "roles": ["registrar"],
+     "vcardArray": ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", "Example Registrar LLC"]]],
+     "entities": [
+       {"objectClassName": "entity", "roles": ["abuse"],
+        "vcardArray": ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", "Abuse desk"],
+                                 ["email", {}, "text", "Abuse@Registrar.example"], ["tel", {}, "uri", "tel:+1.5555550100"]]]}
+     ]}
+  ],
+  "nameservers": [{"objectClassName": "nameserver", "ldhName": "NS1.HOST.EXAMPLE"},
+                  {"objectClassName": "nameserver", "ldhName": "ns2.host.example."}],
+  "port43": "whois.registrar.example"
+}

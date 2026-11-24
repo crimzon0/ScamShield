@@ -150,3 +150,20 @@ def test_health_and_spa(client):
     assert client.get("/api/health").json()["ok"] is True
     assert client.get("/").status_code == 200
     assert client.get("/api/nonexistent").status_code == 404
+
+
+def test_bundle(client, monkeypatch, tmp_path):
+    import scamshield.evidence
+
+    async def fake_bundle(scan_ids, concurrency=3):
+        p = tmp_path / "artifacts" / "cases" / "bundles" / "bundle_x.zip"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(p, "w") as zf:
+            zf.writestr("index.csv", ",".join(scan_ids))
+        return str(p)
+
+    monkeypatch.setattr(scamshield.evidence, "build_bundle", fake_bundle, raising=False)
+    r = client.post("/api/bundle", json={"scan_ids": ["a", "b"]})
+    assert r.status_code == 200 and r.headers["content-type"] == "application/zip"
+    assert zipfile.ZipFile(io.BytesIO(r.content)).read("index.csv") == b"a,b"
+    assert client.post("/api/bundle", json={"scan_ids": []}).status_code == 400

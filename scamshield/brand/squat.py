@@ -168,7 +168,7 @@ def _lookalike(domain: str) -> LookalikeResult:
         closest = first.get(bid)
         if lab == k:  # keyword is the whole label but not an official domain (enbd.com, adcb.net)
             if len(k) >= 4:
-                consider(0.75, bid, closest, 0, ["keyword"])
+                consider(0.45, bid, closest, 0, ["keyword"])  # often a defensive registration by the brand itself
             continue
         if len(k) >= 5:
             if k in lab:

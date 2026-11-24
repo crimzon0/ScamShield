@@ -53,6 +53,18 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
+export async function downloadBundle(scanIds: string[]): Promise<void> {
+  const r = await fetch("/api/bundle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_ids: scanIds }) });
+  if (!r.ok) throw new Error(`${r.status}`);
+  const blob = await r.blob();
+  const cd = r.headers.get("content-disposition") || "";
+  const m = /filename="?([^";]+)"?/.exec(cd);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = m ? m[1] : "scamshield_bundle.zip";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
 export const api = {
   scan: (url: string) => req<ScanResult>("/api/scan", json({ url })),
   getScan: (id: string) => req<ScanResult>(`/api/scans/${encodeURIComponent(id)}`),

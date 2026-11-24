@@ -1,0 +1,244 @@
+{
+ "fab": {
+  "favicon": [
+   "a0dadf2528ce465b",
+   "aedad12528cad671"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.bankfab.com/-/media/fab-uds/common-images/icons/favicon.png",
+   "https://www.bankfab.com/favicon.ico"
+  ]
+ },
+ "adcb": {
+  "favicon": [
+   "bf0e9525ca0aed89"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.adcb.com/favicon.ico"
+  ]
+ },
+ "mashreq": {
+  "favicon": [
+   "ba60c59f3b603c1e"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.mashreq.com/dist/mashreq-reactjs/favicon.ico",
+   "https://www.mashreq.com/favicon.ico"
+  ]
+ },
+ "emirates_islamic": {
+  "favicon": [
+   "92da245a3636c9db",
+   "85c97a363a943697"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.emiratesislamic.ae/-/media/ei/images/common/logo/favicon.png",
+   "https://www.emiratesislamic.ae/-/media/ei/images/header/EI_touch_icon.jpg"
+  ]
+ },
+ "dubai_islamic_bank": {
+  "favicon": [
+   "ea99ad63a5329469"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.dib.ae/Assets/images/favicon.ico"
+  ]
+ },
+ "adib": {
+  "favicon": [
+   "bf95e05ac129c764"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.adib.ae/-/media/project/adib/adibsite/common/favicon-32x32.png"
+  ]
+ },
+ "rakbank": {
+  "favicon": [
+   "9bcc64339bcc6331"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.rakbank.ae/favicon.ico"
+  ]
+ },
+ "cbd": {
+  "favicon": [
+   "9ee8a1177e60869e"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.cbd.ae/favicon.ico"
+  ]
+ },
+ "central_bank_uae": {
+  "favicon": [],
+  "screenshot_top": [],
+  "source": [
+   "https://www.centralbank.ae/favicon.ico"
+  ]
+ },
+ "wio_bank": {
+  "favicon": [
+   "c0793f96c17b3c88",
+   "c0793f96c17b3cc0"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://wio.io/logo.png",
+   "https://www.wio.io/favicon.ico"
+  ]
+ },
+ "tamm": {
+  "favicon": [
+   "b933aaec840e2eb9"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.tamm.abudhabi/favicon.ico"
+  ]
+ },
+ "uae_pass": {
+  "favicon": [
+   "ef38e43381719a63"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.uaepass.ae/favicon.ico"
+  ]
+ },
+ "abu_dhabi_police": {
+  "favicon": [
+   "fe836833e46c8669"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.adpolice.gov.ae:443/-/media/Project/ADP/ADP/favicon_adp.png"
+  ]
+ },
+ "dubai_police": {
+  "favicon": [
+   "ff9aa869a5948661"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.dubaipolice.gov.ae/app/favicon.ico"
+  ]
+ },
+ "rta_dubai": {
+  "favicon": [
+   "ebc88d31d396b047"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.rta.ae/favicon.ico"
+  ]
+ },
+ "moi_uae": {
+  "favicon": [
+   "fa9ea12982e49967"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.moi.gov.ae/favicon.ico"
+  ]
+ },
+ "mohre": {
+  "favicon": [
+   "bb3b86c683319b91"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.mohre.gov.ae/favicon.ico"
+  ]
+ },
+ "dubai_municipality": {
+  "favicon": [
+   "efc39539d20fc80c",
+   "e7c39539d20fcc0c"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.dm.gov.ae/wp-content/themes/dubaimunicipality/assets/images/favicon.ico",
+   "https://dmpmedia.dm.gov.ae/uploads/2023/06/cropped-dm-favicon-2023-32x32.png",
+   "https://dmpmedia.dm.gov.ae/uploads/2023/06/cropped-dm-favicon-2023-192x192.png",
+   "https://dmpmedia.dm.gov.ae/uploads/2023/06/cropped-dm-favicon-2023-180x180.png"
+  ]
+ },
+ "salik": {
+  "favicon": [],
+  "screenshot_top": [],
+  "source": [
+   "https://www.salik.ae/favicon.ico"
+  ]
+ },
+ "emirates_post": {
+  "favicon": [
+   "b83bc7c09c1f2378"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://assets.emiratespost.ae/cn-cms/assets/Microsoft_Teams_image_2aef2b86ac.png"
+  ]
+ },
+ "adnoc_distribution": {
+  "favicon": [
+   "b966c0398fce383c"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.adnocdistribution.ae/assets/images/favicon.png"
+  ]
+ },
+ "etisalat_eand": {
+  "favicon": [
+   "ea4a85b58dc89a37"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.eand.ae/content/dam/etisalat/logo/etisalat-favicon.ico"
+  ]
+ },
+ "du": {
+  "favicon": [
+   "85ec3a90ed4f9a38"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.du.ae/sites/duaediscovery/smenext/favicon.ico"
+  ]
+ },
+ "aramex": {
+  "favicon": [
+   "96c32d9e6168d363"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.aramex.com/favicon.ico"
+  ]
+ },
+ "emirates_airline": {
+  "favicon": [
+   "d1d22f2d1ac3953c"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.emirates.com/favicon.ico"
+  ]
+ },
+ "etihad_airways": {
+  "favicon": [
+   "bf84c063967971b4"
+  ],
+  "screenshot_top": [],
+  "source": [
+   "https://www.etihad.com/favicon.ico"
+  ]
+ },
+ "_note": "pHash (imagehash.phash, 64-bit) of favicons fetched only from each brand's official domains by scamshield.brand.build_assets; cross-brand collisions (distance<=10) removed."
+}

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
+import { api, downloadBundle, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
 import { dict, fmtUtc, humanDuration, Key, Lang } from "./i18n";
 
 // ------------------------------------------------------------------ i18n context
@@ -117,7 +117,7 @@ function BrandCard({ r }: { r: ScanResult }) {
           {b.asks_for.length > 0 && <><dt>{t("asksFor")}</dt><dd>{b.asks_for.map((a) => <span key={a} className="chip">{a}</span>)}</dd></>}
         </dl>
       ) : <p className="muted">{t("noBrand")}</p>}
-      {look && look.brand_id && (
+      {look && look.brand_id && look.score > 0 && look.domain !== look.closest_official && !b?.is_official_domain && (
         <p className="look"><span className="badge badge-warn">{t("lookalike")}</span> <code>{look.domain}</code> → {t("closestOfficial")} <code>{look.closest_official || "—"}</code> {look.techniques.map((x) => <span key={x} className="chip">{x}</span>)}</p>
       )}
     </Card>
@@ -141,7 +141,7 @@ function ScreenshotCard({ r }: { r: ScanResult }) {
         ))}
       </div>
       {det && <div className="shot-meta"><span className={`badge ${det.status === "ok" ? "badge-ok" : "badge-warn"}`}>{det.status}</span> {det.http_status && <code>HTTP {det.http_status}</code>} <span className="muted">{det.title}</span></div>}
-      {src ? <a href={src} target="_blank" rel="noreferrer"><img className="shot" src={src} alt={`${sel} screenshot`} /></a>
+      {src ? <div className="shot-wrap"><a href={src} target="_blank" rel="noreferrer"><img className="shot" src={src} alt={`${sel} screenshot`} /></a></div>
         : <div className="shot-empty">{t("noScreenshot")}</div>}
     </Card>
   );
@@ -238,6 +238,15 @@ function ScanDetail({ r }: { r: ScanResult }) {
   );
 }
 
+function BundleButton({ ids }: { ids: string[] }) {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  if (!ids.length) return null;
+  const run = async () => { setBusy(true); setErr(""); try { await downloadBundle(ids); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); } };
+  return <button className="btn" onClick={run} disabled={busy} title={err || undefined}>{busy ? t("exportingBundle") : `📦 ${t("exportBundle")}`} {err && "⚠"}</button>;
+}
+
 // ------------------------------------------------------------------ scan page
 function ScanBox({ onDone }: { onDone: (r: ScanResult) => void }) {
   const { t } = useI18n();
@@ -296,7 +305,7 @@ function RecentScans({ go, refreshKey }: { go: (r: string) => void; refreshKey: 
   const [rows, setRows] = useState<ScanRow[] | null>(null);
   useEffect(() => { api.scans().then(setRows).catch(() => setRows([])); }, [refreshKey]);
   return (
-    <Card title={t("recentTitle")}>
+    <Card title={t("recentTitle")} actions={<BundleButton ids={(rows || []).filter((s) => s.label !== "legitimate").slice(0, 25).map((s) => s.scan_id)} />}>
       {!rows ? <p className="muted">{t("loading")}</p> : rows.length === 0 ? <p className="muted">{t("noScans")}</p> : (
         <div className="tblwrap"><table className="tbl">
           <thead><tr><th>{t("colWhen")}</th><th>{t("colUrl")}</th><th>{t("score")}</th><th>{t("colVerdict")}</th></tr></thead>
@@ -358,6 +367,7 @@ function RadarPage({ go }: { go: (r: string) => void }) {
   const backfill = async () => { setRunning(true); await api.backfill().catch(() => setRunning(false)); };
   return (
     <Card title={t("radarTitle")} actions={<>
+      <BundleButton ids={(rows || []).filter((h) => h.scan_id).map((h) => h.scan_id as string)} />
       <button className="btn" onClick={load}>{t("refresh")}</button>
       <button className="btn btn-accent" onClick={backfill} disabled={running}>{running ? t("radarRunning") : t("radarBackfill")}</button></>}>
       {!rows ? <p className="muted">{t("loading")}</p> : rows.length === 0 ? <p className="muted">{t("noRadar")}</p> : (

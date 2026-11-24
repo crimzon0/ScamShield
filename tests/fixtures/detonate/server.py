@@ -25,6 +25,13 @@ META_PAGE = """<!doctype html><html><head><meta http-equiv="refresh" content="0;
 JS_PAGE = """<!doctype html><html><head><title>loading</title></head><body>Loading...
 <script>setTimeout(function(){ location.href = '/final'; }, 300);</script></body></html>"""
 
+FP_PAGE = """<!doctype html><html><head><title>fp</title></head><body><pre id="o">hdr=__HDR__</pre><script>
+document.getElementById('o').textContent += '\nwebdriver=' + navigator.webdriver + ' langs=' + navigator.languages.join(',') +
+ ' touch=' + navigator.maxTouchPoints + ' chrome=' + (typeof window.chrome) + ' platform=' + navigator.platform +
+ ' brands=' + (navigator.userAgentData ? navigator.userAgentData.brands.map(b => b.brand).join(',') : '') +
+ ' st=' + String(setTimeout).indexOf('[native code]');
+</script></body></html>"""
+
 BLANK_PAGE = "<!doctype html><html><head><title></title></head><body></body></html>"
 
 # 1x1 PNG
@@ -71,6 +78,13 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/slow":
             time.sleep(30)
             return self._send(200, BENIGN_PAGE)
+        if p == "/js5":
+            return self._send(200, JS_PAGE.replace("300", "4500"))
+        if p == "/meta4":
+            return self._send(200, META_PAGE.replace('content="0;', 'content="4;'))
+        if p == "/fp":  # fingerprint echo: what a cloaker would see
+            hdr = (self.headers.get("sec-ch-ua", "") + " | " + ua).replace("<", "")
+            return self._send(200, FP_PAGE.replace("__HDR__", hdr))
         if p == "/tall":
             return self._send(200, "<html><body><h1>Sandbox Bank tall page</h1>"
                               "<div style='height:30000px;background:linear-gradient(#fff,#00f)'>long</div></body></html>")

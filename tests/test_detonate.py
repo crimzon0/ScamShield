@@ -149,3 +149,33 @@ async def test_concurrent_five(base):
     assert all(d.status == "ok" and d.final_url == base + "/final" for d in dets)
     assert len({d.screenshot_path for d in dets}) == 5  # no artifact clobbering
     assert time.monotonic() - t0 < 30
+
+
+async def test_delayed_js_redirect_4500ms(base):
+    d = await detonate(base + "/js5", scan_id="t-js5")
+    assert d.status == "ok", d.error
+    assert d.final_url == base + "/final"
+    assert kinds(d) == ["js", "final"]
+    assert d.duration_ms < 15_000
+
+
+async def test_delayed_meta_refresh_4s(base):
+    d = await detonate(base + "/meta4", scan_id="t-meta4")
+    assert d.final_url == base + "/final"
+    assert kinds(d) == ["meta", "final"]
+
+
+async def test_plain_page_is_fast(base):
+    d = await detonate(base + "/final", scan_id="t-fast")
+    assert d.status == "ok" and d.duration_ms < 6_000, d.duration_ms
+
+
+async def test_mobile_fingerprint_looks_real(base):
+    d = await detonate(base + "/fp", scan_id="t-fp")
+    t = d.visible_text
+    assert "HeadlessChrome" not in t, t
+    assert "Android" in t and "webdriver=false" in t, t
+    assert "langs=ar-AE,ar" in t and "touch=5" in t and "chrome=object" in t, t
+    assert "st=-1" not in t, t  # patched setTimeout still looks native
+    g = await detonate(base + "/fp", persona="crawler", scan_id="t-fp")
+    assert "Googlebot" in g.visible_text

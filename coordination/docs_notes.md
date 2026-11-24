@@ -6,3 +6,9 @@ Demo: `.venv/Scripts/python -m scamshield.helpline --live --brand tamm --no-land
 
 ## Detonator
 Real runs: google.com ok 5.7s; tamm.abudhabi ok 5.3s (http->301->301->200); tinyurl/is.gd shorteners expanded; dead .ae domain -> status dead in <1s; data: URL -> error. Personas: uae_mobile_ad_click (Android, ar-AE, Asia/Dubai, Google referrer), desktop, crawler (Googlebot).
+
+## Evidence (from evidence teammate)
+- Every scan exports a police case package: one ZIP holding the per-persona screenshots, DOM and HAR, the redirect chain with UTC timestamps, RDAP/WHOIS (raw + parsed registrar and abuse contacts), DNS/hosting/TLS, brand match and verdict JSON, a bilingual EN/AR PDF report, and pre-drafted EN/AR takedown notices for the registrar and host (drafts only, never sent, require officer review). Legitimate verdicts get no takedown draft.
+- Integrity: manifest.json lists every file with its SHA-256, size and UTC creation time, plus tool version and the full UTC timeline (domain registered, certificate first seen, page captured, case generated). The SHA-256 of the manifest itself is in manifest.sha256; missing artifacts are recorded explicitly.
+- Chain of custody: the PDF states how evidence was captured (isolated headless browser, no downloads, no form interaction), flags captures needing manual review (HTTP 4xx, dead page, domain-only); `build_bundle()` packs a radar batch into one hashed ZIP with index.csv.
+- Real examples: aramex.a-track-au.com (OpenPhish) -> scam 100, registrar Dominet (HK), domain 1 day old; tamm.abudhabi -> legitimate 0, no takedown draft.

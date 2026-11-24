@@ -1,0 +1,9 @@
+Domain Name:                     sandboxbank-verify.ae
+Registrar ID:                    Example
+Registrar Name:                  Example AE Registrar
+Status:                          ok
+
+Registrant:                      SANDBOX TEST LLC
+
+Name Server:                     ns1.host.example
+Name Server:                     ns2.host.example
