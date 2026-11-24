@@ -56,3 +56,14 @@ dead/blank/timeout/error detonations: 15
    ('https://hawkinsinc.microsoft-alerts.org', ['blank'], 'scam', '100')
 ```
 Every input row has a verdict, input order preserved, all rows have EN+AR reasons; 15 dead/blank/timeout pages still got verdicts (domain-only). Note: an earlier run silently resumed a stale predictions.csv; fixed by using a fresh file (verdict adding fingerprint check to resume).
+
+### 5. Radar real crt.sh hits + helpline check — PASS (20:31 UTC)
+DB: 478 radar hits {crtsh: 471, certstream: 5, nrd: 2}; 29 scanned so far {scam 10, likely_scam 8, suspicious 8, legitimate 3} (refresh loop scans 25 every 4 min). Real crt.sh look-alikes, e.g.:
+```
+emiratesnbd.com-verify-net.bond   cert 2026-10-09T06:16  flagged 2026-11-24T20:27  scam 100
+emiratesnbd.com-verify-io.bond    cert 2026-10-09T20:04  flagged 2026-11-24T20:27  scam 100
+emiratesnbdgov.com                cert 2026-10-12T16:17  flagged 2026-11-24T20:27  likely_scam 70
+uaepasses.com                     cert 2026-10-06T12:47  flagged 2026-11-24T20:19  scam 100
+```
+(crt.sh index lags ~40 d; certstream + NRD cover the fresh window, e.g. trafficrta.xyz registered 2026-11-22.)
+Helpline: `python -m scamshield.helpline --brand tamm --live --no-landing` -> `sources: {'places': 'no_key', 'synthetic': 'ok'}`; [LIKELY_SCAM] tamm +971560000301 (SYNTHETIC, labelled) with EN+AR reasons; 16 phone findings in db. Live Google Maps search is implemented but unverified (no key).

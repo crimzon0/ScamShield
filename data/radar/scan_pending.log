@@ -22,3 +22,4 @@ scanned 2 hits
 almashreqmedical.com                          certstream     term=mashreq          brand=mashreq          first_seen=2026-11-24T18:58:56 flagged_at=2026-11-24T20:23:58 ttd=  1h25m label=scam score=100 scan=69232cb8f5e3
 adcbupdate.6983254321app.ovinramavol.tkdev.35 certstream     term=adcb             brand=adcb             first_seen=2026-11-24T19:23:51 flagged_at=2026-11-24T20:23:11 ttd=    59m label=legitimate score=0 scan=70745a266252
 2026-11-25 00:29:43,264 ERROR whois.whois Error trying to connect to socket: closing socket - [Errno 11001] getaddrinfo failed
+2026-11-25 00:29:59,159 ERROR whois.whois Error trying to connect to socket: closing socket - [Errno 11001] getaddrinfo failed
