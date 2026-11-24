@@ -10,6 +10,12 @@ async def _main(argv: list[str]) -> int:
     if not argv:
         print("usage: python -m scamshield.evidence <scan_id> | --scan <url>", file=sys.stderr)
         return 2
+    if argv[0] == "--bundle":
+        from . import build_bundle
+
+        path = await build_bundle(argv[1:])
+        print(path)
+        return 0 if path else 1
     if argv[0] == "--scan" and len(argv) > 1:
         from scamshield.pipeline import scan_url
 

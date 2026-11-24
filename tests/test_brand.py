@@ -1,0 +1,153 @@
+import os
+
+os.environ.setdefault("SCAMSHIELD_OFFLINE", "1")
+
+import pytest
+
+from scamshield.brand import get_brand, load_registry, lookalike, match_brand
+from scamshield.brand.normalize import norm
+from scamshield.core import fixtures
+from scamshield.core.schemas import Detonation, FormField
+
+
+def det(url, title="", text="", fields=()):
+    return Detonation(url=url, final_url=url, title=title, visible_text=text, form_fields=list(fields))
+
+
+# ------------------------------------------------------------------ registry
+def test_registry_shape():
+    reg = load_registry()
+    assert len(reg) >= 25
+    ids = [b["id"] for b in reg]
+    assert len(ids) == len(set(ids))
+    for must in ("sandbox_bank", "emirates_nbd", "adcb", "tamm", "uae_pass", "abu_dhabi_police"):
+        assert must in ids
+    assert get_brand("sandbox_bank")["fictional"] is True
+    for b in reg:
+        for k in ("id", "category", "name_en", "name_ar", "official_domains", "keywords_en", "keywords_ar",
+                  "arabizi", "phones", "sources", "verified"):
+            assert k in b, (b["id"], k)
+        for p in b["phones"]:
+            assert p.startswith("+971") and p[1:].isdigit(), (b["id"], p)
+        if not b.get("fictional"):
+            assert b["sources"], b["id"]
+
+
+def test_normalize_arabic():
+    assert norm("الإمارات") == norm("الامارات") == "الامارات"
+    assert norm("مُخَالَفَة") == "مخالفه"
+    assert norm("بنك أبو ظبي") == "بنك ابوظبي"
+    assert norm("ـــتمـــ") == "تم"
+
+
+# ------------------------------------------------------------------ match_brand
+async def test_fixture_sandbox_bank():
+    m = await match_brand(fixtures.detonation())
+    assert m.brand_id == "sandbox_bank"
+    assert not m.is_official_domain
+    assert "card" in m.asks_for and "otp" in m.asks_for
+    assert {"text", "arabic"} <= set(m.methods)
+    assert m.lookalike is not None and m.lookalike.brand_id == "sandbox_bank" and m.lookalike.score >= 0.6
+
+
+async def test_official_subdomain_is_official():
+    m = await match_brand(det("https://online.sandboxbank.example/login", "Sandbox Bank - Login", "Welcome to Sandbox Bank"))
+    assert m.brand_id == "sandbox_bank" and m.is_official_domain
+    assert m.lookalike.score == 0
+    m2 = await match_brand(det("https://www.tamm.abudhabi/en/services", "TAMM | Abu Dhabi Government Services", "TAMM services"))
+    assert m2.brand_id == "tamm" and m2.is_official_domain
+
+
+async def test_brand_on_vercel_not_official():
+    m = await match_brand(det("https://sandboxbank.vercel.app/", "Sandbox Bank", "Sandbox Bank secure login",
+                              [FormField(name="pwd", type="password", label="Password")]))
+    assert m.brand_id == "sandbox_bank" and not m.is_official_domain
+    assert "credentials" in m.asks_for
+
+
+async def test_arabic_only_text_matches():
+    m = await match_brand(det("https://pay-fines-now.example/", "",
+                              "شرطة أبوظبي: لديك مخالفة مرورية غير مدفوعة. أدخل رقم البطاقة ورمز التحقق",
+                              [FormField(name="f1", label="رقم الهوية الإماراتية")]))
+    assert m.brand_id == "abu_dhabi_police"
+    assert "arabic" in m.methods
+    assert not m.is_official_domain
+    assert {"payment", "card", "otp", "emirates_id"} <= set(m.asks_for)
+
+
+async def test_arabic_variants_with_tashkeel_and_alef():
+    m = await match_brand(det("https://x.example/", "", "بنك الامارات دبي الوطني - تحديث البيانات"))
+    assert m.brand_id == "emirates_nbd"
+
+
+async def test_arabizi_matches():
+    m = await match_brand(det("https://x.example/", "", "salam, shurtat abu dhabi: 3indak mukhalafa, idfa3 hal7een"))
+    assert m.brand_id == "abu_dhabi_police" and "arabizi" in m.methods
+
+
+async def test_official_site_mentioning_other_brand_stays_official():
+    m = await match_brand(det("https://u.ae/en/information-and-services", "The UAE Government portal",
+                              "Use TAMM, UAE PASS and Emirates NBD services. Pay your traffic fine online."))
+    assert m.is_official_domain and m.brand_id == "uae_gov_portal"
+
+
+async def test_no_brand_plain_page():
+    m = await match_brand(det("https://example.org/", "My cooking blog", "Recipes for hummus and falafel"))
+    assert m.brand_id is None and m.confidence == 0
+
+
+async def test_dead_page_still_has_lookalike():
+    d = Detonation(url="https://emiratesnbd-verify.com/", final_url="https://emiratesnbd-verify.com/", status="dead")
+    m = await match_brand(d)
+    assert m.lookalike.score >= 0.8
+    assert m.brand_id == "emirates_nbd" and m.methods == ["domain_keyword"] and not m.is_official_domain
+
+
+async def test_never_raises():
+    m = await match_brand(Detonation(url=""))
+    assert m.brand_id is None
+
+
+# ------------------------------------------------------------------ lookalike
+@pytest.mark.parametrize("dom", ["emiratesnbd.com", "online.emiratesnbd.com", "tamm.abudhabi", "moi.gov.ae",
+                                 "adpolice.gov.ae", "sandboxbank.example", "bankfab.com", "u.ae", "salik.rta.ae"])
+def test_official_scores_zero(dom):
+    r = lookalike(dom)
+    assert r.score == 0, r
+
+
+def test_combosquat_high():
+    r = lookalike("emiratesnbd-secure.com")
+    assert r.score >= 0.8 and r.brand_id == "emirates_nbd" and "combosquat" in r.techniques
+    r = lookalike("tamm-pay.com")
+    assert r.brand_id == "tamm" and r.score >= 0.7
+
+
+def test_tld_swap():
+    r = lookalike("emiratesnbd.co")
+    assert r.brand_id == "emirates_nbd" and "tld_swap" in r.techniques and r.score >= 0.8
+
+
+def test_edit_distance_and_homoglyph():
+    r = lookalike("emiratesnbb.com")
+    assert r.brand_id == "emirates_nbd" and r.score >= 0.7
+    r = lookalike("emirat3snbd.com")
+    assert r.brand_id == "emirates_nbd" and "homoglyph" in r.techniques
+    r = lookalike("rnashreq.com")
+    assert r.brand_id == "mashreq" and "homoglyph" in r.techniques
+
+
+def test_idn_punycode():
+    puny = "xn--" + "emiratesnbd".replace("a", "а").encode("punycode").decode()  # Cyrillic a
+    r = lookalike(puny + ".com")
+    assert r.brand_id == "emirates_nbd" and "idn" in r.techniques and r.score >= 0.9
+
+
+def test_shared_host_combosquat():
+    r = lookalike("emiratesnbd-login.vercel.app")
+    assert r.brand_id == "emirates_nbd" and r.score >= 0.8
+
+
+@pytest.mark.parametrize("dom", ["google.com", "example.org", "khaleejtimes.com", "dubizzle.com", "wikipedia.org"])
+def test_unrelated_low(dom):
+    assert lookalike(dom).score < 0.5

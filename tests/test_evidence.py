@@ -170,3 +170,22 @@ async def test_http_error_and_shared_host_flagged(env):
     case = await build_case("ev404")
     assert "HTTP 404" in case.notice_en and "HTTP 404" in case.notice_ar
     assert "netlify.app" in case.notice_en and "منصة استضافة مشتركة" in case.notice_ar
+
+
+async def test_build_bundle(env):
+    from scamshield.evidence import build_bundle
+    for sid in ("evb1", "evb2"):
+        db.save_scan(_scan(env, scan_id=sid))
+    path = await build_bundle(["evb1", "evb2", "missing1"])
+    assert Path(path).is_file()
+    with zipfile.ZipFile(path) as z:
+        names = set(z.namelist())
+        assert {"cases/evb1.zip", "cases/evb2.zip", "cases/evb1.pdf", "index.csv", "bundle_manifest.json",
+                "bundle_manifest.sha256"} <= names
+        raw = z.read("bundle_manifest.json")
+        assert z.read("bundle_manifest.sha256").decode().split()[0] == hashlib.sha256(raw).hexdigest()
+        m = json.loads(raw)
+        assert m["count"] == 2 and m["failed"][0]["scan_id"] == "missing1"
+        for e in m["cases"]:
+            for f in e["files"]:
+                assert hashlib.sha256(z.read(f["path"])).hexdigest() == f["sha256"]
