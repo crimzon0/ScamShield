@@ -16,7 +16,28 @@ log = logging.getLogger(__name__)
 
 
 def llm_available() -> bool:
+    import os
+
+    if os.environ.get("SCAMSHIELD_NO_LLM") == "1":  # ablation switch: measure with/without the LLM
+        return False
     return bool(settings.llm_api_key) and settings.llm_provider != "none" and not settings.offline
+
+
+def _post(url: str, headers: dict, body: dict, timeout: float) -> httpx.Response:
+    """POST with retry on 429/529/5xx (honours Retry-After, capped), max 4 attempts."""
+    import time
+
+    r = None
+    for attempt in range(4):
+        r = httpx.post(url, headers=headers, json=body, timeout=timeout)
+        if r.status_code not in (429, 500, 502, 503, 529):
+            break
+        try:
+            wait = float(r.headers.get("retry-after") or 0)
+        except ValueError:
+            wait = 0
+        time.sleep(min(30.0, max(wait, 2.0 * (2 ** attempt))))
+    return r
 
 
 def _extract_json(text: str) -> Optional[dict]:
@@ -49,34 +70,34 @@ def llm_json(prompt: str, schema: dict[str, Any], timeout: float = 20.0) -> Opti
     try:
         if settings.llm_provider == "openai":
             url = (settings.llm_base_url or "https://api.openai.com/v1") + "/chat/completions"
-            r = httpx.post(
+            r = _post(
                 url,
-                headers={"Authorization": f"Bearer {settings.llm_api_key}"},
-                json={
+                {"Authorization": f"Bearer {settings.llm_api_key}"},
+                {
                     "model": settings.llm_model,
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
                     "response_format": {"type": "json_object"},
                 },
-                timeout=timeout,
+                timeout,
             )
             r.raise_for_status()
             text = r.json()["choices"][0]["message"]["content"]
         else:
             url = (settings.llm_base_url or "https://api.anthropic.com") + "/v1/messages"
-            r = httpx.post(
+            r = _post(
                 url,
-                headers={
+                {
                     "x-api-key": settings.llm_api_key,
                     "anthropic-version": "2023-06-01",
                     "content-type": "application/json",
                 },
-                json={
+                {
                     "model": settings.llm_model,
                     "max_tokens": 800,
                     "system": system,
                     "messages": [{"role": "user", "content": prompt}],
                 },
-                timeout=timeout,
+                timeout,
             )
             r.raise_for_status()
             text = "".join(b.get("text", "") for b in r.json().get("content", []))

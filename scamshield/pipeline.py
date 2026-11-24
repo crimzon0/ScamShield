@@ -90,6 +90,9 @@ def pipeline_fingerprint() -> str:
     for d in _FP_DIRS:
         files += sorted((root / d).rglob("*.py"))
     h = hashlib.sha1()
+    from scamshield.core.llm import llm_available
+
+    h.update(f"llm:{llm_available()}:{settings.llm_model};".encode())  # LLM on/off changes verdicts
     for f in files:
         try:
             h.update(f"{f.name}:{f.stat().st_mtime_ns}:{f.stat().st_size};".encode())
