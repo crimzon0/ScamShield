@@ -323,7 +323,7 @@ def test_reference_hashes_do_not_collide_across_brands():
 
 
 @pytest.mark.parametrize("dom", ["etihadwe.ae", "etihadrail.ae", "etihad-esco.ae", "etihadcreditbureau.ae", "emirates.ae",
-                                 "emiratesauction.com", "etihadrail.gov-services.example"])
+                                 "emiratesauction.com", "etihadrail.gov-services.example", "almashreqmedical.com"])
 def test_weak_dictionary_tokens(dom):
     assert lookalike(dom).score <= 0.4, lookalike(dom)
 
@@ -333,6 +333,7 @@ def test_weak_token_with_context_still_high():
     assert lookalike("etihadguest-miles.top").score >= 0.8
     assert lookalike("etihadd.com").score >= 0.8  # near-exact typo of etihad.com
     assert lookalike("emirates-skywards-points.com").score >= 0.8
+    assert lookalike("mashreq-secure-login.com").score >= 0.8
 
 
 async def test_uae_pass_sso_button_is_mention():

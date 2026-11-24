@@ -221,11 +221,11 @@ async def _helpline_signals(ok: list[Detonation], brand, final: str) -> list[Sig
     """Fake helpline numbers on a page that claims a brand (helpline.phones_on_page)."""
     try:
         from scamshield.core.domains import is_official
-        from scamshield.score import BRAND_THRESHOLD
+        from scamshield.score import BRAND_THRESHOLD, is_mention_only
 
         if not ok or not brand or not brand.brand_id or brand.confidence < BRAND_THRESHOLD or                 not (set(brand.methods or []) - {"domain_keyword"}):  # needs a content-based brand claim
             return []
-        if is_official(final, brand.official_domains or []):
+        if is_official(final, brand.official_domains or []) or is_mention_only(brand):
             return []
         from scamshield.helpline import phones_on_page
 

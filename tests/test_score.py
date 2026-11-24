@@ -225,3 +225,44 @@ def test_integrator_rule_keeps_young_parent_and_secret_forms():
     d = _det(url, form_fields=[FormField(name="otp", label="OTP")])
     v2 = score("t42", url, [d], Intel(domain="partnerpay.io", age_days=900), None, _sub_look(url))
     assert v2.label in ("scam", "likely_scam")
+
+
+def _uaepass(conf=0.5, ev=("body-text mention only",), asks=()):
+    return BrandMatch(brand_id="uae_pass", name_en="UAE PASS", confidence=conf, methods=["text"],
+                      evidence=list(ev), official_domains=["uaepass.ae"], asks_for=list(asks))
+
+
+def test_gov_ae_login_with_uaepass_button_is_legitimate():
+    url = "https://eservice.sewa.gov.ae/portal/"
+    d = _det(url, title="SEWA eServices", form_fields=[FormField(name="password", type="password")])
+    v = score("t50", url, [d], Intel(domain="sewa.gov.ae"), _uaepass(0.7, ev=["'UAE PASS' in title"]), None)
+    assert v.label == "legitimate", [(r.id, r.weight) for r in v.reasons]
+
+
+def test_ac_ae_portal_with_mention_is_legitimate():
+    url = "https://my.uaeu.ac.ae/"
+    d = _det(url, form_fields=[FormField(name="pwd", type="password")])
+    v = score("t51", url, [d], Intel(domain="uaeu.ac.ae"), _uaepass(), None)
+    assert v.label == "legitimate"
+
+
+def test_uaepass_sso_button_on_unknown_site_not_scam():
+    url = "https://portal.someauthority.example.com/login"
+    v = score("t52", url, [_det(url)], Intel(domain="example.com"), _uaepass(0.8, ev=["'UAE PASS' in title"]), None)
+    assert "brand_on_unofficial_domain" not in {r.id for r in v.reasons}
+
+
+def test_regulator_footer_is_not_claim():
+    url = "https://www.exchange-house.example.com/"
+    b = BrandMatch(brand_id="central_bank_uae", name_en="Central Bank of the UAE", confidence=0.7, methods=["text"],
+                   official_domains=["centralbank.ae"])
+    v = score("t53", url, [_det(url)], Intel(domain="example.com", tranco_rank=400000), b, None)
+    assert v.label == "legitimate"
+
+
+def test_mention_only_is_not_claim():
+    url = "https://shop.example.com/"
+    b = BrandMatch(brand_id="adcb", name_en="ADCB", confidence=0.5, methods=["text"],
+                   evidence=["body-text mention only"], official_domains=["adcb.com"])
+    v = score("t54", url, [_det(url)], Intel(domain="example.com", age_days=2000), b, None)
+    assert "brand_on_unofficial_domain" not in {r.id for r in v.reasons}

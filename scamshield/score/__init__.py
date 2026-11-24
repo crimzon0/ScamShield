@@ -609,10 +609,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     sens = sorted(asks & (SENSITIVE | {"personal_info"}))
     if sens and not brand_rule:
         young = (age is None or age < 365) and not established
-        if rtld:
-            w0 = 0
         w = (40 if young else 25) if asks & {"card", "otp", "emirates_id"} else (35 if young else 18) if "credentials" in asks else 8
-        if big:
+        if big or rtld:
             w = 0
         if w:
             add("asks_sensitive", w, f"The page asks for {', '.join(ASK_EN[a] for a in sens)} on an unverified site.",

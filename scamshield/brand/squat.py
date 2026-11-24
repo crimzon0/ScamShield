@@ -100,6 +100,8 @@ def _official_owner(host: str) -> tuple[str | None, str | None]:
 WEAK_TOKENS = {
     "etihad": ("airway", "air", "flight", "fly", "guest", "miles", "ticket", "booking"),
     "emirates": ("airline", "skywards", "fly", "flight", "ticket", "booking"),
+    # المشرق "the East": Al Mashreq Medical, Mashreq newspapers...
+    "mashreq": ("bank", "neo", "online", "login", "secure", "verify", "card", "update", "pay", "reward"),
 }
 
 

@@ -33,3 +33,4 @@ from search-engine extracts of the brand's own pages because a direct fetch fail
 - mashreq: mashreqsecurities.com and mashreqalislami.com bounce through Radware bot-check validate.perfdrive.com; match_brand treats a final host on a known bot-challenge service reached from an official domain as official.
 - Redirect audit 2026-11-25: every reachable official domain redirects to an official host except the two cases above.
 - adnoc (ADNOC Group, added 2026-11-25 to stop adnoc.ae false positives): adnoc.ae is supported by the site itself (title, TLS cert) and search results, NOT yet by a government directory (moet.gov.ae profile lists ADNOC but no URL). No phone added. Re-confirm.
+- emirates_nbd: emiratesnbd.com.eg (Emirates NBD Egypt subsidiary) is likely official but unconfirmed; currently scored as a combosquat look-alike (0.47 brand confidence). Confirm from emiratesnbd.com before adding.
