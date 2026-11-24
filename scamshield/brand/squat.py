@@ -56,11 +56,17 @@ def _split(domain: str) -> tuple[str, str]:
     return domain, ""
 
 
-@lru_cache(maxsize=1)
 def _index():
-    from scamshield.brand import load_registry
+    from scamshield.brand import active_brands, fictional_enabled
 
-    brands = load_registry()
+    return _index_for(fictional_enabled())
+
+
+@lru_cache(maxsize=2)
+def _index_for(_fictional: bool):
+    from scamshield.brand import active_brands
+
+    brands = active_brands()
     officials, entries = [], []  # entries: (brand_id, label, suffix, official_registrable)
     kws = []  # (brand_id, keyword)
     for b in brands:

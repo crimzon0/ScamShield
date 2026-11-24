@@ -6,6 +6,12 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - [x] Phase 0 scaffold, core contract, stubs, CLAUDE.md, Makefile (done 19:44:54 UTC, commit c4558db)
 
 ## Team log
+- **19:57 MILESTONE: real end-to-end scan works** (16 min after start; target was 75 min). Lead integration check:
+  - https://www.tamm.abudhabi/ -> legitimate 0 (brand tamm, official_domain), 6.7 s
+  - https://this-domain-does-not-exist-sc4m.ae/ -> legitimate 15, domain_only, det=dead (no crash) [takedown signals being added]
+  - https://www.careem.com/ -> legitimate 0 (known_site), 5.6 s
+  - verdict's first batch (stub brand): 55 rows / 130 s, P 0.929 R 1.000 FPR 0.069 (2 FPs from stub brand, now fixed)
+- 19:57 wave 2 spawned: breaker, docs. brand real matcher+lookalike (31 tests). evidence DONE (8 tests, bundle export).
 - 19:56 detonator v1 DONE: 13 tests; real Playwright, 3 personas, HTTP/meta/JS chain, shortener expansion, screenshot/DOM/HAR/TLS/favicon, dead/timeout/blank; working on stealth + throughput. helpline DONE v2: 40 tests, phones_on_page() for pipeline. Full suite 83 passed.
 - 19:58 brand: registry 32 brands (31 UAE + fictional), unconfirmed facts in data/registry_todo.md. helpline DONE v1: 36 tests, synthetic run 10 findings; live Places untested (no key); now switching to real registry.
 - 19:56 evidence DONE (4 tests). verdict: real score engine, concurrent pipeline w/ 40s guard + domain-only fallback, resumable CLI, eval; scan cache keyed by pipeline fingerprint. Lead integration: dead .ae domain -> suspicious 46 domain_only (no crash). tamm still mislabelled because brand is a stub.

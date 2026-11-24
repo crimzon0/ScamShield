@@ -71,13 +71,13 @@ async def _get(params: dict, timeout: float, retries: int) -> Optional[list]:
 CERTSPOTTER = "https://api.certspotter.com/v1/issuances"
 
 
-async def _certspotter(domain: str, timeout: float = 8.0) -> Optional[dict]:
+async def _certspotter(domain: str, timeout: float = 8.0, max_pages: int = 3) -> Optional[dict]:
     """Fallback. Cert Spotter's free API lists only unexpired certs, so first_seen is a lower bound
     ('seen since at least'); for new domains it equals the real first cert."""
     rows: list = []
     after = None
     async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": UA}) as c:
-        for _ in range(3):
+        for _ in range(max_pages):
             params = {"domain": domain, "include_subdomains": "true"}
             if after:
                 params["after"] = after

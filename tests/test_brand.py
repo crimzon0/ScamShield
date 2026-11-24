@@ -1,6 +1,7 @@
 import os
 
 os.environ.setdefault("SCAMSHIELD_OFFLINE", "1")
+os.environ["SCAMSHIELD_FICTIONAL"] = "1"  # enable the fictional Sandbox Bank for these tests
 
 import pytest
 
@@ -151,3 +152,15 @@ def test_shared_host_combosquat():
 @pytest.mark.parametrize("dom", ["google.com", "example.org", "khaleejtimes.com", "dubizzle.com", "wikipedia.org"])
 def test_unrelated_low(dom):
     assert lookalike(dom).score < 0.5
+
+
+async def test_fictional_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("SCAMSHIELD_FICTIONAL", raising=False)
+    m = await match_brand(fixtures.detonation())
+    assert m.brand_id is None
+    assert lookalike("sandbox-bank-login.example").brand_id is None
+    assert lookalike("this-domain-does-not-exist-sc4m.ae").score == 0
+    for d in ("careem.com", "adnoc.ae", "netlify.app"):
+        assert lookalike(d).score < 0.5, d
+    nf = await match_brand(det("https://foo.netlify.app/", "Site not found", "Looks like you followed a broken link"))
+    assert nf.brand_id is None

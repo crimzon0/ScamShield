@@ -33,6 +33,19 @@ def load_registry() -> list[dict]:
         return []
 
 
+def fictional_enabled() -> bool:
+    """The fictional Sandbox Bank is only matched when SCAMSHIELD_FICTIONAL=1 (tests, local fixture servers)."""
+    import os
+
+    return os.environ.get("SCAMSHIELD_FICTIONAL", "").strip() == "1"
+
+
+def active_brands() -> list[dict]:
+    """Registry brands used for matching: fictional brands excluded unless SCAMSHIELD_FICTIONAL=1."""
+    fx = fictional_enabled()
+    return [b for b in load_registry() if fx or not b.get("fictional")]
+
+
 def get_brand(brand_id: str) -> dict | None:
     return next((b for b in load_registry() if b.get("id") == brand_id), None)
 
@@ -41,7 +54,7 @@ def official_owner(url_or_host: str) -> dict | None:
     """The registry brand whose official domain covers this host (most specific domain wins), else None."""
     h = host_of(url_or_host)
     best, best_len = None, -1
-    for b in load_registry():
+    for b in active_brands():
         for d in b.get("official_domains", []):
             if is_official(h, [d]) and len(d) > best_len:
                 best, best_len = b, len(d)
@@ -111,7 +124,7 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     from .text import detect_asks, page_parts, score_brands
     from . import visual
 
-    brands = load_registry()
+    brands = active_brands()
     url = det.final_url or det.url or ""
     reg = registrable(url) if url else ""
     look = lookalike(reg) if reg else None

@@ -39,6 +39,7 @@ async def get_browser():
             args=[
                 "--disable-dev-shm-usage",
                 "--disable-extensions",
+                "--disable-blink-features=AutomationControlled",
                 "--disable-background-networking",
                 "--disable-sync",
                 "--no-first-run",

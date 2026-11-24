@@ -50,7 +50,7 @@ def feed_urls(limit: int = 200) -> dict[str, list[str]]:
 
 
 CRTSH_FAIL_TTL = 15 * 60
-CRTSH_WAIT = 6.0  # how long enrich waits for crt.sh before using the Cert Spotter fallback
+CRTSH_WAIT = 4.5  # how long enrich waits for crt.sh before using the Cert Spotter fallback
 
 
 def _crtsh_bg(reg: str):
@@ -149,7 +149,7 @@ async def _enrich(domain: str) -> Intel:
             src["crtsh"] = "ok" if v else "unavailable"  # thread keeps running and caches a late answer
             if v is None:
                 v = await run_source(src, "certspotter", f"intel:certspotter:{reg}",
-                                     lambda: _crtsh._certspotter(reg, 4.0), DAY)
+                                     lambda: asyncio.wait_for(_crtsh._certspotter(reg, 4.0, 1), 4.5), DAY)
         if v:
             intel.cert_first_seen = parse_dt(v.get("first_seen"))
             intel.cert_count = v.get("count")

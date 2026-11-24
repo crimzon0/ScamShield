@@ -20,7 +20,7 @@ from scamshield.core.config import settings
 from scamshield.core.domains import host_of
 from scamshield.core.schemas import Detonation, FormField, Persona, RedirectHop, TLSInfo, utcnow
 
-from . import _browser
+from . import _browser, _stealth
 
 MOBILE_UA = ("Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) "
              "Chrome/131.0.0.0 Mobile Safari/537.36")
@@ -175,7 +175,7 @@ class _Run:
         return out
 
 
-async def _attach_listeners(run: _Run, context, page) -> None:
+async def _attach_listeners(run: _Run, context, page, ua_override: dict | None = None) -> None:
     def on_response(resp):
         try:
             req = resp.request
@@ -212,6 +212,8 @@ async def _attach_listeners(run: _Run, context, page) -> None:
     # Chromium CDP tells us *why* the main frame navigates (meta refresh vs script).
     try:
         cdp = await context.new_cdp_session(page)
+        if ua_override:  # consistent UA + client hints (hides "HeadlessChrome" brand)
+            await _safe(cdp.send("Emulation.setUserAgentOverride", ua_override), 3)
         await cdp.send("Page.enable")
         tree = await cdp.send("Page.getFrameTree")
         main_id = tree["frameTree"]["frame"]["id"]
@@ -374,8 +376,9 @@ async def _capture(run: _Run, context, page, deadline: float) -> None:
                 det.tls = TLSInfo()
             if det.tls is not None:
                 det.tls.san = san[:100]
-            if verr:
-                run.notes.append(f"tls: {verr}"[:300])
+            if verr and det.tls is not None:
+                det.tls.verify_error = verr[:300]
+                run.notes.append(f"tls certificate does not verify: {verr}"[:300])
 
 
 async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: float) -> None:
@@ -385,14 +388,20 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
     capture_reserve = min(4.0, budget * 0.3)
     browser = await _browser.get_browser()
     cfg = PERSONA_CONFIG[persona]
+    version = str(getattr(browser, "version", "") or "131.0.0.0")
+    copts = dict(cfg["context"])
+    copts["user_agent"] = _stealth.ua_for(persona, version.split(".")[0])
+    copts["screen"] = dict(copts["viewport"])
     context = await browser.new_context(
-        **cfg["context"], accept_downloads=False, ignore_https_errors=True, java_script_enabled=True,
+        **copts, accept_downloads=False, ignore_https_errors=True, java_script_enabled=True,
         service_workers="block", record_har_path=str(run.out_dir / "page.har"), record_har_content="omit",
         permissions=[],
     )
     try:
+        await context.add_init_script(_stealth.init_script(persona))
         page = await context.new_page()
-        await _attach_listeners(run, context, page)
+        accept_lang = copts.get("extra_http_headers", {}).get("Accept-Language", "")
+        await _attach_listeners(run, context, page, _stealth.ua_override(persona, version, accept_lang))
         nav_err = ""
         goto_timeout = max(1.0, budget - capture_reserve - 1.0)
         try:
@@ -422,9 +431,15 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
             await _safe(page.wait_for_load_state("networkidle",
                                                  timeout=max(100, (deadline - capture_reserve - time.monotonic()) * 1000)),
                         max(0.1, min(3.0, deadline - capture_reserve - time.monotonic())))
+            # Also wait for short first-party timers / meta refresh (<= ~6 s after DOMContentLoaded).
             while time.monotonic() < deadline - capture_reserve:
                 if time.monotonic() - run.last_nav >= SETTLE_QUIET_S:
-                    break
+                    pending = await _safe(page.evaluate(f"() => window.{_stealth.PROBE} ? window.{_stealth.PROBE}() : 0"),
+                                          0.5, 0)
+                    if not pending or pending <= 0:
+                        break
+                    await asyncio.sleep(min(0.5, max(0.1, pending / 1000)))
+                    continue
                 await asyncio.sleep(0.2)
             await _safe(page.wait_for_load_state("domcontentloaded", timeout=1000), 1.2)
         await _capture(run, context, page, deadline)
@@ -473,7 +488,7 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
         run = _Run(det, out_dir)
         budget = max(3.0, float(settings.detonate_timeout))
         async with _browser.semaphore():
-            budget = max(3.0, budget - (time.monotonic() - t0))  # queueing counts against the cap
+            t_run = time.monotonic()  # the cap is per detonation; time queued for a slot is not counted
             try:
                 await asyncio.wait_for(_run(run, norm, persona, PERSONA_CONFIG[persona]["referer"], budget),
                                        budget + 1.5)
@@ -490,9 +505,7 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
                 if not det.final_url:
                     det.final_url = run.hops[-1]["url"] if run.hops else det.url
                 det.redirect_chain = run.chain(det.final_url, det.http_status)
-                if run.notes:
-                    note = "; ".join(run.notes)[:500]
-                    det.error = f"{det.error}; {note}" if det.error else f"note: {note}"
+                det.notes = [n[:300] for n in run.notes][:20]
                 if det.screenshot_path is None:
                     shot = run.out_dir / "screenshot.png"
                     if shot.exists() and shot.stat().st_size > 0:
