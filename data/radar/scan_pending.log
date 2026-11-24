@@ -17,3 +17,4 @@ uaepass-auth.directschool.workers.dev         crtsh          term=uaepass       
 uaepass.org                                   crtsh          term=uaepass          brand=uae_pass         first_seen=2026-08-20T04:11:44 flagged_at=2026-11-24T20:19:28 ttd= 96d16h label=likely_scam score=70 scan=efd1f6ad4cf0
 uaepass.magure.ai                             crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-09T04:24:38 flagged_at=2026-11-24T20:19:28 ttd= 46d15h label=likely_scam score=60 scan=e98d541988ab
 uaepass.uat.finwall.studio                    crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-15T05:57:57 flagged_at=2026-11-24T20:19:28 ttd= 40d14h label=scam score=88 scan=909196f6c4ed
+scanned 0 hits

@@ -211,3 +211,19 @@ def test_siblings_never_raises():
     from scamshield.radar import siblings
 
     assert siblings("nothing-here.example") == []
+
+
+def test_siblings_shared_ip_and_ns():
+    from scamshield.core import db
+    from scamshield.core.schemas import Intel
+    from scamshield.radar import siblings
+
+    for i, dom in enumerate(["uaepass-a.top", "uaepass-b.top", "unrelated.example"]):
+        ip = "198.51.100.7" if i < 2 else "203.0.113.9"
+        intel = Intel(domain=dom, registrable_domain=dom, ip=ip, a_records=[ip],
+                      nameservers=["ns1.evil-dns.example"] if i < 2 else ["ns1.cloudflare.com"])
+        v = Verdict(scan_id=f"x{i}", url=f"https://{dom}/", score=90, label="scam")
+        db.save_scan(ScanResult(scan_id=f"x{i}", url=f"https://{dom}/", intel=intel, verdict=v))
+    sib = siblings("uaepass-a.top")
+    assert [s["domain"] for s in sib] == ["uaepass-b.top"]
+    assert sib[0]["shared"]["ip"] == ["198.51.100.7"] and sib[0]["shared"]["ns"] == ["ns1.evil-dns.example"]

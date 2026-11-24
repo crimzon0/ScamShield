@@ -6,6 +6,7 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - [x] Phase 0 scaffold, core contract, stubs, CLAUDE.md, Makefile (done 19:44:54 UTC, commit c4558db)
 
 ## Team log
+- 20:21 radar: REAL crt.sh backfill hits (17 from 'uaepass%', scanned): uaepasses.com scam 100 (cert 2026-10-06), uaepass.digital scam 100, uaepass.help scam 97, uaepass.org likely_scam 70, uaepass-auth.directschool.workers.dev likely_scam 72. crt.sh index lags ~40 days (newest not_before 2026-10-15) so backfill parses 120 d; certstream (salik.work, 59 min TTD) + NRD (trafficrta.xyz) cover the fresh window.
 - 20:18 verdict FINAL-1 eval (fresh forced scans, mobile persona, is_scam = scam|likely_scam):
   - HELD-OUT holdout.csv n=79 (37 legit / 42 scam, unseen, no tuning): blocklist IGNORED P 1.000 R 0.619 F1 0.765 FPR 0.000 (>=suspicious: R 0.786 FPR 0); with blocklist P 1.000 R 1.000 FPR 0
   - SAMPLE sample.csv n=127 (68/59, tuned): ignored P 1.000 R 0.746 FPR 0; with blocklist P 1 R 1 FPR 0

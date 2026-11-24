@@ -459,15 +459,25 @@ function RadarKpis({ rows }: { rows: RadarRow[] }) {
   const { t } = useI18n();
   const live = rows.filter((r) => !r.is_fixture);
   const base = live; // fixture rows never count towards results
-  const ttd = base.map((r) => r.time_to_detection_seconds).filter((x): x is number => x != null && x >= 0);
+  const secs = (rs: RadarRow[]) => rs.map((r) => r.time_to_detection_seconds).filter((x): x is number => x != null && x >= 0);
+  // live collectors measure detection speed; crt.sh backfill measures retrospective catch-up
+  const ttd = secs(base.filter((r) => r.source !== "crtsh"));
+  const back = secs(base.filter((r) => r.source === "crtsh"));
   const counts: Record<string, number> = {};
   base.forEach((r) => { const k = r.label || "unlabelled"; counts[k] = (counts[k] || 0) + 1; });
   const order = ["scam", "likely_scam", "suspicious", "legitimate", "unlabelled"];
   return (
     <section className="card kpis" aria-label={t("resultsTitle")}>
       <Kpi value={live.length} label={t("kpiHits")} sub={rows.length !== live.length ? <><FixtureBadge show /> +{rows.length - live.length}</> : undefined} />
-      <Kpi value={humanDuration(median(ttd), t)} label={t("kpiMedianTtd")} />
-      <Kpi value={humanDuration(ttd.length ? Math.min(...ttd) : null, t)} label={t("kpiFastest")} />
+      <Kpi value={humanDuration(median(ttd), t)} label={t("kpiMedianTtd")} sub={<span className="muted">{t("kpiLiveNote")} · n={ttd.length}</span>} />
+      <Kpi value={humanDuration(ttd.length ? Math.min(...ttd) : null, t)} label={t("kpiFastest")} sub={<span className="muted">{t("kpiLiveNote")}</span>} />
+      {back.length > 0 && (
+        <div className="kpi kpi-retro" title={t("kpiBackfillTip")}>
+          <div className="kpi-v kpi-v-sm">{humanDuration(median(back), t)}</div>
+          <div className="kpi-l">{t("kpiBackfill")}</div>
+          <div className="kpi-s muted">{t("kpiBackfillTip")} · n={back.length}</div>
+        </div>
+      )}
       <Kpi value={base.filter((r) => r.scan_id).length} label={t("kpiScanned")} />
       <div className="kpi kpi-wide">
         <div className="kpi-labels">{order.filter((k) => counts[k]).map((k) => (
