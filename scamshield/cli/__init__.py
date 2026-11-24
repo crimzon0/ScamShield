@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import csv
+import json
 import os
 import sys
 import time
@@ -61,6 +62,15 @@ def result_row(res, threshold: str) -> dict:
     }
 
 
+def _fingerprint() -> str:
+    try:
+        from scamshield.pipeline import pipeline_fingerprint
+
+        return pipeline_fingerprint()
+    except Exception:
+        return "unknown"
+
+
 def _done_keys(out: str) -> dict[int, dict]:
     """Already-written rows, keyed by input row index (column _row)."""
     done = {}
@@ -86,6 +96,31 @@ async def run_batch(inp: str, out: str, concurrency: int = 4, personas=None, thr
     fields, rows, url_col = read_input(inp)
     extra = [c for c in fields if c not in OUT_COLS and c != url_col and c != "_row"]
     header = OUT_COLS + extra + ["_row"]
+    meta_path = out + ".meta.json"
+    meta = {"fingerprint": _fingerprint(), "input": os.path.abspath(inp), "personas": list(personas),
+            "threshold": threshold}
+    if os.path.exists(out) and not force:
+        old_meta = {}
+        try:
+            with open(meta_path, encoding="utf-8") as f:
+                old_meta = json.load(f)
+        except Exception:
+            pass
+        same = all(old_meta.get(k) == meta[k] for k in ("fingerprint", "input", "personas", "threshold"))
+        if not same:
+            print(f"WARNING: {out} was written by a different pipeline version or input "
+                  f"(fingerprint {old_meta.get('fingerprint', 'none')} != {meta['fingerprint']}); "
+                  f"starting a fresh scan instead of resuming.", file=sys.stderr, flush=True)
+            os.remove(out)
+        elif not quiet:
+            print(f"resuming {out} (same pipeline fingerprint {meta['fingerprint']})", flush=True)
+    elif os.path.exists(out) and force:
+        os.remove(out)
+    try:
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
+    except Exception:
+        pass
     done = _done_keys(out)
     # if existing file has a different header, start over
     if done and os.path.exists(out):

@@ -2,3 +2,5 @@
 2026-11-25 00:19:11,352 INFO scamshield.radar certstream HIT salik.work term=salik brand=salik
 2026-11-25 00:23:11,601 INFO scamshield.radar certstream HIT adcbupdate.6983254321app.ovinramavol.tkdev.35-204-139-184.sslip.io term=adcb brand=adcb
 2026-11-25 00:23:58,476 INFO scamshield.radar certstream HIT almashreqmedical.com term=mashreq brand=mashreq
+2026-11-25 00:25:24,147 INFO scamshield.radar certstream HIT ghaziabadpolice.com term=adpolice brand=abu_dhabi_police
+2026-11-25 00:26:29,790 INFO scamshield.radar certstream HIT aramexservice.com term=aramex brand=aramex

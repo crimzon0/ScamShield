@@ -25,6 +25,7 @@ SHARED_HOSTS = {
     "codesandbox.io", "csb.app", "lovable.app", "softr.app", "glide.page", "sharepoint.com", "ipfs.io",
     "dweb.link", "translate.goog", "webcindario.com", "tiiny.site", "weeblysite.com", "yolasite.com",
     "ucoz.net", "github.dev", "loca.lt", "serveo.net",
+    "sslip.io", "nip.io", "xip.io", "traefik.me", "localtest.me",
     "r2.dev", "fly.dev", "railway.app", "deno.dev", "bubbleapps.io", "typedream.app",
 }
 

@@ -43,6 +43,7 @@ def main(argv=None) -> int:
     s.add_argument("--limit", type=int, default=None)
     s.add_argument("--no-scan", action="store_true")
     sub.add_parser("watchlist", help="print watchlist stats")
+    sub.add_parser("prune", help="drop stored hits the current matcher no longer accepts")
     sp = sub.add_parser("scan-pending", help="scan stored hits that have no scan yet")
     sp.add_argument("--limit", type=int, default=200)
     m = sub.add_parser("match")
@@ -87,10 +88,27 @@ def main(argv=None) -> int:
 
         from .common import scan_hits
 
-        todo = [h for h in db.list_radar_hits(5000) if not h.scan_id][: a.limit]
+        todo = [h for h in db.list_radar_hits(5000) if not h.scan_id and not h.extra.get("scan_error")]
+        # registrable look-alikes before brand-in-subdomain hits; newest first
+        todo.sort(key=lambda h: (bool(h.extra.get("subdomain_only")), -h.first_seen.timestamp()))
+        todo = todo[: a.limit]
         hits = asyncio.run(scan_hits(todo))
         print(f"scanned {len(hits)} hits")
         _print_hits(hits)
+    elif a.cmd == "prune":
+        from scamshield.core import db
+
+        from .watchlist import match_detail
+
+        c = db.connect()
+        gone = []
+        for h in db.list_radar_hits(100000):
+            host = h.extra.get("scan_host") or h.extra.get("host") or h.domain
+            if h.source in ("crtsh", "certstream", "nrd") and match_detail(host) is None:
+                c.execute("DELETE FROM radar_hits WHERE id=?", (h.id,))
+                gone.append(h.domain)
+        c.commit()
+        print(f"pruned {len(gone)}: {gone[:30]}")
     elif a.cmd == "watchlist":
         from collections import Counter
 

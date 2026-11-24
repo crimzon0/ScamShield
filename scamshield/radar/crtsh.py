@@ -168,6 +168,10 @@ def query_patterns(terms: Optional[list[str]] = None, prefixes: bool = True) -> 
     out: list[tuple[str, str]] = []
     for t in ordered:
         out.append((t, f"{t}-%" if len(t) <= 3 else f"{t}%"))
+    # short terms: 'tamm%' often comes back empty (crt.sh gives up on huge prefix scans) -> narrower 'tamm-%'
+    for t in ordered:
+        if 4 <= len(t) <= 5:
+            out.append((t, f"{t}-%"))
     if prefixes:
         for t in pri:
             for p in PREFIXES:

@@ -1,17 +1,13 @@
 {
  "state": "running",
  "url": "ws://localhost:8080/",
- "started_at": "2026-11-24T20:18:35.790585+00:00",
- "messages": 1248927,
- "certs": 1248927,
- "hits": 3,
- "new_hits": 2,
+ "started_at": "2026-11-24T20:28:01.983222+00:00",
+ "messages": 29174,
+ "certs": 29174,
+ "hits": 0,
+ "new_hits": 0,
  "reconnects": 0,
  "last_error": "",
- "last_hit": {
-  "domain": "almashreqmedical.com",
-  "term": "mashreq",
-  "at": "2026-11-24 20:23:58.475614+00:00"
- },
+ "last_hit": null,
  "queue": 0
 }

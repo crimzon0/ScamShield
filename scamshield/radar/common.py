@@ -98,6 +98,17 @@ def hit_from_match(domain: str, source: str, first_seen: datetime, m: dict, extr
             ex[k] = m[k]
     if m.get("registrable") and domain != m["registrable"]:
         ex["subdomain_only"] = True  # brand term only in a subdomain of someone else's domain (lower prior)
+        try:  # ...unless it is the classic 'emiratesnbd.com-verify.bond' official-domain-as-prefix trick
+            from .watchlist import _wl
+
+            host = m.get("host", "")
+            for off in _wl()["official_by_brand"].get(m.get("brand_id") or "", []):
+                if host.startswith(off + "-") or host.startswith(off + "."):
+                    ex["official_prefix"] = off
+                    ex["subdomain_only"] = False
+                    break
+        except Exception:
+            pass
     ex.update(extra or {})
     return RadarHit(domain=domain, source=source, matched_term=m.get("term", ""), brand_id=m.get("brand_id"),
                     first_seen=_aware(first_seen), flagged_at=flagged_at or utcnow(), extra=ex)

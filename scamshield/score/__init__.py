@@ -370,8 +370,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
 
     # ---------------- rule 1: official domain
     if on_official and not bl:
-        add("official_domain", -100, f"The page is on an official domain ({host}) listed in our verified registry.",
-            f"الصفحة على نطاق رسمي ({host}) مُدرج في سجلّنا المُتحقَّق منه.", final)
+        add("official_domain", -100, f"The page is on an official domain ({host}) listed in our registry of official domains.",
+            f"الصفحة على نطاق رسمي ({host}) مُدرج في سجلّنا للنطاقات الرسمية.", final)
         return _finish(scan_id, url, final, dom, mode, 0, sig, brand, look, forced="legitimate")
 
     # ---------------- SSO / integration: page hands login to the brand's official domain, collects no secrets

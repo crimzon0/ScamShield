@@ -18,3 +18,6 @@ uaepass.org                                   crtsh          term=uaepass       
 uaepass.magure.ai                             crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-09T04:24:38 flagged_at=2026-11-24T20:19:28 ttd= 46d15h label=likely_scam score=60 scan=e98d541988ab
 uaepass.uat.finwall.studio                    crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-15T05:57:57 flagged_at=2026-11-24T20:19:28 ttd= 40d14h label=scam score=88 scan=909196f6c4ed
 scanned 0 hits
+scanned 2 hits
+almashreqmedical.com                          certstream     term=mashreq          brand=mashreq          first_seen=2026-11-24T18:58:56 flagged_at=2026-11-24T20:23:58 ttd=  1h25m label=scam score=100 scan=69232cb8f5e3
+adcbupdate.6983254321app.ovinramavol.tkdev.35 certstream     term=adcb             brand=adcb             first_seen=2026-11-24T19:23:51 flagged_at=2026-11-24T20:23:11 ttd=    59m label=legitimate score=0 scan=70745a266252

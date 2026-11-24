@@ -90,6 +90,8 @@ def test_match_short_terms_need_context():
     assert match("tamm.xyz")[1] == "tamm"
     assert match("pierre-emoi.com") is None
     assert match("saudi.moi") is None
+    assert match("ghaziabadpolice.com") is None and match("almashreqmedical.com") is None
+    assert match("myemiratesnbd.com")[1] == "emirates_nbd" and match("secure-emirates-nbd.com")[1] == "emirates_nbd"
 
 
 def test_match_punycode_arabic_and_homoglyph():

@@ -4,3 +4,8 @@
 2026-11-25 00:21:58,013 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern tamm%)
 2026-11-25 00:22:58,021 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern tamm%)
 2026-11-25 00:23:58,021 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern tamm%)
+2026-11-25 00:24:59,481 INFO scamshield.radar crt.sh tamm%                    empty          rows=0
+2026-11-25 00:25:05,427 INFO scamshield.radar crt.sh salik%                   empty          rows=0
+2026-11-25 00:25:23,961 INFO scamshield.radar crt.sh emiratesnbd%             ok             rows=943
+2026-11-25 00:27:59,807 INFO scamshield.radar crt.sh adcb%                    empty          rows=0
+2026-11-25 00:28:04,809 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern dubaipolice%)

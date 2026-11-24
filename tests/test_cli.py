@@ -57,3 +57,13 @@ def test_metrics():
     m = ev.metrics([(1, 1), (1, 0), (0, 0), (0, 1)])
     assert m["tp"] == m["fp"] == m["fn"] == m["tn"] == 1
     assert m["precision"] == 0.5 and m["fpr"] == 0.5
+
+
+def test_resume_refuses_stale_output(tmp_path, monkeypatch):
+    inp = _write(tmp_path / "in.csv", "url\nhttps://a.example/\n")
+    out = str(tmp_path / "out.csv")
+    cli.main([inp, "--out", out, "-q"])
+    first = _read(out)[0]["scan_id"]
+    monkeypatch.setattr(cli, "_fingerprint", lambda: "different-version")
+    cli.main([inp, "--out", out, "-q"])
+    assert _read(out)[0]["scan_id"] != first  # re-scanned, not resumed

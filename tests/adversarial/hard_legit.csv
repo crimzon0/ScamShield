@@ -1,0 +1,43 @@
+url,org,category,note
+https://www.careem.com/auth/login?return_to=%2Fen-ae%2F,Careem,uae_business,link on careem.com/en-ae; -> auth.careem.com/login 200
+https://www.careem.com/en-ae/pay/,Careem Pay,uae_business,link on careem.com; 200 wallet page with Sign In
+https://ae.partner.talabat.com/s/?language=en_US,talabat,uae_business,banner link on talabat.com/uae; 200
+https://www.smilesuae.ae/Smiles-Portal-1.0.0/,Smiles (e&),uae_business,smilesuae.ae homepage redirect target; 200
+https://alansariexchange.com/service/bill-payments/,Al Ansari Exchange,uae_exchange,link on homepage; 200
+https://alansariexchange.com/service/sendmoneyonline-alansariexchangeapp/,Al Ansari Exchange,uae_exchange,link on homepage; 200
+https://alansariexchange.com/service/flexiblepay/,Al Ansari Exchange,uae_exchange,link on homepage; 200
+https://luluexchange.com/send-money-online/,LuLu Exchange,uae_exchange,link on homepage; 200
+https://my.uaeu.ac.ae/,UAE University,university,link on uaeu.ac.ae/en; 200
+https://uaeu.elluciancrmrecruit.com/Apply/Account/Login,UAE University (Ellucian),university,link on uaeu.ac.ae; 200 third-party admissions login
+https://www.uaeu.ac.ae/en/eservices/,UAE University,university,link on homepage; 200
+https://www.zu.ac.ae/main/en/_secure_login/login,Zayed University,university,link on zu.ac.ae; 200
+https://eservices.zu.ac.ae/,Zayed University,university,link on homepage; 200 password form
+https://zuportal.zu.ac.ae/,Zayed University,university,link on homepage; 401 auth challenge
+https://banner.aus.edu/,American University of Sharjah,university,link on aus.edu; 200
+https://studentmail.aus.edu/,American University of Sharjah,university,link on aus.edu; -> login.microsoftonline.com SAML
+https://portal.hct.ac.ae/Pages/default.aspx,Higher Colleges of Technology,university,link on hct.ac.ae; -> eis.hct.ac.ae/commonauth
+https://www.sorbonne.ae/login,Sorbonne University Abu Dhabi,university,link on sorbonne.ae; 200 password form
+https://students.nyuad.nyu.edu/,NYU Abu Dhabi,university,link on nyuad current-students; -> login.microsoftonline.com SAML
+https://brightspace.nyu.edu/d2l/home,NYU (NYUAD LMS),university,link on nyuad current-students; 200
+https://eservice.sewa.gov.ae/portal/,SEWA Sharjah,uae_gov_small,link on sewa.gov.ae; 200
+https://eservice.sewa.gov.ae/portal/One-TimePayment.aspx,SEWA Sharjah,uae_gov_small,link on homepage; 200 bill payment
+https://eservice.sewa.gov.ae/portal/CustomerRegistrations.aspx,SEWA Sharjah,uae_gov_small,link on homepage; 200
+https://eservices.sewa.gov.ae/,SEWA Sharjah,uae_gov_small,link on homepage; 200
+https://www.adjd.gov.ae/AR/Pages/EServiceDirectory.aspx,Abu Dhabi Judicial Department,uae_gov_small,link on adjd.gov.ae; 200
+https://www.adjd.gov.ae/sites/eServices/AR/pages/MyeServiceStatus.aspx,Abu Dhabi Judicial Department,uae_gov_small,link on homepage; 200
+https://www.ajman.ae/ar/payments,Digital Ajman,uae_gov_small,link on ajman.ae; 200
+https://www.doh.gov.ae/en/eservices,Department of Health Abu Dhabi,uae_gov_small,link on doh.gov.ae/en; 200
+https://dc.gov.ae/DCWeb_Common/Login.aspx?lang=ar,Dubai Customs,uae_gov_small,link on dc.gov.ae/PublicServices; 200
+https://dc.gov.ae/PublicServices/MainFlow.SmartApps.aspx?lang=ar,Dubai Customs,uae_gov_small,link on dc.gov.ae/PublicServices; 200
+https://www.etihadwe.ae/ar/Services/eServices/Pages/Customer.aspx,Etihad Water & Electricity,uae_gov_small,link on etihadwe.ae; 200
+https://www.etihadwe.ae/ar/_layouts/15/Authenticate.aspx?Source=%2Far%2FPages%2Fdefault%2Easpx,Etihad Water & Electricity,uae_gov_small,sign-in link on etihadwe.ae; 401
+https://login.microsoftonline.com/,Microsoft,global_saas,canonical; 200
+https://accounts.google.com/,Google,global_saas,canonical; 200
+https://github.com/login,GitHub,global_saas,canonical; 200
+https://www.paypal.com/signin,PayPal,global_saas,canonical; 403 to curl
+https://appleid.apple.com/sign-in,Apple,global_saas,canonical; 200
+https://www.linkedin.com/login,LinkedIn,global_saas,canonical; 403 to curl
+https://login.live.com/,Microsoft,global_saas,canonical; 200
+https://www.dropbox.com/login,Dropbox,global_saas,canonical; 200
+https://www.facebook.com/login,Meta,global_saas,canonical; 400 to curl
+https://id.atlassian.com/login,Atlassian,global_saas,canonical; 202 to curl (JS challenge)

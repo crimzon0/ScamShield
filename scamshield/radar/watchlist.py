@@ -62,6 +62,27 @@ def _token_hit(term: str, tokens: list[str]) -> bool:
     return False
 
 
+def _anchored_hit(term: str, tokens: list[str]) -> bool:
+    """Long term inside the joined tokens, starting at a token start or right after a scam affix
+    ('myemiratesnbd', 'secure-emirates-nbd'), so 'ghaziabadpolice' / 'almashreqmedical' do not match
+    'adpolice' / 'mashreq'. Also matches the homoglyph skeleton of the tokens."""
+    for toks in (tokens, [skeleton(x) for x in tokens] if not all(x.isascii() for x in tokens) else None):
+        if not toks:
+            continue
+        joined = "".join(toks)
+        starts, pos = [], 0
+        for x in toks:
+            starts.append(pos)
+            pos += len(x)
+        i = joined.find(term)
+        while i != -1:
+            st = max(p for p in starts if p <= i)
+            if i == st or joined[st:i] in AFFIXES:
+                return True
+            i = joined.find(term, i + 1)
+    return False
+
+
 def hit_domain(m: dict) -> str:
     """The domain a hit is filed under: the registrable domain, unless the brand term only appears in the
     subdomain part (central-bank.sdm.network) - then the full host, so the feed shows what matched."""
@@ -347,7 +368,7 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         if not host or "." not in host:
             return None
         wl = _wl(include_fictional)
-        if host.endswith(BENIGN_SUFFIXES):
+        if host.endswith(BENIGN_SUFFIXES) or (host.endswith(".ms") and "mcas" in host.rsplit(".", 2)[-2]):
             return None
         if wl["official"] and _is_official_fast(host, wl["official_set"]):
             return None
@@ -380,8 +401,10 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
             t = e["term"]
             if "-" in t:
                 hit = _hyphen_hit(t, dotted)
-            elif not t.isascii() or len(t) >= SUBSTRING_MIN:
+            elif not t.isascii():
                 hit = t in squashed
+            elif len(t) >= SUBSTRING_MIN:
+                hit = t in squashed and _anchored_hit(t, tokens)
             else:
                 hit = _token_hit(t, tokens)
             if hit:
