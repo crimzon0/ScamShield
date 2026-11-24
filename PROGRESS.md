@@ -93,3 +93,25 @@ Every false negative is listed with reasons in var/verify_eval.log. Will re-run 
 ```
 UI scan of https://aramex.p-track-au.com/ (holdout scam row) -> scam 100 with EN reasons (+60 openphish, +50 imitates aramex.com subdomain_brand, +30 domain 1 day old) and AR reasons after the toggle (<html dir="rtl" lang="ar">, mirrored layout); screenshot served; redirect chain shown. https://www.rta.ae/ -> legitimate 0 (official domain; brand RTA via arabic+logo_hash+screenshot_hash).
 Lead re-check via curl: /api/health ok; / 200 text/html; /api/scans/5c8df41f307d -> 100 scam, 4 reasons with Arabic, screenshot URL; case export: zip 200 application/zip 150582 B, pdf 200 application/pdf 119217 B (%PDF-1.4). ZIP: screenshots, dom, har, favicon, redirect_chain, rdap_whois, dns_hosting, brand_match, verdict, report.pdf, takedown_en/ar, manifest.json + manifest.sha256.
+
+### FINAL re-verification on final engine (fingerprint db475dd39c6eb6a5), 20:44-20:57 UTC, no API keys
+make test:
+```
+300 passed, 87 skipped, 1 warning in 337.16s (0:05:37)
+EXIT 0
+```
+make eval:
+```
+=== ScamShield eval: data/eval/sample.csv  (n=127, is_scam >= likely_scam) ===
+precision 1.000  recall 1.000  F1 1.000  FPR 0.000  accuracy 1.000
+FALSE POSITIVES (0):
+ABLATION (blocklist ignored): precision 1.000  recall 0.797  F1 0.887  FPR 0.000  (TP 47 FN 12 FP 0 TN 68)
+  ablation with threshold >= suspicious: P 1.000  R 0.898  F1 0.946  FPR 0.000
+  domain_only subset (n=40): recall 0.826  FPR 0.000
+official domains FP: 0/112  (not 'legitimate': 0)
+EXIT 0
+```
+Held-out (verdict, same engine): blocklists ignored P 1.000 R 0.714 F1 0.833 FPR 0; first BLIND run (20:18) R 0.619. Adversarial (breaker): offline 92 pass; network 45/45 official deep links + 42/42 hard-legit pages legitimate.
+
+### 6. Docs — PASS
+README.md, docs/slides.md (8 Marp slides), docs/video-script.md (60 s), docs/pilot.md exist; README/slides/video quote the measured numbers above (headline: blind held-out P 1.000 R 0.619 FPR 0, official 0/112).

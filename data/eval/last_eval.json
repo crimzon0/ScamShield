@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T20:43:54.077540+00:00",
+  "generated_at": "2026-11-24T20:56:29.117614+00:00",
   "dataset": "data/eval/sample.csv",
   "n": 127,
   "threshold": "likely_scam",
@@ -13,10 +13,14 @@
   "fpr": 0.0,
   "accuracy": 1.0,
   "blocklist_ignored": false,
-  "official_fp": null,
+  "official_fp": {
+    "flagged": 0,
+    "total": 112,
+    "not_legitimate": 0
+  },
   "modes": {
-    "full": 96,
-    "domain_only": 31
+    "full": 87,
+    "domain_only": 40
   },
   "labels": {
     "legitimate": 68,
@@ -25,7 +29,7 @@
   "domain_only": {
     "recall": 1.0,
     "fpr": 0.0,
-    "n": 31
+    "n": 40
   },
   "false_positives": [],
   "false_negatives": [],
