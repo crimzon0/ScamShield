@@ -13,7 +13,7 @@ import uuid
 from datetime import datetime, timezone
 
 from scamshield.core import db
-from scamshield.core.domains import registrable
+from scamshield.core.domains import host_of, registrable
 from scamshield.core.schemas import (BrandMatch, CloakDiff, Detonation, Intel, LookalikeResult, ScanResult, Signal,
                                      Verdict)
 
@@ -49,12 +49,12 @@ async def _detonate(url: str, persona: str, scan_id: str) -> Detonation:
         return Detonation(url=url, persona=persona, status="error", final_url="", error=str(e)[:300])
 
 
-async def _enrich(domain: str) -> Intel:
+async def _enrich(domain: str, host: str | None = None) -> Intel:
     from scamshield.intel import enrich
 
     if not domain:
         return Intel(domain="", sources={"enrich": "unavailable"})
-    return await _guard(enrich(domain), ENRICH_TIMEOUT,
+    return await _guard(enrich(domain, host=host or None), ENRICH_TIMEOUT,
                         lambda: Intel(domain=domain, registrable_domain=domain, sources={"enrich": "unavailable"}),
                         "enrich")
 
@@ -157,7 +157,7 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
 
     in_dom = registrable(url)
     det_task = asyncio.gather(*[_detonate(url, p, scan_id) for p in personas])
-    enr_task = asyncio.ensure_future(_enrich(in_dom))
+    enr_task = asyncio.ensure_future(_enrich(in_dom, host_of(url)))
     bl_task = asyncio.ensure_future(asyncio.to_thread(_blocklist, url))
     dets = list(await det_task)
     state["dets"] = dets
@@ -173,7 +173,7 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
     in_intel, in_look = intel, None
     if dom and dom != in_dom:
         in_intel = intel.model_copy(deep=True)
-        intel = await _enrich(dom)
+        intel = await _enrich(dom, host_of(final))
         state["intel"] = intel
         in_look = await _guard(asyncio.to_thread(lookalike, in_dom), 10, None, "lookalike")
         in_intel.blocklist_hits = list(dict.fromkeys((in_intel.blocklist_hits or []) + bl))
@@ -233,7 +233,7 @@ async def _domain_only(scan_id: str, url: str, state: dict, reason: str) -> Scan
     dets = state.get("dets") or [Detonation(url=url, status="timeout", error=f"scan guard: {reason}")]
     final = next((d.final_url for d in dets if d.final_url), url)
     dom = registrable(final)
-    intel = state.get("intel") or await _enrich(dom)
+    intel = state.get("intel") or await _enrich(dom, host_of(final))
     if not intel.blocklist_hits:
         intel.blocklist_hits = _blocklist(url)
     look = await _guard(asyncio.to_thread(lookalike, dom), 5, None, "lookalike")

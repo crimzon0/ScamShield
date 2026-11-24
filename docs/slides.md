@@ -100,12 +100,20 @@ Speaker notes: Fines, tolls, government sign-in and bank OTP pages are the UAE s
 
 # Results (measured)
 
-[[RESULTS_TABLE]]
+<!-- RT:BEGIN -->
+| | Precision | Recall | FPR |
+|---|---|---|---|
+| Full pipeline (n=55) | 1.000 | 1.000 | 0.000 |
+| Blocklists ignored (ablation) | 1.000 | 0.115 | 0.000 |
+
+- **Official UAE domains flagged as scam: 0 / 109**
+- Recall with blocklists is mostly feed overlap: without them we catch 3/26, and 10 more are marked "suspicious"
+<!-- RT:END -->
 
 Caveats: small set (55 URLs); scam URLs come from public feeds, so we also report a run with blocklists ignored; feed labels not hand-verified.
 
 <!--
-Speaker notes: Numbers come from `make eval` on data/eval/sample.csv, run on [[EVAL_DATE]]. The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there.
+Speaker notes: Numbers come from `make eval` on data/eval/sample.csv, run on 2026-11-24, ~20:03 UTC. The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there.
 -->
 
 ---

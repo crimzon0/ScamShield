@@ -14,9 +14,13 @@
   "favicon": [
    "bf0e9525ca0aed89"
   ],
-  "screenshot_top": [],
+  "screenshot_top": [
+   "996362992766373c",
+   "b33cc31ae718e718"
+  ],
   "source": [
-   "https://www.adcb.com/favicon.ico"
+   "https://www.adcb.com/favicon.ico",
+   "https://www.adcb.com/en/personal/"
   ]
  },
  "mashreq": {
@@ -111,9 +115,13 @@
   "favicon": [
    "ef38e43381719a63"
   ],
-  "screenshot_top": [],
+  "screenshot_top": [
+   "984f4db0f20f0dda",
+   "d16c92e96c1bc17c"
+  ],
   "source": [
-   "https://www.uaepass.ae/favicon.ico"
+   "https://www.uaepass.ae/favicon.ico",
+   "https://uaepass.ae/"
   ]
  },
  "abu_dhabi_police": {

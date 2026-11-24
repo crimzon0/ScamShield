@@ -19,6 +19,12 @@ SHARED_HOSTS = {
     "wordpress.com", "tilda.ws", "mystrikingly.com", "my.canva.site", "firebasestorage.googleapis.com",
     # free-subdomain providers (DigitalPlat FreeDomain etc.): parent age is meaningless
     "de5.net", "us.kg", "dpdns.org", "qzz.io", "eu.org", "duckdns.org", "freemyip.com", "no-ip.org", "ddns.net",
+    "gitbook.io", "mybluehost.me", "cpanel.site", "cloudapp.azure.com", "azurestaticapps.net",
+    "web.core.windows.net", "blob.core.windows.net", "s3.amazonaws.com", "storage.googleapis.com",
+    "myshopify.com", "notion.site", "gitlab.io", "hostingersite.com", "jimdosite.com", "site123.me",
+    "codesandbox.io", "csb.app", "lovable.app", "softr.app", "glide.page", "sharepoint.com", "ipfs.io",
+    "dweb.link", "translate.goog", "webcindario.com", "tiiny.site", "weeblysite.com", "yolasite.com",
+    "ucoz.net", "github.dev", "loca.lt", "serveo.net",
     "r2.dev", "fly.dev", "railway.app", "deno.dev", "bubbleapps.io", "typedream.app",
 }
 
@@ -38,10 +44,22 @@ def host_of(url_or_host: str) -> str:
 def registrable(url_or_host: str) -> str:
     """eTLD+1 with private suffixes (foo.vercel.app stays foo.vercel.app)."""
     h = host_of(url_or_host)
+    shared = _shared_suffix(h)
+    if shared and h != shared:
+        # tenant on a shared host: keep exactly one label left of the platform suffix
+        return h[: -len(shared) - 1].rsplit(".", 1)[-1] + "." + shared
     ext = _extract(h)
     if ext.domain and ext.suffix:
         return f"{ext.domain}.{ext.suffix}"
     return h
+
+
+def _shared_suffix(h: str) -> str:
+    best = ""
+    for s in SHARED_HOSTS:
+        if (h == s or h.endswith("." + s)) and len(s) > len(best):
+            best = s
+    return best
 
 
 def registrable_icann(url_or_host: str) -> str:

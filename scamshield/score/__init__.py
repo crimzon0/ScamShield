@@ -308,10 +308,14 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             add("old_domain", -15, f"The domain has existed for over {age // 365} years.",
                 f"النطاق موجود منذ أكثر من {age // 365} سنوات.", f"age_days={age}")
 
-    cfs = _days_since(intel.cert_first_seen) if intel and not shared else None
-    if cfs is not None and cfs < 14 and (age is None or age >= 7):
-        add("new_certificate", 10, f"The first TLS certificate for this domain appeared {cfs} day(s) ago.",
-            f"ظهرت أول شهادة أمان لهذا النطاق منذ {cfs} أيام.", f"cert_first_seen={intel.cert_first_seen}")
+    # certificate recency: only meaningful on a domain known to be young (cert dates are lower bounds)
+    cert_dt = intel.cert_first_seen if intel else None
+    if cert_dt is None:
+        cert_dt = next((d.tls.valid_from for d in ok if d.tls and d.tls.valid_from), None)
+    cfs = _days_since(cert_dt) if not shared else None
+    if cfs is not None and cfs < 14 and age is not None and 7 <= age < 90:
+        add("new_certificate", 5, f"The site's TLS certificate is only {cfs} day(s) old on a young domain.",
+            f"شهادة الأمان للموقع عمرها {cfs} أيام فقط على نطاق حديث.", f"cert={cert_dt}")
 
     # registry takedown / hold
     rd_status = " ".join(str(x) for x in ((intel.raw_rdap or {}).get("status") or [])) if intel and not shared else ""

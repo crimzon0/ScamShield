@@ -42,9 +42,12 @@ def add_reference(brand_id: str, favicon_path: str | None = None, screenshot_pat
     d = _load()
     e = d.setdefault(brand_id, {"favicon": [], "screenshot_top": [], "source": []})
     if favicon_path:
-        h = phash_image(favicon_path)
-        if _informative(h) and str(h) not in e["favicon"]:
-            e["favicon"].append(str(h))
+        try:
+            h = phash_image(favicon_path)
+            if _informative(h) and str(h) not in e["favicon"]:
+                e["favicon"].append(str(h))
+        except Exception:
+            pass  # SVG / broken icon
     if screenshot_path:
         h = phash_image(screenshot_path, top_fraction=0.25)
         if _informative(h) and str(h) not in e["screenshot_top"]:

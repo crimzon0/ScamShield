@@ -23,8 +23,8 @@ The pages are short-lived. A phishing domain is often registered, used and dropp
 | Surface | Input | What it does |
 |---|---|---|
 | **Impersonation engine** | a URL (from a citizen report, SMS, ad, or a CSV batch) | Opens the link in an isolated headless browser as a UAE mobile user, follows every redirect and shortener, identifies which UAE brand the page claims to be, checks whether it is on that brand's official domain, and returns a 0-100 risk score with bilingual reasons. |
-| **Early-warning radar** | Certificate Transparency (crt.sh backfill, certstream live), search results | Watches for newly issued certificates and new domains that contain UAE brand terms or look-alikes (`uaepass`, `tamm-`, `rta-fine`, homoglyphs, punycode). Every hit is pushed through the same scan pipeline. Records **time to detection** = flagged time minus the first-seen time reported by the source. |
-| **Helpline checker** | Google Maps (Places) and search listings for UAE brands, in English and Arabic | Normalises every phone number to E.164 and compares it with the brand's official numbers. Listings' websites go through the same scan pipeline. |
+| **Early-warning radar** | Certificate Transparency (crt.sh backfill, certstream live), newly registered domain lists, search ads / organic results | Watches for newly issued certificates and new domains that contain UAE brand terms or look-alikes (`uaepass`, `tamm-`, `rta-fine`, homoglyphs, punycode). Every hit is pushed through the same scan pipeline. Records **time to detection** = flagged time minus the first-seen time reported by the source. |
+| **Helpline checker** | Google Maps (Places) listings in English and Arabic across six UAE cities, search snippets | Normalises every phone number to E.164 (Arabic-Indic digits, 800/600 numbers, 05x mobiles, wa.me links) and compares it with the brand's official numbers and short codes. Listings' websites go through the same scan pipeline. |
 
 All three surfaces end in the same place: a saved scan with a verdict, reasons and artifacts, which can be exported as a **police case file** (ZIP + bilingual PDF + takedown notice).
 
@@ -90,7 +90,7 @@ Code map:
 - **Survive redirects, shorteners and cloaking.** Shorteners are expanded; HTTP, meta-refresh and JavaScript redirects are followed and recorded hop by hop. The page is opened as different personas (UAE mobile user arriving from a Google ad with `ar-AE` locale and Dubai time zone; desktop; Googlebot). If the scam shows a login form to the mobile user but a harmless page to the crawler, that difference is itself a signal (`cloaking`, +25).
 - **Look-alike domains.** Typosquats, homoglyphs, Arabic/Latin confusables, punycode (`xn--`) and "brand + keyword" patterns (`tamm-fines-pay`, `uaepass-login`) are matched against every registry brand.
 - **Every reason is bilingual.** Each signal carries an English and an Arabic sentence, a weight and the evidence it came from. The dashboard switches fully to Arabic (RTL).
-- **Evidence the police can use.** `build_case(scan_id)` produces a ZIP with screenshots, DOM, HAR, redirect chain, WHOIS/RDAP, verdict JSON, a bilingual PDF report, and English/Arabic takedown notices for the registrar and host, plus a `manifest` with the **SHA-256** of every file (and of the manifest and ZIP). Timestamps are UTC, ISO 8601.
+- **Evidence the police can use.** `build_case(scan_id)` produces a ZIP with screenshots, DOM, HAR, redirect chain, WHOIS/RDAP, verdict JSON, a bilingual PDF report, and English/Arabic takedown notices for the registrar and host, plus `manifest.json` with the **SHA-256**, size and UTC creation time of every file, the tool version and the case timeline (domain registered, certificate first seen, page captured, case generated); the manifest's own hash is in `manifest.sha256`, and missing artifacts are recorded explicitly. The PDF states how evidence was captured (isolated browser, no downloads, no form interaction) and flags captures that need manual review. Takedown notices are **drafts only, never sent automatically**, and legitimate verdicts get none.
 - **Time to detection.** Radar hits store `first_seen` (certificate notBefore / registration date from the source) and `flagged_at`. The difference is shown on the dashboard, so speed is measured rather than claimed.
 - **Fake helplines need two signals.** A number not in the registry is only *unverified*. It becomes *likely scam* only with an independent second sign: brand-named listing linking to a non-official site, a personal mobile for an institution, a new listing with few reviews, a website scored as scam, or WhatsApp-only contact.
 - **Never invent an official fact.** Official domains and phone numbers in `data/registry.json` come with source URLs; anything not confirmed from an official source is left out and listed in `data/registry_todo.md`.
@@ -228,7 +228,21 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 ## 7. Measured results
 
 <!-- RESULTS:BEGIN -->
-_Being measured — filled from a real `make eval` run._
+All numbers below are from real runs of `make eval` on `data/eval/sample.csv` (2026-11-24, ~20:03 UTC). Threshold: `likely_scam` or above counts as scam.
+
+| Run | n | Precision | Recall | F1 | FPR | TP / FN / FP / TN |
+|---|---|---|---|---|---|---|
+| Full pipeline (blocklists on) | 55 | 1.000 | 1.000 | 1.000 | 0.000 | 26 / 0 / 0 / 29 |
+| Ablation: blocklists ignored (`--ignore-blocklist`) | 55 | 1.000 | 0.115 | 0.207 | 0.000 | 3 / 23 / 0 / 29 |
+
+**Official-domain sweep:** the home page of every official domain in the registry was scanned: **0/109 flagged as scam** (one, `moi-cpc.gov.ae`, was labelled `suspicious`: it redirects to `moi-cpc.ae` and the page timed out).
+
+**How to read this honestly**
+
+- **No false positives** on the 29 legitimate URLs (UAE banks, government, telecom, airlines, a news page that mentions banks) or on the 109 official-domain home pages. This is the property we optimised hardest.
+- **The headline recall comes almost entirely from feed overlap.** The 26 scam URLs were taken from OpenPhish and phishunt, and `intel` checks the same feeds, so a blocklist hit decides most of them. With blocklists ignored, recall drops to **0.115** (3 of 26); 10 of the missed scams are still labelled `suspicious` (score 35-59), the rest `legitimate`. Most of these are dead or removed pages on free hosts (`pages.dev`, `netlify.app`, `vercel.app`) or non-UAE brands (Coinbase, Binance, Santander, iCloud, Microsoft), where our UAE registry gives no brand signal.
+- In practice ScamShield is meant to run *with* feeds and the radar together; the ablation shows how much the page/domain analysis adds on its own, and where to improve (global-brand registry, free-host scoring, Tranco/RDAP lookup on sub-domains of shared hosts).
+- n = 55 is small. Treat these numbers as a regression check, not a benchmark.
 <!-- RESULTS:END -->
 
 ## 8. Limitations (honest)

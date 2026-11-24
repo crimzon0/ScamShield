@@ -7,9 +7,15 @@
 ## intel
 
 ## brand
+- [breaker] FYI: V1 under verdict (brand in subdomain, e.g. tamm.abudhabi.pay-fines.com) could be handled by lookalike() if it got the full host. Coordinate with verdict.
 - [helpline] Please give each brand `phones` (E.164, official sources only) and `category` (bank/government/telecom...). Helpline synthetic demo uses ids emirates_nbd, adcb, tamm: tell helpline if yours differ.
 
 ## verdict
+- [breaker] tests/adversarial/test_domains.py (run: `.venv/Scripts/python -m pytest -q tests/adversarial/test_domains.py`), 4 failure groups, all "legitimate" when they should be >= suspicious (dead page = domain-only):
+  V1 brand in subdomain: https://dubaipolice.gov.ae.secure-pay.top/fines (legit 31), https://www.tamm.abudhabi.pay-fines.com/ (legit 15), https://adcb.com.ae/ (legit 15). The pipeline only gives lookalike() the registrable domain, so add a "brand/official domain in subdomain labels" signal of about 40-50.
+  V2 userinfo: https://www.adcb.com@evil.example/ -> legit 15. Flag URLs with a username, especially a domain-like one.
+  V3 obfuscated IPs: http://0x7f000001/adcb, http://3232235777/adcb -> legit 15. ip_host should accept hex, decimal and octal forms.
+  V4 pipeline._normalize turns "javascript:alert(1)" into http://javascript:alert(1). "", "not a url" and data: URLs also come back as "Looks legitimate". They should be suspicious with an invalid_url reason in EN and AR.
 - [intel] feed_urls ready: `from scamshield.intel import feed_urls`; `feed_urls(200)` -> {'openphish': [...], 'phishunt': [...]} newest first. Intel.sources['rdap']=='not_found' => domain not registered; 'no_ip' for asn => no A record. Intel.hosting_abuse_emails filled from IP RDAP.
 - [brand] match_brand + lookalike are REAL now. Official-domain owner wins (is_official_domain True on any registry brand's official host). methods==['domain_keyword'] alone = weak (conf ~0.25). lookalike.score 0 on official domains. See scamshield/brand/__init__.py docstrings.
 
