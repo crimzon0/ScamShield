@@ -1005,6 +1005,37 @@
    "verified": false
   },
   {
+   "id": "adnoc",
+   "category": "energy",
+   "name_en": "ADNOC (Abu Dhabi National Oil Company)",
+   "name_ar": "أدنوك",
+   "official_domains": [
+    "adnoc.ae",
+    "jobs.adnoc.ae"
+   ],
+   "keywords_en": [
+    "adnoc",
+    "abu dhabi national oil company"
+   ],
+   "keywords_ar": [
+    "أدنوك",
+    "شركة بترول أبوظبي الوطنية"
+   ],
+   "arabizi": [
+    "adnok"
+   ],
+   "phones": [],
+   "short_codes": [],
+   "domain_keywords": [
+    "adnoc"
+   ],
+   "sources": [
+    "https://www.adnoc.ae/ (detonated 2026-11-25: title 'ADNOC | Home'; TLS cert CN adnoc.ae, SAN adnoc.ae/www.adnoc.ae)",
+    "https://adnoc.ae/en/our-story and https://jobs.adnoc.ae/us/en/who-we-are (search results)"
+   ],
+   "verified": false
+  },
+  {
    "id": "adnoc_distribution",
    "category": "fuel",
    "name_en": "ADNOC Distribution",
@@ -1014,12 +1045,10 @@
     "onlineorder.adnocdistribution.ae"
    ],
    "keywords_en": [
-    "adnoc distribution",
-    "adnoc"
+    "adnoc distribution"
    ],
    "keywords_ar": [
-    "أدنوك للتوزيع",
-    "أدنوك"
+    "أدنوك للتوزيع"
    ],
    "arabizi": [
     "adnoc lil tawzee3"
@@ -1029,7 +1058,7 @@
    ],
    "short_codes": [],
    "domain_keywords": [
-    "adnoc"
+    "adnocdistribution"
    ],
    "sources": [
     "https://onlineorder.adnocdistribution.ae/ (search excerpt)",

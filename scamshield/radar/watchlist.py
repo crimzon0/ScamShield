@@ -33,6 +33,8 @@ AFFIXES = sorted({
     "track", "tracking", "delivery", "parcel", "post", "refund", "reward", "rewards", "points", "sms", "otp",
     "auth", "account", "accounts", "official", "smart", "digital", "net", "info", "center", "centre", "hub",
     "renew", "renewal", "visa", "toll", "tolls", "traffic", "police", "pass", "ebanking", "mobile", "unlock",
+    "bill", "bills", "recharge", "topup", "tag", "wallet", "gift", "prize", "win", "offer", "offers", "jobs",
+    "cash", "loan", "loans", "claim", "pay2", "paid", "due", "violation", "violations", "gov-ae", "govae",
 }, key=len, reverse=True)
 
 

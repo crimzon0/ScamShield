@@ -1,2 +1,1 @@
-2026-11-25 00:16:21,243 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern uaepass%)
-2026-11-25 00:17:21,245 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern uaepass%)
+2026-11-25 00:18:47,796 INFO scamshield.radar crt.sh uaepass%                 ok             rows=66
