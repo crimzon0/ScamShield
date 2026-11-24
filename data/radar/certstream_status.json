@@ -2,16 +2,16 @@
  "state": "running",
  "url": "ws://localhost:8080/",
  "started_at": "2026-11-24T20:32:22.502921+00:00",
- "messages": 1415226,
- "certs": 1415226,
- "hits": 1,
- "new_hits": 1,
+ "messages": 2466971,
+ "certs": 2466971,
+ "hits": 2,
+ "new_hits": 2,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "mashreq.nwhco.ir",
-  "term": "mashreq",
-  "at": "2026-11-24 20:35:54.847579+00:00"
+  "domain": "skywards.com.hk",
+  "term": "skywards",
+  "at": "2026-11-24 20:40:52.932582+00:00"
  },
  "queue": 0
 }

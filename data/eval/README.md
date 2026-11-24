@@ -72,3 +72,29 @@ names from public brand-phishing rankings (not fitted to the held-out misses).
 Official domains (every non-fictional registry domain as `https://<domain>/`): **FP 0/112**.
 Domain-only subset without blocklist: holdout recall 0.455 (n=16), sample 0.826 (n=31), FPR 0 on both.
 False positives on either set: none.
+
+## Update 2026-11-25 (late): hard-legit fixes (supersedes FINAL above)
+
+Code version: pipeline fingerprint `db475dd39c6eb6a5`. Changes:
+- The brand rule needs confidence >= 0.6 and is never triggered by a body-text-only mention.
+- Regulator footers ("regulated by CBUAE") are not claims.
+- A "Sign in with UAE PASS" button counts as an SSO integration unless the page collects UAE PASS secrets itself.
+- .gov.ae/.mil.ae (-40) and .ac.ae (-25) restricted-registrant domains never get the brand rule or the sensitive-form signal.
+- Unknown-age (.ae) domains count as established via a Tranco top-1M rank or more than 2 years of cert history.
+- The fake-helpline signal requires a real brand claim.
+
+Re-scored with `--rescore --rebrand` on the same stored scans; hard-legit (tests/adversarial/hard_legit.csv, breaker)
+is forced live scans via `pytest -m network tests/adversarial/test_hard_legit.py`.
+
+| set | blocklist | P | R | F1 | FPR |
+|---|---|---|---|---|---|
+| **holdout (headline)** | **ignored** | **1.000** | **0.714** | **0.833** | **0.000** |
+| holdout | ignored, threshold >= suspicious | 1.000 | 0.857 | 0.923 | 0.000 |
+| holdout | used | 1.000 | 1.000 | 1.000 | 0.000 |
+| sample (tuned on) | ignored | 1.000 | 0.797 | 0.887 | 0.000 |
+| sample (tuned on) | ignored, threshold >= suspicious | 1.000 | 0.898 | 0.946 | 0.000 |
+| sample (tuned on) | used | 1.000 | 1.000 | 1.000 | 0.000 |
+| hard-legit, 42 real UAE gov/uni/exchange/business logins | - | - | - | - | 0/42 not legitimate |
+
+Trade-off: roblox.com.et (sample) dropped from likely_scam to suspicious 53, because its unknown-age domain now
+counts as established.
