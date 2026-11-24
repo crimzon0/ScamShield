@@ -40,7 +40,7 @@ async def collect_search(scan: bool = True, limit: int | None = None) -> list[Ra
 def siblings(domain: str) -> list[dict]:
     """Domains sharing IP / nameserver / cert / favicon hash with domain (from scanned + radar domains in db)."""
     try:
-        from .siblings import siblings as _s
+        from .network import siblings as _s
 
         return _s(domain)
     except Exception:

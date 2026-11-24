@@ -108,7 +108,7 @@ def main(argv=None) -> int:
         for d in feed(a.limit):
             print(json.dumps(d, ensure_ascii=False, default=str))
     elif a.cmd == "siblings":
-        from .siblings import siblings
+        from .network import siblings
 
         print(json.dumps(siblings(a.domain), indent=1, default=str))
     return 0

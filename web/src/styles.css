@@ -193,3 +193,6 @@ html[lang="ar"] .scanbox input:placeholder-shown { direction: rtl; font-family: 
 .dot-off { background: var(--susp); }
 .dot-na { background: #7d8aa0; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(46,204,113,.05); } }
+
+.kpi-retro { background: #f0f1f4; border-style: dashed; }
+.kpi-v-sm { font-size: 18px; color: var(--muted); }

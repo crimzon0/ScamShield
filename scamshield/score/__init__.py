@@ -202,6 +202,46 @@ def _is_gone(d: Detonation) -> bool:
     return not d.form_fields and len((d.visible_text or "").strip()) < 600 and bool(NOT_FOUND_PAGE.search(head))
 
 
+_LINK_RE = re.compile(r"""(?:href|action|formaction|data-href)\s*=\s*["']([^"']{8,600})["']""", re.I)
+SECRETS = {"credentials", "card", "otp", "emirates_id"}
+_AUTH_RE = re.compile(r"://(id|login|auth|sso|idp|accounts?|signin)\.|oauth|authori[sz]e|openid|saml|/sso|/idp|"
+                      r"/login|/signin|/auth|client_id=|redirect_uri=", re.I)
+
+
+def _sso_target(ok: list[Detonation], official: list[str]) -> str:
+    """URL of a link / form action on the page that goes to the brand's official domain (e.g. 'Sign in with
+    UAE PASS' -> https://id.uaepass.ae/...). Empty when none found or DOM unavailable."""
+    if not official:
+        return ""
+    for d in ok:
+        cands = []
+        if d.dom_path:
+            try:
+                with open(d.dom_path, encoding="utf-8", errors="replace") as f:
+                    cands = _LINK_RE.findall(f.read(3_000_000))
+            except Exception:
+                cands = []
+        for u in cands:
+            u = u.strip().replace("&amp;", "&")
+            full = u if "://" in u else "https:" + u
+            if u.lower().startswith(("http://", "https://", "//")) and is_official(full, official) and _AUTH_RE.search(full):
+                return u[:200]
+    return ""
+
+
+def _brand_official(brand, look) -> list[str]:
+    doms = list(brand.official_domains or []) if brand else []
+    bid = (brand.brand_id if brand and brand.brand_id else None) or (look.brand_id if look else None)
+    if bid and not doms:
+        try:
+            from scamshield.brand import get_brand
+
+            doms = list((get_brand(bid) or {}).get("official_domains") or [])
+        except Exception:
+            pass
+    return doms
+
+
 def _brand_names(brand: Optional[BrandMatch], look: Optional[LookalikeResult]) -> tuple[str, str]:
     if brand and brand.brand_id:
         return brand.name_en or brand.brand_id, brand.name_ar or brand.name_en or brand.brand_id
@@ -334,11 +374,21 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             f"الصفحة على نطاق رسمي ({host}) مُدرج في سجلّنا المُتحقَّق منه.", final)
         return _finish(scan_id, url, final, dom, mode, 0, sig, brand, look, forced="legitimate")
 
+    # ---------------- SSO / integration: page hands login to the brand's official domain, collects no secrets
+    sso = ""
+    if ok and not (asks & SECRETS) and not on_official and ((brand_conf >= 0.2) or (look and look.score >= 0.5)):
+        sso = _sso_target(ok, _brand_official(brand, look))
+    if sso:
+        add("sso_integration", 0, f"The page links its sign-in to the official {b_en or 'brand'} site and does not ask "
+            f"for a password, OTP or card itself (typical 'Sign in with ...' integration).",
+            f"تحوّل الصفحة تسجيل الدخول إلى الموقع الرسمي لـ{b_ar or 'الجهة'} ولا تطلب بنفسها كلمة مرور أو رمز تحقق "
+            f"أو بيانات بطاقة (تكامل «تسجيل الدخول عبر ...» المعتاد).", sso)
+
     # ---------------- rule 2: brand impersonation
     established = (tranco is not None and tranco <= 100_000) or (age is not None and age > 3 * 365)
     big = tranco is not None and tranco <= 10_000
     brand_rule = False
-    if brand_conf >= BRAND_THRESHOLD and not on_official:
+    if brand_conf >= BRAND_THRESHOLD and not on_official and not sso:
         ev = "; ".join(brand.evidence[:3])
         if big or (established and not (asks & {"credentials", "card", "otp", "emirates_id"})):
             add("brand_mention_established_site", 10,
@@ -365,6 +415,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
 
     if look and look.score >= 0.2 and not on_official and not brand_rule and not (big and look.score < 0.8):
         w = round(55 * look.score) if look.score >= 0.5 else round(20 * look.score)
+        if sso:
+            w = min(w, 15)
         tech = ", ".join(look.techniques) or "similarity"
         add("lookalike_domain", w,
             f"The domain {dom} imitates {look.closest_official or b_en} ({tech}).",
@@ -576,6 +628,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
                 f"تعذّر تحليل الصفحة ({st})؛ الحكم مبني على معلومات النطاق فقط.", st)
 
     total = BASE + sum(s.weight for s in sig)
+    if sso and not (bl or warn):
+        total = min(total, LIKELY - 1)
     if brand_rule:
         total = max(total, 85)
     elif bl or warn:
