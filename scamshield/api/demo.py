@@ -1,6 +1,6 @@
 """Owner: dashboard. `make demo` -> seed the db, build the web UI if needed, serve API + UI on :8000.
 
-    python -m scamshield.api.demo [--no-seed] [--with-fixtures] [--backfill] [--rebuild] [--port 8000] [--host 127.0.0.1]
+    python -m scamshield.api.demo [--no-seed] [--with-fixtures] [--backfill] [--helpline] [--rebuild] [--port 8000] [--host 127.0.0.1]
 
 Radar hits come from the radar collectors already in the db; --backfill also queries crt.sh (rate-limited, slow).
 
@@ -80,10 +80,14 @@ async def _seed_radar(with_fixtures: bool, backfill: bool = False) -> None:
         _p(f"radar: crt.sh backfill added {len(hits)} hits")
 
 
-async def _seed_helpline() -> None:
+async def _seed_helpline(refresh: bool = False) -> None:
     from scamshield import helpline
     from scamshield.brand import load_registry
 
+    existing = db.list_phone_findings(limit=2000)
+    if existing and not refresh:
+        _p(f"helpline: {len(existing)} findings in db (use --helpline to refresh; live checks are slow)")
+        return
     ids = [b["id"] for b in (load_registry() or [])][:12] or ["sandbox_bank"]
     n = 0
     for bid in ids:
@@ -113,16 +117,17 @@ def _build_web(force: bool = False) -> None:
     subprocess.run("npm run build", cwd=WEB, shell=shell, check=False)
 
 
-async def seed(with_fixtures: bool = False, backfill: bool = False) -> None:
+async def seed(with_fixtures: bool = False, backfill: bool = False, helpline: bool = False) -> None:
     await _seed_scans(with_fixtures)
     await _seed_radar(with_fixtures, backfill)
-    await _seed_helpline()
+    await _seed_helpline(helpline)
 
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="ScamShield demo server")
     ap.add_argument("--no-seed", action="store_true")
     ap.add_argument("--rebuild", action="store_true")
+    ap.add_argument("--helpline", action="store_true", help="re-run helpline checks for 12 brands (slow when live)")
     ap.add_argument("--backfill", action="store_true", help="also run a 7-day crt.sh backfill (slow, rate-limited)")
     ap.add_argument("--with-fixtures", action="store_true", help="also seed fictional Sandbox Bank sample data")
     ap.add_argument("--host", default="127.0.0.1")
@@ -134,7 +139,7 @@ def main(argv: list[str] | None = None) -> None:
         except Exception:
             pass
     if not a.no_seed:
-        asyncio.run(seed(a.with_fixtures, a.backfill))
+        asyncio.run(seed(a.with_fixtures, a.backfill, a.helpline))
     _build_web(a.rebuild)
     import uvicorn
 

@@ -157,6 +157,8 @@ html[lang="ar"] .scanbox input:placeholder-shown { direction: rtl; font-family: 
 .nowrap { white-space: nowrap; }
 .num { font-weight: 700; font-variant-numeric: tabular-nums; }
 .ttd { color: var(--navy-700); font-weight: 700; }
+.rel-hint { margin: 0 0 8px; }
+.tbl-rel td:first-child { overflow-wrap: anywhere; max-width: 360px; }
 
 .muted { color: var(--muted); }
 .small { font-size: 12px; }

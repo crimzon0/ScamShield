@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, Collectors, downloadBundle, EvalResult, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
+import { api, Collectors, downloadBundle, EvalResult, Label, PhoneRow, RadarRow, RelatedRow, ScanResult, ScanRow } from "./api";
 import { dict, fmtUtc, humanDuration, Key, Lang } from "./i18n";
 
 // ------------------------------------------------------------------ i18n context
@@ -248,7 +248,34 @@ function ScanDetail({ r }: { r: ScanResult }) {
         <ScreenshotCard key={r.scan_id} r={r} />
         <div className="stack"><ChainCard r={r} /><ExportCard key={r.scan_id} r={r} /></div>
       </div>
+      <RelatedCard key={`rel-${r.scan_id}`} scanId={r.scan_id} />
     </div>
+  );
+}
+
+function RelatedCard({ scanId }: { scanId: string }) {
+  const { t, lang } = useI18n();
+  const [rows, setRows] = useState<RelatedRow[] | null>(null);
+  useEffect(() => { api.related(scanId).then((o) => setRows(o.related || [])).catch(() => setRows([])); }, [scanId]);
+  const open = (id?: string | null) => { if (id) window.location.hash = `/scan/${id}`; };
+  return (
+    <Card title={t("relatedTitle")} actions={rows && rows.length > 0 ? <span className="muted small">{rows.length}</span> : undefined}>
+      {!rows ? <p className="muted">{t("loading")}</p> : rows.length === 0 ? <p className="muted">{t("relatedNone")}</p> : (<>
+        <p className="muted small rel-hint">{t("relatedHint")}</p>
+        <div className="tblwrap"><table className="tbl tbl-rel">
+          <thead><tr><th>{t("colDomain")}</th><th>{t("relatedWhy")}</th><th>{t("score")}</th><th>{t("colVerdict")}</th></tr></thead>
+          <tbody>{rows.map((x) => (
+            <tr key={x.domain} className={x.scan_id ? "click" : ""} onClick={() => open(x.scan_id)}
+              title={x.scan_id ? undefined : t("relatedNotScanned")}>
+              <td><Ltr><code>{x.display}</code></Ltr> <FixtureBadge show={x.is_fixture} /></td>
+              <td>{x.reasons.map((rs) => (
+                <span key={rs.kind} className="chip" title={rs.values.join(", ")}>{lang === "ar" ? rs.ar : rs.en}{rs.values.length > 1 ? ` ×${rs.values.length}` : ""}</span>))}</td>
+              <td className="num">{x.score ?? "—"}</td>
+              <td className="nowrap">{x.label ? <LabelPill label={x.label} /> : <span className="muted small">{t("relatedNotScanned")}</span>}</td>
+            </tr>))}</tbody>
+        </table></div>
+      </>)}
+    </Card>
   );
 }
 

@@ -198,3 +198,47 @@ def test_radar_collectors_and_feed_extra(client):
     db.save_radar_hit(fixtures.radar_hit())
     rows = client.get("/api/radar").json()
     assert rows and rows[0]["time_to_detection_seconds"] is not None and "extra" in rows[0]
+
+
+def test_related_domains(client, monkeypatch):
+    import scamshield.radar
+
+    r = client.post("/api/scan", json={"url": "sandbox-bank-login.example/verify"})
+    sid = r.json()["scan_id"]
+    other = client.post("/api/scan", json={"url": "sandbox-bank-pay.example/"}).json()
+    other_dom = other["verdict"]["registrable_domain"]
+    calls = []
+
+    def fake_siblings(domain):
+        calls.append(domain)
+        return [{"domain": other_dom, "shared": {"ip": ["198.51.100.7"], "cert": ["crtsh:1", "crtsh:2"]}, "strength": 7},
+                {"domain": "unscanned-sib.example", "shared": {"ns": ["ns1.bad.example"]}, "strength": 2}]
+
+    monkeypatch.setattr(scamshield.radar, "siblings", fake_siblings)
+    body = client.get(f"/api/scans/{sid}/related").json()
+    assert body["scan_id"] == sid and body["domain"]
+    rel = body["related"]
+    assert [x["domain"] for x in rel] == [other_dom, "unscanned-sib.example"]
+    first = rel[0]
+    assert "[.]" in first["display"] and "." not in first["display"].replace("[.]", "")
+    kinds = {x["kind"]: x for x in first["reasons"]}
+    assert kinds["ip"]["en"] and kinds["ip"]["ar"] and kinds["cert"]["values"] == ["crtsh:1", "crtsh:2"]
+    assert first["scan_id"] == other["scan_id"] and first["label"] == "scam" and first["score"] is not None
+    assert rel[1]["scan_id"] is None and rel[1]["label"] is None
+    # cached: second call does not recompute
+    client.get(f"/api/scans/{sid}/related")
+    assert len(calls) == 1
+
+
+def test_related_never_raises(client, monkeypatch):
+    import scamshield.radar
+
+    def boom(domain):
+        raise RuntimeError("db gone")
+
+    monkeypatch.setattr(scamshield.radar, "siblings", boom)
+    sid = client.post("/api/scan", json={"url": "sandbox-bank-x.example/"}).json()["scan_id"]
+    r = client.get(f"/api/scans/{sid}/related")
+    assert r.status_code == 200 and r.json()["related"] == []
+    r = client.get("/api/scans/nope/related")
+    assert r.status_code == 200 and r.json()["related"] == []

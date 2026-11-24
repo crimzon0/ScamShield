@@ -40,6 +40,9 @@ export interface PhoneRow {
   status: "official" | "unverified" | "likely_scam"; second_signals: string[]; reasons_en: string; reasons_ar: string;
   synthetic: boolean; found_at: string;
 }
+export interface RelatedReason { kind: string; en: string; ar: string; values: string[] }
+export interface RelatedRow { domain: string; display: string; strength: number; reasons: RelatedReason[]; scan_id?: string | null; score?: number | null; label?: Label | null; is_fixture?: boolean }
+export interface RelatedOut { scan_id: string; domain: string; display: string; related: RelatedRow[] }
 export interface CaseOut { zip_url?: string | null; pdf_url?: string | null; notice_en: string; notice_ar: string }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -80,6 +83,7 @@ export async function downloadBundle(scanIds: string[]): Promise<void> {
 export const api = {
   scan: (url: string) => req<ScanResult>("/api/scan", json({ url })),
   getScan: (id: string) => req<ScanResult>(`/api/scans/${encodeURIComponent(id)}`),
+  related: (id: string) => req<RelatedOut>(`/api/scans/${encodeURIComponent(id)}/related`),
   scans: () => req<ScanRow[]>("/api/scans"),
   radar: () => req<RadarRow[]>("/api/radar?limit=1000"),
   radarStatus: () => req<{ running: boolean; last_started?: string | null; last_count?: number | null; error?: string }>("/api/radar/status"),

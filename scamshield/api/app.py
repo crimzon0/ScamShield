@@ -273,6 +273,109 @@ def screenshot(scan_id: str, persona: str):
     return FileResponse(path, media_type=mimetypes.guess_type(path.name)[0] or "image/png")
 
 
+# ------------------------------------------------------------------ related domains (domain networks)
+MAX_RELATED = 20
+RELATED_TTL = 600  # siblings() walks all stored scans + radar hits; cache per domain for 10 min
+
+# why two domains are linked (radar.network feature kinds); unknown kinds fall back to the raw key
+RELATED_REASONS: dict[str, tuple[str, str]] = {
+    "ip": ("Same IP address", "نفس عنوان IP"),
+    "ns": ("Same dedicated nameservers", "نفس خوادم الأسماء المخصصة"),
+    "cert": ("Same TLS certificate", "نفس شهادة TLS"),
+    "favicon": ("Same site icon", "نفس أيقونة الموقع"),
+    "registrar": ("Same registrar, registered together", "نفس المسجِّل وتاريخ تسجيل متقارب"),
+    "pattern": ("Same naming pattern", "نفس نمط التسمية"),
+    "asn": ("Same hosting network (ASN)", "نفس شبكة الاستضافة (ASN)"),
+}
+
+
+def defang(domain: str) -> str:
+    """Display-safe domain: example.com -> example[.]com (never clickable as-is)."""
+    return (domain or "").replace(".", "[.]")
+
+
+def _latest_verdicts(domains: list[str]) -> dict[str, dict]:
+    """domain -> {scan_id, score, label} of its most recent scan (scans table, then radar hits)."""
+    out: dict[str, dict] = {}
+    if not domains:
+        return out
+    c = db.connect()
+    qs = ",".join("?" * len(domains))
+    try:
+        rows = c.execute(
+            f"SELECT scan_id, score, label, created_at, json_extract(result_json,'$.verdict.registrable_domain') AS d "
+            f"FROM scans WHERE d IN ({qs}) ORDER BY created_at DESC", domains).fetchall()
+        for r in rows:
+            out.setdefault(r["d"], {"scan_id": r["scan_id"], "score": r["score"], "label": r["label"]})
+    except Exception:
+        log.debug("related: scans lookup failed", exc_info=True)
+    try:
+        for r in c.execute(f"SELECT domain, hit_json FROM radar_hits WHERE domain IN ({qs}) ORDER BY flagged_at DESC",
+                           domains).fetchall():
+            if r["domain"] in out:
+                continue
+            h = json.loads(r["hit_json"])
+            if h.get("scan_id") or h.get("label"):
+                out[r["domain"]] = {"scan_id": h.get("scan_id"), "score": h.get("score"), "label": h.get("label")}
+    except Exception:
+        log.debug("related: radar lookup failed", exc_info=True)
+    return out
+
+
+def _siblings_cached(domain: str) -> list[dict]:
+    from scamshield import radar  # looked up at call time (monkeypatch-friendly)
+
+    def run():
+        sib = radar.siblings(domain)
+        return sib if isinstance(sib, list) else []
+
+    return db.cached(f"api:related:{domain}", run, ttl=RELATED_TTL) or []
+
+
+def related_domains(domain: str, limit: int = MAX_RELATED) -> list[dict]:
+    """Up to `limit` related domains with bilingual reasons and their latest verdict. Never raises."""
+    try:
+        if not domain:
+            return []
+        sibs = [s for s in _siblings_cached(domain) if isinstance(s, dict) and s.get("domain")][:limit]
+        verdicts = _latest_verdicts([s["domain"] for s in sibs])
+        out = []
+        for s in sibs:
+            shared = s.get("shared") or {}
+            reasons = []
+            for kind, vals in shared.items():
+                en, ar = RELATED_REASONS.get(kind, (kind, kind))
+                vals = [str(v) for v in (vals if isinstance(vals, (list, tuple, set)) else [vals])]
+                reasons.append({"kind": kind, "en": en, "ar": ar, "values": vals[:5]})
+            v = verdicts.get(s["domain"], {})
+            out.append({"domain": s["domain"], "display": defang(s["domain"]), "strength": s.get("strength", 0),
+                        "reasons": reasons, "scan_id": v.get("scan_id"), "score": v.get("score"),
+                        "label": v.get("label"), "is_fixture": is_fixture(s["domain"])})
+        return out
+    except Exception:
+        log.debug("related_domains failed", exc_info=True)
+        return []
+
+
+@app.get("/api/scans/{scan_id}/related")
+def scan_related(scan_id: str, limit: int = MAX_RELATED):
+    """Domains sharing infrastructure with this scan's domain (radar.siblings). Empty list on any error."""
+    domain = ""
+    try:
+        res = db.get_scan(scan_id)
+        if res is not None:
+            domain = (res.verdict.registrable_domain or (res.intel.registrable_domain if res.intel else "")
+                      or "")
+            if not domain:
+                from scamshield.core.domains import registrable
+
+                domain = registrable(res.verdict.final_url or res.url)
+    except Exception:
+        log.debug("related: scan lookup failed", exc_info=True)
+    rel = related_domains(domain, max(1, min(limit, 50))) if domain else []
+    return {"scan_id": scan_id, "domain": domain, "display": defang(domain), "related": rel}
+
+
 # ------------------------------------------------------------------ radar
 _radar_state: dict[str, Any] = {"running": False, "last_started": None, "last_finished": None, "last_count": None,
                                 "error": ""}
