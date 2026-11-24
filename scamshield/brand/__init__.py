@@ -120,6 +120,21 @@ def _llm_signal(det: Detonation, parts: dict, brands: list[dict]) -> dict | None
     return out
 
 
+CHALLENGE_HOSTS = {"perfdrive.com", "radwarebotmanager.com", "hcaptcha.com", "challenges.cloudflare.com"}
+
+
+def _challenge_origin(det: Detonation, url: str) -> str | None:
+    try:
+        if not url or registrable(url) not in CHALLENGE_HOSTS and host_of(url) not in CHALLENGE_HOSTS:
+            return None
+        hops = [h.url for h in det.redirect_chain or []] or [det.url]
+        for prev in reversed([h for h in hops if h and host_of(h) != host_of(url)]):
+            return prev if official_owner(prev) else None
+    except Exception:
+        return None
+    return None
+
+
 async def _match_brand(det: Detonation) -> BrandMatch:
     from .text import detect_asks, page_parts, score_brands
     from . import visual
@@ -173,6 +188,11 @@ async def _match_brand(det: Detonation) -> BrandMatch:
 
     # Precision rule: if the page is on ANY registry brand's official domain, that owner is the answer
     # (an official site that mentions another brand - u.ae listing TAMM, ENBD mentioning Liv - is not impersonation).
+    # Bot-challenge interstitials (WAF) reached by redirect from an official domain inherit that domain:
+    # e.g. mashreqsecurities.com -> validate.perfdrive.com (Radware). Never applied for other hosts (open redirects).
+    challenge_from = _challenge_origin(det, url)
+    if challenge_from:
+        url = challenge_from
     owner = official_owner(url) if url else None
     chosen = None
     if owner is not None:
@@ -189,6 +209,8 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     if chosen is None:
         return BrandMatch(asks_for=asks, lookalike=look, llm_used=llm_used,
                           evidence=[r["evidence"][0] for r in ranked[:2] if r["evidence"]])
+    if challenge_from:
+        chosen["evidence"] = list(chosen["evidence"]) + [f"final host is a bot-challenge page reached from official {host_of(url)}"]
     b = get_brand(chosen["id"]) or {}
     off = list(b.get("official_domains", []))
     return BrandMatch(

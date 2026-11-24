@@ -29,3 +29,6 @@ from search-engine extracts of the brand's own pages because a direct fetch fail
 - Brands not added (research pending): Careem (careem.com; no public phone line — any "Careem helpline" is suspicious), noon (noon.com, 800-38888 from search excerpt), Ajman Bank, NBF, Abu Dhabi Municipality, ADDC/ADWEA, Sharjah Police.
 - All arabizi spellings are common transliterations, not from official sources.
 - adnoc_distribution: parent ADNOC Group domain adnoc.ae is very likely official but not confirmed on an official page; lookalike gives exact-keyword labels (adnoc.ae, enbd.com) only 0.45.
+- moi_uae: moi-cpc.ae added because the government-controlled moi-cpc.gov.ae redirects to it (cert is a ZeroSSL DV cert for moi-cpc.ae/www.moi-cpc.ae only — no OV identity). Re-confirm on a moi.gov.ae page.
+- mashreq: mashreqsecurities.com and mashreqalislami.com bounce through Radware bot-check validate.perfdrive.com; match_brand treats a final host on a known bot-challenge service reached from an official domain as official.
+- Redirect audit 2026-11-25: every reachable official domain redirects to an official host except the two cases above.

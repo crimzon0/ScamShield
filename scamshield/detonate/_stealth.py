@@ -56,6 +56,14 @@ _INIT = r"""
   if (CFG.chrome && !window.chrome) {
     try { window.chrome = {runtime: {}, app: {isInstalled: false}, csi: function () {}, loadTimes: function () {}}; } catch (e) {}
   }
+  // Closed shadow roots hide phishing forms from scanners: force them open (all frames).
+  try {
+    const oAS = Element.prototype.attachShadow;
+    Element.prototype.attachShadow = new Proxy(oAS, {apply(t, self, args) {
+      const init = Object.assign({}, args[0] || {}, {mode: 'open'});
+      return Reflect.apply(t, self, [init]);
+    }});
+  } catch (e) {}
   if (window.top !== window) return;
   // Track short timers so the scanner waits for delayed first-party redirects.
   const pend = new Map();

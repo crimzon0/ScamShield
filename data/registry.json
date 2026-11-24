@@ -746,7 +746,8 @@
    "name_ar": "وزارة الداخلية",
    "official_domains": [
     "moi.gov.ae",
-    "moi-cpc.gov.ae"
+    "moi-cpc.gov.ae",
+    "moi-cpc.ae"
    ],
    "keywords_en": [
     "ministry of interior",
@@ -773,7 +774,8 @@
    ],
    "sources": [
     "https://www.adpolice.gov.ae/en/Media-Center/News/2021/06/17/MoI-launches-IM-Chat-Service-via-its-website-and-smart-phone-application",
-    "https://www.moi.gov.ae/"
+    "https://www.moi.gov.ae/",
+    "https://moi-cpc.gov.ae/ redirects (HTTP) to https://moi-cpc.ae/ar/default.aspx (observed 2026-11-25; .gov.ae is government-controlled)"
    ],
    "verified": false
   },

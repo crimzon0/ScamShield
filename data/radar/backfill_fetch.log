@@ -2,3 +2,5 @@
 2026-11-25 00:07:21,768 INFO scamshield.radar crt.sh enbd                   empty 0 {'enbd': 'empty', '%enbd%': 'empty'}
 2026-11-25 00:07:26,771 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
 2026-11-25 00:08:26,797 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
+2026-11-25 00:09:26,802 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
+2026-11-25 00:10:26,826 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)

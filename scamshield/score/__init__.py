@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from typing import Optional
 
-from scamshield.core.domains import host_of, is_official, is_shared_host, registrable, registrable_icann
+from scamshield.core.domains import SHARED_HOSTS, host_of, is_official, is_shared_host, registrable, registrable_icann
 from scamshield.core.schemas import BrandMatch, CloakDiff, Detonation, Intel, LookalikeResult, Signal, Verdict
 
 BRAND_THRESHOLD = 0.4
@@ -52,7 +52,7 @@ EXTRA_SHARED = {
     "serveo.net", "loca.lt", "workers.dev", "pages.dev", "weeblysite.com", "ukit.me", "tiiny.site",
     "yolasite.com", "webnode.page", "ucoz.net", "github.dev", "vercel.app", "netlify.app", "square.site",
 }
-SHORTENERS = {"bit.ly", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rebrand.ly", "cutt.ly",
+SHORTENERS = {"urlz.li", "bit.ly", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rebrand.ly", "cutt.ly",
               "s.id", "shorturl.at", "rb.gy", "t.ly", "bitly.com", "lnkd.in", "qrco.de", "flyn.co", "tiny.cc"}
 # Globally phished brand keywords -> display name. Only used to spot the name in an address/title that is NOT theirs.
 GLOBAL_BRANDS = {
@@ -68,10 +68,15 @@ GLOBAL_BRANDS = {
     "careem": "Careem", "talabat": "talabat", "aramex": "Aramex", 
 }
 _KW_RE = re.compile("|".join(sorted(GLOBAL_BRANDS, key=len, reverse=True)))
+SHORT_BRANDS = {"dpd": "DPD", "dhl": "DHL", "ups": "UPS", "ebay": "eBay", "okx": "OKX", "usps": "USPS", "etsy": "Etsy",
+                "hmrc": "HMRC", "irs": "IRS", "bdo": "BDO", "gcash": "GCash", "itau": "Itau", "bradesco": "Bradesco",
+                "chase": "Chase", "apple": "Apple", "meta": "Meta", "steam": "Steam", "ledger": "Ledger"}
+GLOBAL_BRANDS.update(SHORT_BRANDS)
+_SHORT_RE = re.compile(r"(^|[.\-\d])(" + "|".join(SHORT_BRANDS) + r")([.\-\d]|$)")
 _TITLE_RE = re.compile(_KW_RE.pattern + "|webmail|roundcube|zimbra|outlook web|office 365|microsoft 365|"
                        "e-?mail (login|account)|mailbox")
 HOST_BAIT = re.compile(r"login|log-in|signin|sign-in|verify|verification|secure|account|update|wallet|"
-                       r"recover|unlock|billing|payment|refund|claim|bonus|giveaway|reward|helpdesk|webmail|confirm")
+                       r"recover|unlock|logon|billing|payment|refund|claim|bonus|giveaway|reward|helpdesk|webmail|confirm")
 NOT_FOUND_PAGE = re.compile(
     r"site not found|page not found|404 not found|deployment (could not be found|not found)|this site can.t be reached|"
     r"there isn.t a github pages site here|no such app|application (error|not found)|this account has been suspended|"
@@ -300,7 +305,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     brand_rule = False
     if brand_conf >= BRAND_THRESHOLD and not on_official:
         ev = "; ".join(brand.evidence[:3])
-        if big or (established and not (asks & SENSITIVE)):
+        if big or (established and not (asks & {"credentials", "card", "otp", "emirates_id"})):
             add("brand_mention_established_site", 10,
                 f"Mentions {b_en}, but this is a long-established site that does not ask for sensitive data.",
                 f"تذكر الصفحة {b_ar}، لكن الموقع قديم ومعروف ولا يطلب بيانات حساسة.", ev)
@@ -388,19 +393,50 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             "يستخدم النطاق أحرفاً دولية (Punycode) قد تُخفي عنواناً مزيفاً.", host)
 
     # global brand names in the address / title
+    known = tranco is not None and tranco <= 100_000
     label0 = dom.split(".")[0] if dom else ""
-    sub = host[: -len(dom)] if dom and host.endswith(dom) else host
-    scope = host if not shared else sub
-    gm = _KW_RE.search(scope.replace("-", "").replace(".", "")) if not on_official and not established else None
+    suffix0 = dom[len(label0) + 1:] if dom else ""
+    sub = host[: -len(dom)].rstrip(".") if dom and host.endswith(dom) and host != dom else ""
+    if shared:
+        suf = next((x for x in sorted(SHARED_HOSTS | EXTRA_SHARED, key=len, reverse=True)
+                    if host.endswith("." + x)), "")
+        scope = host[: -len(suf) - 1] if suf else sub
+    else:
+        scope = host
+    kw = None
+    if not on_official and not known and scope:
+        m1 = _KW_RE.search(scope.replace("-", "").replace(".", ""))
+        m2 = _SHORT_RE.search(scope)
+        kw = m1.group(0) if m1 else (m2.group(2) if m2 else None)
     gb = None
-    if gm and gm.group(0) not in label0.replace("-", "") or (gm and shared):
-        gb = GLOBAL_BRANDS[gm.group(0)]
-        add("brand_in_hostname", 50, f"The address contains the name \"{gb}\" but is not a {gb} website ({dom}).",
-            f"يحتوي العنوان على اسم «{gb}» لكنه ليس موقعاً تابعاً لـ{gb} ({dom}).", host)
-    elif gm and label0 != gm.group(0):  # combosquat in the registrable label itself, e.g. coinbase-secured.com
-        gb = GLOBAL_BRANDS[gm.group(0)]
-        add("brand_in_hostname", 50, f"The domain {dom} uses the name \"{gb}\" but is not an official {gb} domain.",
-            f"النطاق {dom} يستخدم اسم «{gb}» لكنه ليس نطاقاً رسمياً لـ{gb}.", host)
+    if kw:
+        gb = GLOBAL_BRANDS[kw]
+        if shared or kw in sub.replace("-", "").replace(".", ""):
+            add("brand_in_hostname", 50, f"The address contains the name \"{gb}\" but is not a {gb} website ({dom}).",
+                f"يحتوي العنوان على اسم «{gb}» لكنه ليس موقعاً تابعاً لـ{gb} ({dom}).", host)
+        elif label0 != kw:  # combosquat in the registrable label itself, e.g. coinbase-secured.com
+            add("brand_in_hostname", 50, f"The domain {dom} uses the name \"{gb}\" but is not an official {gb} domain.",
+                f"النطاق {dom} يستخدم اسم «{gb}» لكنه ليس نطاقاً رسمياً لـ{gb}.", host)
+        elif suffix0 != "com":  # roblox.com.kz style
+            add("brand_in_hostname", 35, f"The domain {dom} uses the name \"{gb}\" with an unusual ending; it is not a "
+                f"known {gb} site.", f"النطاق {dom} يستخدم اسم «{gb}» بامتداد غير معتاد؛ وهو ليس موقعاً معروفاً لـ{gb}.", host)
+        else:
+            gb = None
+    if not shared and sub and not on_official and not known and \
+            re.search(r"(^|\.)(com|net|org|gov|edu|co|ae|abudhabi|dubai)(\.|$)", sub):
+        add("embedded_fake_domain", 35, f"The address starts with what looks like another website's name ({sub}), but the "
+            f"real site is {dom}.", f"يبدأ العنوان بما يشبه اسم موقع آخر ({sub})، لكن الموقع الحقيقي هو {dom}.", host)
+    if shared and not gb:
+        try:
+            from urllib.parse import urlsplit
+
+            pm = _KW_RE.search(urlsplit(final).path.lower())
+        except Exception:
+            pm = None
+        if pm:
+            gb = GLOBAL_BRANDS[pm.group(0)]
+            add("brand_in_path_free_host", 25, f"A free hosting page uses the name \"{gb}\" in its address.",
+                f"صفحة استضافة مجانية تستخدم اسم «{gb}» في عنوانها.", final[:200])
     if not gb and not brand_rule and not established:
         tm = _TITLE_RE.search(" ".join(d.title.lower() for d in ok))
         if tm and (asks & SENSITIVE) and tm.group(0) not in label0:
@@ -474,7 +510,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         g = gone[0]
         code = g.http_status or 0
         if shared:
-            add("platform_takedown", 20, f"The hosting platform reports this page as removed (HTTP {code}); "
+            add("platform_takedown", 40, f"The hosting platform reports this page as removed (HTTP {code}); "
                 "free-hosting pages are typically removed after abuse reports.",
                 f"تُفيد منصة الاستضافة بأن هذه الصفحة أُزيلت (HTTP {code})؛ عادةً ما تُزال صفحات الاستضافة المجانية بعد بلاغات إساءة.",
                 f"HTTP {code} {g.title[:60]}")
@@ -490,7 +526,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
                 "was removed or never legitimately existed.",
                 "النطاق غير مسجّل (حالياً): الرابط يشير إلى موقع أُزيل أو لم يكن موجوداً بشكل مشروع.", "RDAP not found")
         elif nx and shared:
-            add("platform_takedown", 20, f"The free-hosting address {host} no longer exists (likely removed after abuse reports).",
+            add("platform_takedown", 40, f"The free-hosting address {host} no longer exists (likely removed after abuse reports).",
                 f"عنوان الاستضافة المجانية {host} لم يعد موجوداً (أُزيل غالباً بعد بلاغات إساءة).", "NXDOMAIN")
         elif nx and registered and not established:
             add("registered_not_resolving", 20, "The domain is registered but no longer resolves (often a pulled scam site).",

@@ -1,0 +1,9 @@
+# Radar live certificate stream. `docker compose up -d` then `python -m scamshield.radar certstream`.
+# certstream-server-go tails public CT logs and serves the classic certstream JSON on ws://localhost:8080/
+services:
+  certstream:
+    image: 0rickyy0/certstream-server-go:latest
+    container_name: scamshield-certstream
+    restart: unless-stopped
+    ports:
+      - "8080:8080"

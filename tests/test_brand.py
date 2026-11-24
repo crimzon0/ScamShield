@@ -241,3 +241,22 @@ def test_official_host_subdomain_zero():
 async def test_gate_page_brand_from_subdomain():
     m = await match_brand(det("https://aramex.a-track-au.com/", "يرجى التحقق من أنك إنسان", "يرجى التحقق من أنك إنسان Privacy Help"))
     assert m.brand_id == "aramex" and not m.is_official_domain and "domain_keyword" in m.methods
+
+
+async def test_bot_challenge_from_official_is_official():
+    from scamshield.core.schemas import RedirectHop
+
+    fin = "https://validate.perfdrive.com/?ssc=https%3A%2F%2Fmashreqsecurities.com%2F"
+    d = Detonation(url="https://mashreqsecurities.com/", final_url=fin, title="Mashreq Securities", visible_text="Mashreq",
+                   redirect_chain=[RedirectHop(url="https://mashreqsecurities.com/", kind="start"), RedirectHop(url=fin, kind="final")])
+    m = await match_brand(d)
+    assert m.brand_id == "mashreq" and m.is_official_domain
+    # the same challenge host reached from a non-official domain stays unofficial
+    d2 = Detonation(url="https://mashreq-login.top/", final_url=fin, title="Mashreq", visible_text="Mashreq bank login",
+                    redirect_chain=[RedirectHop(url="https://mashreq-login.top/", kind="start"), RedirectHop(url=fin, kind="final")])
+    m2 = await match_brand(d2)
+    assert m2.brand_id == "mashreq" and not m2.is_official_domain
+
+
+def test_moi_cpc_redirect_target_official():
+    assert lookalike("moi-cpc.ae").score == 0

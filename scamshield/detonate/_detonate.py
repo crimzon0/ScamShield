@@ -249,7 +249,13 @@ async def _safe(coro, timeout: float | None = None, default=None):
 _FORMS_JS = r"""
 () => {
   const out = [];
-  const els = document.querySelectorAll('input, select, textarea');
+  const els = [];
+  const collect = (root, depth) => {
+    if (depth > 8) return;
+    try { els.push(...root.querySelectorAll('input, select, textarea')); } catch (e) {}
+    try { for (const h of root.querySelectorAll('*')) if (h.shadowRoot) collect(h.shadowRoot, depth + 1); } catch (e) {}
+  };
+  collect(document, 0);
   for (const el of els) {
     const type = (el.getAttribute('type') || el.tagName).toLowerCase();
     if (['hidden','submit','button','image','reset'].includes(type)) continue;
@@ -273,7 +279,23 @@ _META_JS = r"""
   const icon = document.querySelector('link[rel~="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]');
   return {lang: (document.documentElement && document.documentElement.lang) || '',
           title: document.title || '',
-          text: document.body ? document.body.innerText : '',
+          text: (() => {
+            // innerText skips shadow roots: append their rendered text (closed roots are forced open by init script)
+            let t = document.body ? document.body.innerText : '';
+            const walk = (root, depth) => {
+              if (depth > 8 || t.length > 40000) return;
+              let hosts = [];
+              try { hosts = Array.from(root.querySelectorAll('*')).filter(h => h.shadowRoot); } catch (e) {}
+              for (const h of hosts) {
+                for (const c of h.shadowRoot.children) {
+                  if (c.innerText && c.tagName !== 'STYLE' && c.tagName !== 'SCRIPT') t += '\n' + c.innerText;
+                }
+                walk(h.shadowRoot, depth + 1);
+              }
+            };
+            walk(document, 0);
+            return t;
+          })(),
           icon: icon ? icon.href : '',
           height: Math.max(document.body ? document.body.scrollHeight : 0,
                            document.documentElement ? document.documentElement.scrollHeight : 0)};
@@ -316,7 +338,14 @@ async def _capture(run: _Run, context, page, deadline: float) -> None:
 
     det.title = str(meta.get("title") or "")[:500]
     det.lang = str(meta.get("lang") or "")[:20]
-    det.visible_text = str(meta.get("text") or "")[:TEXT_CAP]
+    text = str(meta.get("text") or "")
+    for fr in page.frames[1:8]:  # child frames (e.g. full-size iframe hosting the real phishing page)
+        if len(text) >= TEXT_CAP:
+            break
+        ft = await _safe(fr.evaluate("() => document.body ? document.body.innerText : ''"), min(1.5, left()), "")
+        if ft and str(ft).strip():
+            text += "\n[iframe " + (fr.url or "")[:120] + "]\n" + str(ft)
+    det.visible_text = text[:TEXT_CAP]
 
     html = await _safe(page.content(), min(3, left()), None)
     if html:
@@ -460,7 +489,7 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
             await _safe(page.wait_for_load_state("domcontentloaded", timeout=1000), 1.2)
         await _capture(run, context, page, deadline)
         if det.status == "ok":
-            if len(det.visible_text.strip()) < 20 and not det.form_fields:
+            if len(det.visible_text.strip()) < 20 and not det.form_fields and not det.title.strip():
                 det.status = "blank"
             if _CHALLENGE_RE.search(det.title or "") or "cf-chl" in (html_snip := (det.visible_text or "")[:2000])                     or "Verify you are human" in html_snip:
                 run.notes.append("anti-bot challenge page (content hidden from scanner)")

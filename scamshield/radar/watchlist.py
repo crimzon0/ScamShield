@@ -273,12 +273,32 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
     cores = sorted({_squash(e["term"]) for e in kw if _squash(e["term"])}, key=len, reverse=True)
     prefilter = _re.compile("|".join(_re.escape(c) for c in cores)) if cores else None
     return {"entries": entries, "keywords": kw, "perms": perms, "skel": skel, "official": official,
-            "prefilter": prefilter,
+            "prefilter": prefilter, "official_set": frozenset(official),
             "official_by_brand": official_by_brand}
 
 
+_mt = {"t": 0.0, "v": (0.0, 0.0)}
+
+
 def _wl(include_fictional: bool = False) -> dict:
-    return _build(include_fictional, _mtime(settings.registry_path), _mtime(SEED_PATH))
+    import time as _t
+
+    now = _t.monotonic()
+    if now - _mt["t"] > 30:  # re-check registry/seed mtimes at most every 30 s (hot path)
+        _mt["t"], _mt["v"] = now, (_mtime(settings.registry_path), _mtime(SEED_PATH))
+    return _build(include_fictional, *_mt["v"])
+
+
+def _is_official_fast(host: str, official: frozenset) -> bool:
+    """Same semantics as core.domains.is_official, O(labels): host or any parent is official,
+    except that on a shared host (vercel.app, ...) only an exact match counts."""
+    if host in official:
+        return True
+    parts = host.split(".")
+    parents = [".".join(parts[i:]) for i in range(1, len(parts))]
+    if any(p in SHARED_HOSTS for p in parents) or host in SHARED_HOSTS:
+        return False
+    return any(p in official for p in parents)
 
 
 # ------------------------------------------------------------------ public
@@ -304,7 +324,7 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         if not host or "." not in host:
             return None
         wl = _wl(include_fictional)
-        if wl["official"] and is_official(host, wl["official"]):
+        if wl["official"] and _is_official_fast(host, wl["official_set"]):
             return None
         squashed0 = _squash(host)
         if host.isascii() and wl["prefilter"] is not None and not wl["prefilter"].search(squashed0):
