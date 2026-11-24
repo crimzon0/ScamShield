@@ -188,9 +188,37 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
             cloak = cloak_diff(dets)
         except Exception:
             cloak = None
-    v = score(scan_id, url, dets, intel, brand, look, cloak)
+    extra = await _helpline_signals(ok, brand, final)
+    v = score(scan_id, url, dets, intel, brand, look, cloak, extra=extra)
     return ScanResult(scan_id=scan_id, url=url, detonations=dets, cloak=cloak, intel=intel, brand=brand,
                       lookalike=look, verdict=v)
+
+
+async def _helpline_signals(ok: list[Detonation], brand, final: str) -> list[Signal]:
+    """Fake helpline numbers on a page that claims a brand (helpline.phones_on_page)."""
+    try:
+        from scamshield.core.domains import is_official
+        from scamshield.score import BRAND_THRESHOLD
+
+        if not ok or not brand or not brand.brand_id or brand.confidence < BRAND_THRESHOLD:
+            return []
+        if is_official(final, brand.official_domains or []):
+            return []
+        from scamshield.helpline import phones_on_page
+
+        best = max(ok, key=lambda d: len(d.visible_text or ""))
+        found = await asyncio.wait_for(asyncio.to_thread(phones_on_page, best, brand.brand_id, None, True), 10)
+        out = []
+        for f in found or []:
+            if f.status == "likely_scam":
+                out.append(Signal(id="fake_helpline_on_page", weight=15,
+                                  en=f.reasons_en or f"Unofficial phone number {f.number_e164} shown as a helpline.",
+                                  ar=f.reasons_ar or f"رقم هاتف غير رسمي {f.number_e164} معروض كخط مساعدة.",
+                                  evidence=f.number_e164))
+        return out[:3]
+    except Exception as e:
+        log.warning("helpline check failed: %s", e)
+        return []
 
 
 async def _domain_only(scan_id: str, url: str, state: dict, reason: str) -> ScanResult:

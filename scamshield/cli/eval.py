@@ -45,7 +45,13 @@ def main(argv=None) -> int:
     ap.add_argument("--personas", nargs="+", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-official", action="store_true")
+    ap.add_argument("--rescore", action="store_true",
+                    help="re-run score() on the stored scans of --predictions (no network) - for threshold tuning")
+    ap.add_argument("--ignore-blocklist", action="store_true",
+                    help="ablation: ignore feed/blocklist hits (eval scams come from the same feeds)")
     a = ap.parse_args(argv)
+    if a.ignore_blocklist:
+        os.environ["SCAMSHIELD_IGNORE_BLOCKLIST"] = "1"
 
     fields, rows, url_col = read_input(a.labelled)
     lab_col = next((c for c in fields if c.lower() in ("label", "is_scam", "class")), None)
@@ -62,6 +68,8 @@ def main(argv=None) -> int:
         if os.path.exists(a.out):
             os.remove(a.out)
         preds = asyncio.run(run_batch(a.labelled, a.out, a.concurrency, a.personas, a.threshold, a.force, quiet=True))
+    if a.rescore:
+        preds = [rescore(p, a.threshold) for p in preds]
     pmap = {(p.get("url") or "").strip(): p for p in preds}
 
     pairs, fps, fns = [], [], []
@@ -98,6 +106,22 @@ def main(argv=None) -> int:
     if not a.no_official:
         official_fp(a)
     return 0
+
+
+def rescore(p: dict, threshold: str) -> dict:
+    from scamshield.cli import result_row
+    from scamshield.core import db
+    from scamshield.score import score
+
+    try:
+        r = db.get_scan(p.get("scan_id", ""))
+        if r is None:
+            return p
+        extra = [s for s in r.verdict.reasons if s.id == "fake_helpline_on_page"]
+        r.verdict = score(r.scan_id, r.url, r.detonations, r.intel, r.brand, r.lookalike, r.cloak, extra=extra)
+        return dict(p, **result_row(r, threshold))
+    except Exception:
+        return p
 
 
 def official_fp(a) -> None:

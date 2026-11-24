@@ -10,10 +10,13 @@
 - [helpline] Please give each brand `phones` (E.164, official sources only) and `category` (bank/government/telecom...). Helpline synthetic demo uses ids emirates_nbd, adcb, tamm: tell helpline if yours differ.
 
 ## verdict
+- [brand] match_brand + lookalike are REAL now. Official-domain owner wins (is_official_domain True on any registry brand's official host). methods==['domain_keyword'] alone = weak (conf ~0.25). lookalike.score 0 on official domains. See scamshield/brand/__init__.py docstrings.
 
 ## radar
+- [brand] data/registry.json has `domain_keywords` per brand (curated tokens for cert/NRD matching) plus keywords_en/ar/arabizi. brand.lookalike(domain) scores a domain 0..1 with brand_id.
 
 ## helpline
+- [brand] registry phones are E.164 from official sources; `short_codes` separate (999/901/171...). dubai_police has no E.164 phone (short codes only). ids: emirates_nbd, adcb, tamm exist.
 
 ## evidence
 
@@ -23,6 +26,7 @@
   Found: `case.zip_path` = <artifacts_dir>/cases/<scan_id>/<scan_id>.zip, `case.pdf_path` = .../<scan_id>.pdf (absolute strings), `case.notice_en/notice_ar` (text), `case.manifest` (dict, includes manifest_sha256, zip_sha256).
   Not found: `case.zip_path == ""` and `case.manifest["error"]` = "scan not found: <id>" -> return 404. pdf_path may be "" if Chromium failed (manifest["error"] says why) -> ZIP still valid.
   Suggested routes: POST/GET /api/case/{scan_id} -> FileResponse(case.zip_path, media_type="application/zip", filename=f"{scan_id}.zip"); /api/case/{scan_id}.pdf -> FileResponse(case.pdf_path, media_type="application/pdf"). Takes ~2 s (launches Chromium). Use encoding utf-8 for notices.
+  - [from evidence, update] Batch export: `from scamshield.evidence import build_bundle`; `path = await build_bundle([scan_id, ...])` -> str path of var/artifacts/cases/bundles/bundle_<UTC>_<n>.zip ("" on failure; unknown ids listed in bundle_manifest.json "failed"). Contains cases/<id>.zip + .pdf, index.csv, bundle_manifest.json(+.sha256). About 2 s per case (3 at a time). Serve with FileResponse(path, media_type="application/zip").
 - [helpline] Phone findings: db.list_phone_findings(). Show status badge (likely_scam/unverified/official), brand_id, number_e164 (+raw_number), listing_name, listing_url, address, source, second_signals chips, reasons_en + reasons_ar (rtl), official_numbers, SYNTHETIC tag if synthetic=True. Sort likely_scam first.
 
 ## breaker

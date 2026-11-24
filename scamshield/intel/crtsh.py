@@ -30,7 +30,20 @@ async def _throttle() -> None:
         await asyncio.sleep(wait)
 
 
+COOLDOWN_KEY = "intel:crtsh_cooldown"
+
+
+class RateLimited(Exception):
+    pass
+
+
+def _cooldown(seconds: float) -> None:
+    db.cache_set(COOLDOWN_KEY, True, int(min(max(seconds, 60), 900)))
+
+
 async def _get(params: dict, timeout: float, retries: int) -> Optional[list]:
+    if db.cache_get(COOLDOWN_KEY):
+        raise RateLimited("crt.sh cooldown active")
     delay = 2.0
     async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": UA}, follow_redirects=True) as c:
         for attempt in range(retries + 1):
@@ -39,7 +52,14 @@ async def _get(params: dict, timeout: float, retries: int) -> Optional[list]:
             if r.status_code == 200:
                 txt = r.text.strip()
                 return r.json() if txt else []
-            if r.status_code in (429, 500, 502, 503, 504) and attempt < retries:
+            if r.status_code == 429:
+                try:
+                    ra = float(r.headers.get("Retry-After", "300"))
+                except ValueError:
+                    ra = 300
+                _cooldown(ra)  # every caller in this process (and others sharing the DB) backs off
+                raise RateLimited(f"crt.sh 429, retry-after {ra}")
+            if r.status_code >= 500 and attempt < retries:
                 await asyncio.sleep(delay)
                 delay *= 2
                 continue
@@ -48,13 +68,44 @@ async def _get(params: dict, timeout: float, retries: int) -> Optional[list]:
     return None
 
 
-async def fetch_first_seen(domain: str, timeout: float = 10.0) -> Optional[dict]:
-    """{'first_seen': iso|None, 'count': int} over certs for domain and its subdomains."""
-    rows = await _get({"q": domain, "output": "json"}, timeout, retries=0)
-    if rows is None:
+CERTSPOTTER = "https://api.certspotter.com/v1/issuances"
+
+
+async def _certspotter(domain: str, timeout: float = 8.0) -> Optional[dict]:
+    """Fallback. Cert Spotter's free API lists only unexpired certs, so first_seen is a lower bound
+    ('seen since at least'); for new domains it equals the real first cert."""
+    rows: list = []
+    after = None
+    async with httpx.AsyncClient(timeout=timeout, headers={"User-Agent": UA}) as c:
+        for _ in range(3):
+            params = {"domain": domain, "include_subdomains": "true"}
+            if after:
+                params["after"] = after
+            r = await c.get(CERTSPOTTER, params=params)
+            if r.status_code != 200:
+                break
+            page = r.json()
+            rows += page
+            if len(page) < 100:
+                break
+            after = page[-1]["id"]
+    if not rows and r.status_code != 200:
         return None
-    nbs = [d for d in (parse_dt(r.get("not_before")) for r in rows) if d]
-    return {"first_seen": min(nbs).isoformat() if nbs else None, "count": len({r.get("id") for r in rows})}
+    nbs = [d for d in (parse_dt(x.get("not_before")) for x in rows) if d]
+    return {"first_seen": min(nbs).isoformat() if nbs else None, "count": len(rows), "via": "certspotter"}
+
+
+async def fetch_first_seen(domain: str, timeout: float = 10.0) -> Optional[dict]:
+    """{'first_seen': iso|None, 'count': int, 'via': 'crtsh'|'certspotter'}. crt.sh first, Cert Spotter fallback."""
+    try:
+        rows = await _get({"q": domain, "output": "json"}, timeout, retries=0)
+        if rows is not None:
+            nbs = [d for d in (parse_dt(r.get("not_before")) for r in rows) if d]
+            return {"first_seen": min(nbs).isoformat() if nbs else None,
+                    "count": len({r.get("id") for r in rows}), "via": "crtsh"}
+    except Exception as e:
+        log.info("crt.sh failed for %s: %r", domain, e)
+    return await _certspotter(domain)
 
 
 async def crtsh_search(pattern: str, days: int = 30, timeout: float = 30.0) -> list[dict]:

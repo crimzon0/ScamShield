@@ -21,7 +21,8 @@ from scamshield.core.schemas import Intel
 
 from . import feeds as _feeds
 from ._common import DAY, HOUR, log, parse_dt, run_source
-from .crtsh import crtsh_search, fetch_first_seen
+from . import crtsh as _crtsh
+from .crtsh import crtsh_search
 from .keyed import fetch_safe_browsing, fetch_urlscan
 from .netinfo import fetch_asn, fetch_dns
 from .rdap import fetch_ip_rdap, registration
@@ -49,23 +50,27 @@ def feed_urls(limit: int = 200) -> dict[str, list[str]]:
 
 
 CRTSH_FAIL_TTL = 15 * 60
+CRTSH_WAIT = 6.0  # how long enrich waits for crt.sh before using the Cert Spotter fallback
 
 
 def _crtsh_bg(reg: str):
-    """Runs in a worker thread with its own loop. Caches success (1 d) itself so a capped enrich still benefits
-    next time; failures are remembered for 15 min so we don't hammer crt.sh."""
+    """Runs in a worker thread with its own loop, so it can outlive enrich's cap. Caches success (1 d) itself;
+    failures are remembered for 15 min (429s also set a global crt.sh cooldown) so we don't hammer crt.sh."""
     fail_key = f"intel:crtsh_fail:{reg}"
     if db.cache_get(fail_key):
         return None
     try:
-        v = asyncio.run(fetch_first_seen(reg, timeout=25.0))
+        rows = asyncio.run(_crtsh._get({"q": reg, "output": "json"}, 25.0, retries=0))
     except Exception as e:
         log.info("crt.sh failed for %s: %r", reg, e)
-        v = None
-    if v is None:
+        rows = None
+    if rows is None:
         db.cache_set(fail_key, True, CRTSH_FAIL_TTL)
-    else:
-        db.cache_set(f"intel:crtsh:{reg}", v, DAY)
+        return None
+    nbs = [d for d in (parse_dt(r.get("not_before")) for r in rows) if d]
+    v = {"first_seen": min(nbs).isoformat() if nbs else None, "count": len({r.get("id") for r in rows}),
+         "via": "crtsh"}
+    db.cache_set(f"intel:crtsh:{reg}", v, DAY)
     return v
 
 
@@ -131,8 +136,20 @@ async def _enrich(domain: str) -> Intel:
                 intel.hosting_country = ipr.get("country", "")
 
     async def do_crtsh():
-        # crt.sh is slow: the fetch runs in its own thread so it can finish (and fill the cache) after the 10 s cap.
-        v = await run_source(src, "crtsh", f"intel:crtsh:{reg}", lambda: asyncio.to_thread(_crtsh_bg, reg), DAY)
+        key = f"intel:crtsh:{reg}"
+        v = db.cache_get(key)
+        if v is not None:
+            src["crtsh"] = "cached"
+        elif settings.offline:
+            src["crtsh"] = "offline"
+        else:
+            fut = asyncio.ensure_future(asyncio.to_thread(_crtsh_bg, reg))
+            done, _ = await asyncio.wait({fut}, timeout=CRTSH_WAIT)
+            v = fut.result() if fut in done and not fut.exception() else None
+            src["crtsh"] = "ok" if v else "unavailable"  # thread keeps running and caches a late answer
+            if v is None:
+                v = await run_source(src, "certspotter", f"intel:certspotter:{reg}",
+                                     lambda: _crtsh._certspotter(reg, 4.0), DAY)
         if v:
             intel.cert_first_seen = parse_dt(v.get("first_seen"))
             intel.cert_count = v.get("count")

@@ -51,7 +51,7 @@ def official_owner(url_or_host: str) -> dict | None:
 def lookalike(domain: str) -> LookalikeResult:
     """Domain-only: edit distance, homoglyphs, punycode/IDN, TLD swap, brand-keyword combosquat vs registry.
     An official domain (or subdomain) scores 0."""
-    from .lookalike import lookalike as _l
+    from .squat import lookalike as _l
 
     return _l(domain)
 

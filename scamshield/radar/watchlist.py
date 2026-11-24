@@ -101,6 +101,79 @@ def _mtime(p: Path) -> float:
         return 0.0
 
 
+def _hyphen_hit(term: str, dotted: str) -> bool:
+    """'tamm-' must start a token, '-tamm' must end one, 'rta-fine' must start a token."""
+    d = "-" + dotted + "-"
+    if term.startswith("-"):
+        return (term + "-") in d
+    return ("-" + term) in d
+
+
+_CONFUSABLE: Optional[dict] = None
+_MULTI = {"rn": "m", "vv": "w", "cl": "d", "nn": "m"}
+
+
+def _confusables() -> dict:
+    """single glyph -> ascii letter, inverted from dnstwist's homoglyph tables."""
+    global _CONFUSABLE
+    if _CONFUSABLE is None:
+        m: dict[str, str] = {}
+        try:
+            import dnstwist
+
+            tables = [dnstwist.Fuzzer.glyphs_unicode, dnstwist.Fuzzer.glyphs_ascii]
+            tables += list(getattr(dnstwist.Fuzzer, "glyphs_idn_by_tld", {}).values())
+            for tab in tables:
+                for ascii_c, glyphs in tab.items():
+                    if len(ascii_c) != 1 or not ascii_c.isalpha():
+                        continue
+                    for g in glyphs:
+                        if len(g) == 1 and g != ascii_c and not g.isalpha() or (len(g) == 1 and not g.isascii()):
+                            m.setdefault(g, ascii_c)
+        except Exception:
+            pass
+        # Cyrillic / Greek look-alikes (dnstwist's unicode table is Latin-diacritics only)
+        for a, gs in {"a": "аɑα", "b": "Ьβ", "c": "сϲ", "d": "ԁ", "e": "еєε", "h": "һ", "i": "іιӏ", "j": "ј",
+                      "k": "кκ", "l": "ӏ", "m": "м", "n": "пη", "o": "оοσ", "p": "рρ", "q": "ԛ", "s": "ѕ",
+                      "t": "т", "u": "υ", "v": "ν", "w": "ԝ", "x": "хχ", "y": "уγ"}.items():
+            for g in gs:
+                m.setdefault(g, a)
+        m.update({"0": "o", "1": "l"})
+        _CONFUSABLE = m
+    return _CONFUSABLE
+
+
+def skeleton(label: str) -> str:
+    """Map confusable glyphs (Cyrillic а, Greek ο, 0->o, rn->m ...) to ASCII for homoglyph comparison."""
+    c = _confusables()
+    s = "".join(c.get(ch, ch) for ch in label.lower())
+    for k, v in _MULTI.items():
+        s = s.replace(k, v)
+    return s
+
+
+def _fuzz_labels(dnstwist, lab: str):
+    """(fuzzer, label) pairs from dnstwist's cheap fuzzers on the bare label (no DNS, no network)."""
+    if dnstwist is None:
+        return
+    try:
+        f = dnstwist.Fuzzer(lab + ".com")
+    except Exception:
+        return
+    for name in ("addition", "bitsquatting", "hyphenation", "insertion", "omission", "plural", "repetition",
+                 "replacement", "transposition", "vowel_swap"):
+        fn = getattr(f, "_" + name, None)
+        if fn is None:
+            continue
+        try:
+            for pl in fn():
+                pl = decode_host(pl)
+                if "." not in pl:
+                    yield name.replace("_", "-"), pl
+        except Exception:
+            continue
+
+
 # ------------------------------------------------------------------ build
 @lru_cache(maxsize=4)
 def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> dict:
@@ -131,7 +204,7 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
         for k in b.get("keywords_en", []) + [b.get("name_en", "")]:
             t = _squash(k)
             if len(t) >= MIN_LEN and t not in stop and t.isascii():
-                add(t, b["id"], "keyword", "en", query=len(t) >= 6)
+                add(t, b["id"], "keyword", "en")
         for k in b.get("arabizi", []):
             t = _squash(k)
             if len(t) >= MIN_LEN + 1 and t not in stop and t.isascii():
@@ -158,33 +231,30 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
 
     # dnstwist permutations of official registrable domains
     perms: dict[str, tuple[str, str, str]] = {}  # label -> (brand_id, fuzzer, official)
+    skel: dict[str, tuple[str, str, str]] = {}  # confusable skeleton of official label -> (...)
     n_perm = 0
     try:
         import dnstwist
     except Exception:  # pragma: no cover
         dnstwist = None
+    done_regs: set[str] = set()
     for b in reg:
         for d in official_by_brand.get(b["id"], []):
             r = registrable_of(d)
-            if any(r == s or r.endswith("." + s) for s in SHARED_HOSTS):
+            if r in done_regs or any(r == s or r.endswith("." + s) for s in SHARED_HOSTS):
                 continue
+            done_regs.add(r)
             lab = r.split(".")[0]
-            if len(lab) < MIN_LEN or dnstwist is None:
+            if len(lab) < MIN_LEN or lab in stop:
                 continue
-            try:
-                f = dnstwist.Fuzzer(r)
-                f.generate()
-                for p in f.permutations():
-                    if p["fuzzer"] in SKIP_FUZZERS:
-                        continue
-                    pl = decode_host(p["domain"]).split(".")[0]
-                    if len(pl) >= MIN_LEN and pl != lab and pl not in stop:
-                        perms.setdefault(pl, (b["id"], p["fuzzer"], r))
-            except Exception as e:  # never raise
-                log.debug("dnstwist failed for %s: %s", r, e)
-            # same label on another TLD (tld swap / combo on official label)
-            if lab not in stop:
-                perms.setdefault(lab, (b["id"], "tld-swap", r))
+            # homoglyphs are matched via confusable skeleton (see skeleton()), not enumerated: dnstwist's
+            # homoglyph fuzzer yields ~30k names per domain.
+            for fz, pl in _fuzz_labels(dnstwist, lab):
+                if len(pl) >= MIN_LEN and pl != lab and pl not in stop:
+                    perms.setdefault(pl, (b["id"], fz, r))
+            # same label on another TLD (tld swap)
+            perms.setdefault(lab, (b["id"], "tld-swap", r))
+            skel.setdefault(skeleton(lab), (b["id"], "homoglyph", r))
     for pl, (bid, fz, off) in perms.items():
         n_perm += 1
         entries.append({"term": pl, "brand_id": bid, "kind": "permutation", "lang": "en", "query": False,
@@ -192,7 +262,7 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
     kw = [e for e in entries if e["kind"] == "keyword"]
     # longest first so the most specific term wins
     kw.sort(key=lambda e: -len(e["term"]))
-    return {"entries": entries, "keywords": kw, "perms": perms, "official": official,
+    return {"entries": entries, "keywords": kw, "perms": perms, "skel": skel, "official": official,
             "official_by_brand": official_by_brand}
 
 
@@ -232,14 +302,21 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         if p is not None and reg != p[2]:
             return {"term": label, "brand_id": p[0], "kind": "permutation", "fuzzer": p[1], "official": p[2],
                     "host": host, "registrable": reg}
+        sk = skeleton(label)
+        q = wl["skel"].get(sk)
+        if q is not None and sk != label and reg != q[2]:
+            return {"term": label, "brand_id": q[0], "kind": "permutation", "fuzzer": "homoglyph", "official": q[2],
+                    "host": host, "registrable": reg}
         # 2) keyword anywhere in the host (hyphen-sensitive terms vs hyphen-insensitive)
         squashed = _squash(host)
+        if not host.isascii():  # homoglyph combosquat: еmiratesnbd-login.com
+            squashed = squashed + "|" + _squash(skeleton(host))
         dotted = host.replace(".", "-")
         tokens = [t for t in dotted.split("-") if t]
         for e in wl["keywords"]:
             t = e["term"]
             if "-" in t:
-                hit = t in dotted
+                hit = _hyphen_hit(t, dotted)
             elif not t.isascii() or len(t) >= SUBSTRING_MIN:
                 hit = t in squashed
             else:

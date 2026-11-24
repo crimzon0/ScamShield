@@ -11,6 +11,7 @@ Order of rules:
 from __future__ import annotations
 
 import ipaddress
+import os
 import re
 from datetime import datetime, timezone
 from typing import Optional
@@ -105,10 +106,12 @@ ASK_AR = {"credentials": "بيانات الدخول", "card": "بيانات ال
 
 # ------------------------------------------------------------------ main
 def score(scan_id: str, url: str, dets: list[Detonation], intel: Intel | None, brand: BrandMatch | None,
-          look: LookalikeResult | None, cloak: CloakDiff | None = None) -> Verdict:
-    """Combine signals into a 0-100 Verdict with bilingual reasons. Works with dets empty/dead (domain-only)."""
+          look: LookalikeResult | None, cloak: CloakDiff | None = None,
+          extra: list[Signal] | None = None) -> Verdict:
+    """Combine signals into a 0-100 Verdict with bilingual reasons. Works with dets empty/dead (domain-only).
+    `extra`: additional pre-built signals (e.g. fake helpline numbers found on the page)."""
     try:
-        return _score(scan_id, url, dets or [], intel, brand, look, cloak)
+        return _score(scan_id, url, dets or [], intel, brand, look, cloak, extra or [])
     except Exception as e:  # never raise
         return Verdict(scan_id=scan_id, url=url, final_url=url, registrable_domain=_safe_reg(url), score=50,
                        label="suspicious", mode="domain_only",
@@ -125,7 +128,7 @@ def _safe_reg(url: str) -> str:
         return ""
 
 
-def _score(scan_id, url, dets, intel, brand, look, cloak) -> Verdict:
+def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     final = _pick_final(url, dets)
     host = host_of(final)
     dom = registrable(final)
@@ -143,7 +146,7 @@ def _score(scan_id, url, dets, intel, brand, look, cloak) -> Verdict:
     on_official = bool(host) and is_official(final, official_all)
 
     bl = []
-    if intel:
+    if intel and os.environ.get("SCAMSHIELD_IGNORE_BLOCKLIST") != "1":
         bl = list(dict.fromkeys((intel.blocklist_hits or []) + [f"safe_browsing:{t}" for t in intel.safe_browsing or []]))
     tranco = intel.tranco_rank if intel and not shared else None
     age = None
@@ -247,6 +250,14 @@ def _score(scan_id, url, dets, intel, brand, look, cloak) -> Verdict:
     elif sens and brand_rule:
         add("asks_sensitive", 10, f"It asks for {', '.join(ASK_EN[a] for a in sens)}.",
             f"وتطلب {('، '.join(ASK_AR[a] for a in sens))}.", ", ".join(sens))
+
+    tls_err = next((d.tls.verify_error for d in ok if d.tls and d.tls.verify_error), "")
+    if tls_err and asks & SENSITIVE:
+        add("tls_error_sensitive", 15, f"The site's security certificate is invalid ({tls_err}) yet it asks for sensitive data.",
+            f"شهادة الأمان للموقع غير صالحة ({tls_err}) ومع ذلك يطلب بيانات حساسة.", tls_err)
+
+    for x in extra:
+        sig.append(x)
 
     if "credentials" in asks and final.lower().startswith("http://"):
         add("password_no_https", 20, "A password field is served over an unencrypted (HTTP) connection.",

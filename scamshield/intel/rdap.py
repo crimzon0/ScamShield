@@ -122,7 +122,17 @@ CREATED_KEYS = ("creation date", "created", "created on", "registered on", "regi
                 "domain registration date", "registered", "create date")
 
 
-def parse_whois_text(txt: str) -> dict:
+RATE_LIMIT_RE = re.compile(r"blacklisted|exceeded the query limit|query rate|too many|try again later|limit exceeded", re.I)
+
+
+class WhoisRateLimited(Exception):
+    pass
+
+
+def parse_whois_text(txt: str) -> Optional[dict]:
+    """Parsed dict, {'found': False} for unregistered, None if the answer is unusable. Raises on rate limit."""
+    if RATE_LIMIT_RE.search(txt[:500]):
+        raise WhoisRateLimited(txt[:200].strip())
     kv: dict[str, list[str]] = {}
     for line in txt.splitlines():
         if ":" not in line or line.lstrip().startswith(("%", "#", ">>>")):
@@ -135,6 +145,8 @@ def parse_whois_text(txt: str) -> dict:
         return {"found": False, "via": "whois"}
     if NOT_FOUND_RE.search(txt[:300]) and not any(k in kv for k in ("domain name", "domain")):
         return {"found": False, "via": "whois"}
+    if not any(k in kv for k in ("domain name", "domain", "registrar", "registrar name", "name server", "nserver")):
+        return None
     created = next((kv[k][0] for k in CREATED_KEYS if k in kv), None)
     registrar = next((kv[k][0] for k in ("registrar", "registrar name", "sponsoring registrar") if k in kv), "")
     ns = sorted({v.split()[0].lower().rstrip(".") for k in ("name server", "nserver", "nameserver") for v in kv.get(k, [])})
