@@ -512,6 +512,10 @@ function AccuracyCard() {
                 <tr className="acc-honest" title={t("accHoldoutTip")}><th>{t("accHoldout")}</th>
                   <td>{pct(ev.holdout.precision)}</td><td>{pct(ev.holdout.recall)}</td><td>{pct(ev.holdout.f1)}</td><td>{pct(ev.holdout.fpr)}</td><td>{ev.holdout.n ?? "—"}</td></tr>
               )}
+              {ev.holdout?.ablation_no_blocklist && (
+                <tr className="acc-honest" title={t("accNoBlocklistTip")}><th>{t("accHoldout")} · {t("accNoBlocklist")} <span className="badge badge-warn">{t("accHonest")}</span></th>
+                  <td>{pct(ev.holdout.ablation_no_blocklist.precision)}</td><td>{pct(ev.holdout.ablation_no_blocklist.recall)}</td><td>{pct(ev.holdout.ablation_no_blocklist.f1)}</td><td>{pct(ev.holdout.ablation_no_blocklist.fpr)}</td><td>{ev.holdout.n ?? "—"}</td></tr>
+              )}
             </tbody>
           </table></div>
           {ev.ablation_no_blocklist && <p className="muted small">{t("accNoBlocklistTip")}</p>}

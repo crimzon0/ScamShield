@@ -56,7 +56,7 @@ const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Cont
 
 export interface CollectorStatus { state?: string; reason?: string; certs?: number; messages?: number; hits?: number; started_at?: string; last_error?: string; queries?: number; at?: string }
 export interface Collectors { certstream?: CollectorStatus; search?: CollectorStatus; backfill?: { running: boolean; last_started?: string | null } }
-export interface EvalMetrics { precision?: number; recall?: number; f1?: number; fpr?: number; n?: number; dataset?: string; tp?: number; fp?: number; fn?: number; tn?: number }
+export interface EvalMetrics { ablation_no_blocklist?: EvalMetrics | null; precision?: number; recall?: number; f1?: number; fpr?: number; n?: number; dataset?: string; tp?: number; fp?: number; fn?: number; tn?: number }
 export interface EvalResult {
   generated_at?: string; dataset?: string; n?: number; threshold?: string; error?: string;
   tp?: number; fp?: number; fn?: number; tn?: number; precision?: number; recall?: number; f1?: number; fpr?: number;

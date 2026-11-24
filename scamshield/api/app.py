@@ -533,6 +533,15 @@ def eval_results():
         return {"error": f"unreadable last_eval.json: {e}"}
     if isinstance(data, dict) and "generated_at" not in data:
         data["generated_at"] = datetime.fromtimestamp(EVAL_PATH.stat().st_mtime, timezone.utc).isoformat()
+    hold = EVAL_PATH.with_name("last_eval_holdout.json")
+    if isinstance(data, dict) and not data.get("holdout") and hold.is_file():
+        try:
+            h = json.loads(hold.read_text(encoding="utf-8"))
+            keys = ("generated_at", "dataset", "n", "tp", "fp", "fn", "tn", "precision", "recall", "f1", "fpr",
+                    "ablation_no_blocklist")
+            data["holdout"] = {k: h[k] for k in keys if k in h}
+        except Exception:
+            pass
     return data
 
 
