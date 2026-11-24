@@ -157,8 +157,7 @@ async def test_detonator_chain_records_hops(base):
     assert len(d.redirect_chain) >= 10, kinds
 
 
-@pytest.mark.parametrize("path", ["/iframe", pytest.param("/shadow", marks=pytest.mark.xfail(
-    strict=False, reason="detonator: closed shadow DOM content/forms not extracted -> status blank")), "/jsdelay", "/aronly"])
+@pytest.mark.parametrize("path", ["/iframe", "/shadow", "/jsdelay", "/aronly"])
 async def test_evasive_payloads(base, path):
     res = await _scan(base + path)
     assert res.verdict.label in BAD, _why(res)
