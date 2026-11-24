@@ -98,6 +98,20 @@ def _case_roots() -> list[Path]:
     return [Path(settings.artifacts_dir).resolve(), (ROOT / "var").resolve()]
 
 
+FIXTURE_BRANDS = {"sandbox_bank"}
+
+
+def is_fixture(domain_or_url: str = "", brand_id: Optional[str] = None) -> bool:
+    """Fictional test data (Sandbox Bank, reserved .example/.test/.invalid TLDs): badge it, never a live detection."""
+    if brand_id in FIXTURE_BRANDS:
+        return True
+    host = (domain_or_url or "").lower()
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    host = host.split("/", 1)[0].split(":", 1)[0].rstrip(".")
+    return host.endswith((".example", ".test", ".invalid")) or host in ("example", "localhost")
+
+
 def _normalize_url(url: str) -> str:
     url = (url or "").strip()
     if url and "://" not in url:
@@ -222,6 +236,7 @@ def scans(limit: int = 50):
             r["domain"] = registrable(r["url"])
         except Exception:
             r["domain"] = ""
+        r["is_fixture"] = is_fixture(r["url"])
     return rows
 
 
@@ -243,6 +258,8 @@ def scan_detail(scan_id: str):
         if _safe_file(d.screenshot_path, _artifact_roots())
     }
     out["case"] = _case_info(scan_id)
+    out["is_fixture"] = is_fixture(res.verdict.final_url or res.url, res.verdict.brand_id) or is_fixture(
+        res.url, res.brand.brand_id if res.brand else None)
     return out
 
 
@@ -265,6 +282,7 @@ def _radar_row(h) -> dict:
     d = _dump(h)
     fs, fa = _parse_dt(h.first_seen), _parse_dt(h.flagged_at)
     d["time_to_detection_seconds"] = int((fa - fs).total_seconds()) if fs and fa else None
+    d["is_fixture"] = is_fixture(h.domain, h.brand_id)
     return d
 
 
@@ -463,6 +481,23 @@ async def bundle(body: BundleIn):
     if not f:
         raise HTTPException(404, "bundle not produced")
     return FileResponse(f, media_type="application/zip", filename=f.name)
+
+
+EVAL_PATH = ROOT / "data" / "eval" / "last_eval.json"
+
+
+@app.get("/api/eval")
+def eval_results():
+    """Latest offline accuracy run written by `python -m scamshield.cli.eval` (owner: verdict). null if none."""
+    try:
+        data = json.loads(EVAL_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        return {"error": f"unreadable last_eval.json: {e}"}
+    if isinstance(data, dict) and "generated_at" not in data:
+        data["generated_at"] = datetime.fromtimestamp(EVAL_PATH.stat().st_mtime, timezone.utc).isoformat()
+    return data
 
 
 @app.get("/api/brands")

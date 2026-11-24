@@ -74,10 +74,12 @@ def _crtsh_bg(reg: str):
     return v
 
 
-async def enrich(domain: str) -> Intel:
-    """Never raises; each source's status is recorded in Intel.sources. Wall time capped at ~10 s."""
+async def enrich(domain: str, host: str | None = None) -> Intel:
+    """Never raises; each source's status is recorded in Intel.sources. Wall time capped at ~10 s.
+    `domain` may be a registrable domain, a host or a URL. Pass the actual `host` (e.g. the final URL's host)
+    when `domain` is the registrable domain: DNS/ASN, blocklists and Safe Browsing then use the real host."""
     try:
-        return await _enrich(domain)
+        return await _enrich(host or domain)
     except Exception as e:  # pragma: no cover - last resort
         log.warning("enrich(%s) crashed: %r", domain, e)
         h = host_of(domain) or domain
@@ -122,6 +124,15 @@ async def _enrich(domain: str) -> Intel:
         intel.mx_records = d.get("mx", [])
         if d.get("ns") and not intel.nameservers:
             intel.nameservers = d["ns"]
+        if not intel.a_records and host == reg and not settings.offline:
+            # apex has no A: phishing usually lives on a subdomain; try ones the feeds list
+            from .netinfo import _q, _resolver
+
+            for h in _feeds.listed_hosts(reg):
+                a, _ = await _q(_resolver(), h, "A")
+                if a:
+                    intel.a_records = a
+                    break
         if not intel.a_records:
             src["asn"] = "no_ip"
             return

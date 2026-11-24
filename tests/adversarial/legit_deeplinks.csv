@@ -1,0 +1,46 @@
+url,brand_id,category,note
+https://online.bankfab.com/PersonalBankingWeb/login,fab,login,link on bankfab.com/en-ae/personal; 302 -> online.bankfab.com index 200
+https://www.dib.ae/online-banking/al-islami-online-banking,dubai_islamic_bank,login,link on dib.ae homepage; -> online.dib.ae/Login 200
+https://www.mashreq.com/en/uae/neo/digital-channels/online-banking/,mashreq,login,link on mashreq.com neo; 200
+https://www.adib.ae/en/personal/services/internet-banking,adib,login,link on adib.ae/en; 200
+https://online.emiratesnbd.com,emirates_nbd,login,link on emiratesnbd.com online-banking page; root 404 to curl (JS app)
+https://www.adcb.com/en/ib-prelogin,adcb,login,ADCB pre-login page (adcb.com search); 403 to bots
+https://www.emiratesnbd.com/en/help-and-support/registering-for-online-and-mobile-banking?source=quick-search,emirates_nbd,content,link on emiratesnbd.com/en; 200
+https://www.rta.ae/wps/portal/rta/ae/driver-and-carowner/parking/pay-parking-fines,rta_dubai,fines,link on rta.ae home; 200
+https://www.rta.ae/wps/portal/rta/ae/corporate-services/Right%20of%20way/pay-adv-fines,rta_dubai,fines,link on rta.ae home; 200
+https://www.rta.ae/wps/portal/rta/ae/home/rta-services/service-details?serviceId=120,rta_dubai,service,link on rta.ae home; 200
+https://www.rta.ae/wps/portal/rta/ar/home,rta_dubai,arabic,redirects to long /!ut/p/z1 WebSphere URL
+https://www.dubaipolice.gov.ae/wps/portal/home/services/individualservices/finesinquiry?firstView=true,dubai_police,fines,official search result; bot-blocked/geo-limited
+https://www.dubaipolice.gov.ae/wps/portal/home/services/individualservices/trafficfinesinstallment,dubai_police,fines,official search result; bot-blocked/geo-limited
+https://www.tamm.abudhabi/en/life-events/individual/Make-a-payment/Fines/paytrafficfines,tamm,fines,tamm.abudhabi; 200
+https://www.tamm.abudhabi/en/life-events/individual/DriveTransport/fines-violations/requesttoissueatrafficviolationsclearancecertificate,tamm,service,tamm.abudhabi; 200
+https://www.tamm.abudhabi/ar-AE/aspects-of-life/vehiclestransportation/trafficviolationsandfines/FinesPayment/paytrafficfines,tamm,arabic,ADP fines link on adpolice.gov.ae; 200
+https://www.tamm.abudhabi/ar-AE/aspects-of-life/vehiclestransportation/drivingservices/DrivingLicence/requestforanewdrivinglicenceissuance,tamm,arabic,link on adpolice.gov.ae; 200
+https://www.adpolice.gov.ae/ar-AE/Our-Services,abu_dhabi_police,arabic,link on adpolice.gov.ae; 200
+https://smartservices.icp.gov.ae/echannels/web/client/guest/index.html,icp,service,icp smart services; 200
+https://smartservices.icp.gov.ae/echannels/web/client/default.html?langar=,icp,arabic,icp smart services AR; 200
+https://icp.gov.ae/services-details/?serviceid=64afe3c1035448005bd52e5a,icp,service,link on icp.gov.ae; 200
+https://selfcare.uaepass.ae,uae_pass,login,link on uaepass.ae; 301 -> uaepass.ae 200
+https://u.ae/en/information-and-services/business/Doing-business/doing-business-in-free-zones/starting-a-business-in-a-free-zone,uae_gov_portal,content,u.ae; 200
+https://u.ae/ar,uae_gov_portal,arabic,u.ae; 200
+https://eservices.mohre.gov.ae/MOHRE.Domestic.UI/Home/index?lang=en-gb,mohre,service,link on mohre.gov.ae; 200
+https://hub.dm.gov.ae/link/mainservice?SegmentID=G2B&ServiceID=125,dubai_municipality,service,link on dm.gov.ae; 200
+https://www.dm.gov.ae/easy-payments/,dubai_municipality,fines,dm.gov.ae; 200
+https://www.emiratespost.ae/all-services/renew-personal-po-box,emirates_post,service,emiratespost.ae; 200
+https://www.etisalat.ae/ecare/c/quick-pay?locale=en,etisalat_eand,service,301 -> www.eand.ae quick-pay 200
+https://www.cbd.ae/business/payments-cash-management/public-sector-payments/psp-services,cbd,content,cbd.ae; 200
+https://centralbank.ae/en/our-operations/payments-and-settlements/,central_bank_uae,content,centralbank.ae; 200
+https://www.emiratesnbd.com/ar/ways-of-banking/online-banking,emirates_nbd,arabic,emiratesnbd.com; 200
+https://www.bankfab.com/ar-ae/personal,fab,arabic,bankfab.com; 200
+https://www.mashreq.com/ar/uae/neo/,mashreq,arabic,mashreq.com; 200
+https://www.du.ae/ar/personal,du,arabic,du.ae; 200
+http://emiratesnbd.com,emirates_nbd,redirect,http apex -> https://www.emiratesnbd.com/en
+http://bankfab.com,fab,redirect,-> https://www.bankfab.com/en-ae/personal
+http://tamm.abudhabi,tamm,redirect,-> https://www.tamm.abudhabi/
+http://dib.ae,dubai_islamic_bank,redirect,-> https://www.dib.ae/
+http://cbd.ae,cbd,redirect,-> https://www.cbd.ae/
+https://dm.gov.ae,dubai_municipality,redirect,apex -> https://www.dm.gov.ae/
+http://du.ae,du,redirect,5 hops all du.ae
+http://mashreq.com,mashreq,redirect,5 hops -> www.mashreq.com/en/uae/neo/
+http://adib.ae,adib,redirect,-> https://www.adib.ae/
+https://emiratespost.ae,emirates_post,redirect,apex -> www.emiratespost.ae

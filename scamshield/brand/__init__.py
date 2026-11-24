@@ -76,7 +76,7 @@ async def match_brand(det: Detonation) -> BrandMatch:
     except Exception as e:  # pragma: no cover - defensive
         log.warning("match_brand failed: %s", e)
         try:
-            look = lookalike(registrable(det.final_url or det.url))
+            look = lookalike(host_of(det.final_url or det.url))
         except Exception:
             look = None
         return BrandMatch(lookalike=look, evidence=[f"brand matcher error: {e}"])
@@ -126,8 +126,8 @@ async def _match_brand(det: Detonation) -> BrandMatch:
 
     brands = active_brands()
     url = det.final_url or det.url or ""
-    reg = registrable(url) if url else ""
-    look = lookalike(reg) if reg else None
+    host = host_of(url) if url else ""
+    look = lookalike(host) if host else None  # full host: subdomain_brand needs the subdomain labels
 
     parts = page_parts(det)
     asks = detect_asks(" ".join([parts["title"], parts["text"], parts["form"]]), det.form_fields)
@@ -162,7 +162,8 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     if look and look.brand_id and look.score >= 0.6:
         bid = look.brand_id
         r = scored.setdefault(bid, {"id": bid, "confidence": 0.0, "methods": [], "evidence": [], "hits": 0})
-        w = 0.3 * look.score
+        # an explicit brand claim in the hostname (subdomain/combosquat/homoglyph/IDN) is stronger than a fuzzy one
+        w = (0.55 if ("subdomain_brand" in look.techniques or look.score >= 0.85) else 0.3) * look.score
         r["confidence"] = round(1 - (1 - r["confidence"]) * (1 - w), 3)
         r["methods"] = sorted(set(r["methods"]) | {"domain_keyword"})
         r["evidence"].append(f"domain '{look.domain}' resembles {look.closest_official} ({', '.join(look.techniques)})")

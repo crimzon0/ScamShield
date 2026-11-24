@@ -94,6 +94,14 @@ def _official_owner(host: str) -> tuple[str | None, str | None]:
     return best if best else (None, None)
 
 
+def _subdomain_part(host: str) -> str:
+    ext = _extract(host)
+    if ext.domain and ext.suffix:
+        return ext.subdomain or ""
+    parts = host.split(".")
+    return ".".join(parts[:-2]) if len(parts) > 2 else ""
+
+
 def _near_substring(k: str, s: str) -> bool:
     """k appears in s with at most one edit (window sizes len(k)-1..len(k)+1)."""
     n = len(k)
@@ -182,6 +190,19 @@ def _lookalike(domain: str) -> LookalikeResult:
                 consider(0.8 if len(k) >= 4 else 0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"])
             elif len(k) == 4 and (lab.startswith(k) or lab.endswith(k)) and len(lab) > len(k) + 2:
                 consider(0.6, bid, closest, Levenshtein.distance(lab, k), ["keyword", "combosquat"])
+    # subdomain_brand: brand token in a subdomain label of a non-official host
+    # (aramex.a-track-au.com, emiratesnbd.com.verify-login.xyz, tamm.gov-ae.pay-fines.top)
+    sub = _subdomain_part(host)
+    if sub:
+        sub_labels = [l for l in sub.split(".") if l]
+        sub_toks = set(sub_labels) | {t for l in sub_labels for t in _tokens(l)}
+        cands = [(bid, k) for bid, k in kws] + [(bid, olab) for bid, olab, _, _ in entries]
+        for bid, k in cands:
+            closest = first.get(bid)
+            if len(k) >= 4 and (k in sub_toks or (len(k) >= 6 and any(k in l for l in sub_labels))):
+                consider(0.9, bid, closest, None, ["subdomain_brand", "keyword"])
+            elif len(k) == 3 and k in sub_labels:
+                consider(0.6, bid, closest, None, ["subdomain_brand", "keyword"])
     if idn and best.score == 0.0:
         best = LookalikeResult(domain=domain, techniques=["idn"], score=0.2)
     return best

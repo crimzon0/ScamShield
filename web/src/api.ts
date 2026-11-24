@@ -26,12 +26,12 @@ export interface Verdict {
 export interface ScanResult {
   scan_id: string; url: string; detonations: Detonation[]; cloak?: { cloaked: boolean; personas: string[]; differences: string[]; similarity: number } | null;
   intel?: Intel | null; brand?: BrandMatch | null; lookalike?: Lookalike | null; verdict: Verdict; created_at: string;
-  screenshots?: Record<string, string>; case?: { zip_url?: string | null; pdf_url?: string | null } | null;
+  screenshots?: Record<string, string>; is_fixture?: boolean; case?: { zip_url?: string | null; pdf_url?: string | null } | null;
 }
-export interface ScanRow { scan_id: string; url: string; created_at: string; score: number; label: Label; domain?: string }
+export interface ScanRow { scan_id: string; url: string; created_at: string; score: number; label: Label; domain?: string; is_fixture?: boolean }
 export interface RadarRow {
   id: number; domain: string; source: string; matched_term: string; brand_id?: string | null; first_seen: string;
-  flagged_at: string; scan_id?: string | null; score?: number | null; label?: Label | null; time_to_detection_seconds?: number | null;
+  flagged_at: string; scan_id?: string | null; score?: number | null; label?: Label | null; time_to_detection_seconds?: number | null; is_fixture?: boolean;
 }
 export interface PhoneRow {
   id: number; brand_id: string; brand_name_en?: string; brand_name_ar?: string; query: string; source: string;
@@ -53,6 +53,13 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
+export interface EvalResult {
+  generated_at?: string; dataset?: string; n?: number; threshold?: string; error?: string;
+  tp?: number; fp?: number; fn?: number; tn?: number; precision?: number; recall?: number; f1?: number; fpr?: number;
+  official_fp?: { flagged: number; total: number }; labels?: Record<string, number>; modes?: Record<string, number>;
+  false_positives?: { url: string; label?: string; score?: number }[]; false_negatives?: { url: string; label?: string; score?: number }[];
+}
+
 export async function downloadBundle(scanIds: string[]): Promise<void> {
   const r = await fetch("/api/bundle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scan_ids: scanIds }) });
   if (!r.ok) throw new Error(`${r.status}`);
@@ -72,6 +79,7 @@ export const api = {
   radar: () => req<RadarRow[]>("/api/radar"),
   radarStatus: () => req<{ running: boolean; last_count?: number | null; error?: string }>("/api/radar/status"),
   backfill: () => req<{ started: boolean }>("/api/radar/backfill", { method: "POST" }),
+  evalResults: () => req<EvalResult | null>("/api/eval"),
   helpline: () => req<PhoneRow[]>("/api/helpline"),
   helplineRun: () => req<{ findings: number }>("/api/helpline/run", json({})),
   buildCase: (id: string) => req<CaseOut>(`/api/scans/${encodeURIComponent(id)}/case`, { method: "POST" }),

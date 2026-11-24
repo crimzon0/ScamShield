@@ -72,7 +72,7 @@ HOST_BAIT = re.compile(r"login|log-in|signin|sign-in|verify|verification|secure|
                        r"recover|unlock|billing|payment|refund|claim|bonus|giveaway|reward|helpdesk|webmail|confirm")
 NOT_FOUND_PAGE = re.compile(
     r"site not found|page not found|404 not found|deployment (could not be found|not found)|this site can.t be reached|"
-    r"there isn.t a github pages site here|no such app|application (error|not found)|account (has been )?suspended|"
+    r"there isn.t a github pages site here|no such app|application (error|not found)|this account has been suspended|"
     r"this (site|account|page) (has been|is) (suspended|disabled|removed|deleted)|domain (is )?(for sale|parked)|"
     r"web page not available|this deployment is temporarily paused|project not found|error 1001|dns resolution error|"
     r"site (is )?(unavailable|disabled)|403 forbidden|not found", re.I)
@@ -131,7 +131,7 @@ def _is_gone(d: Detonation) -> bool:
     if d.http_status and d.http_status >= 400:
         return True
     head = f"{d.title} {(d.visible_text or '')[:300]}"
-    return len((d.visible_text or "").strip()) < 600 and bool(NOT_FOUND_PAGE.search(head))
+    return not d.form_fields and len((d.visible_text or "").strip()) < 600 and bool(NOT_FOUND_PAGE.search(head))
 
 
 def _brand_names(brand: Optional[BrandMatch], look: Optional[LookalikeResult]) -> tuple[str, str]:

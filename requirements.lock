@@ -26,6 +26,8 @@ phonenumbers==9.0.44
 pillow==13.0.0
 playwright==1.65.2
 pluggy==1.7.0
+psycopg==3.3.9
+psycopg-binary==3.3.9
 pydantic==2.14.4
 pydantic_core==2.50.5
 Pygments==2.21.0
@@ -40,6 +42,8 @@ PyYAML==6.0.4
 RapidFuzz==3.14.6
 requests==2.34.2
 requests-file==3.0.1
+# Editable Git install with no remote (scamshield==0.1.0)
+-e c:\scamshiled
 scipy==1.18.1
 starlette==1.10.0
 tldextract==5.4.0

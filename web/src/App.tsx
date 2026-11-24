@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, downloadBundle, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
+import { api, downloadBundle, EvalResult, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
 import { dict, fmtUtc, humanDuration, Key, Lang } from "./i18n";
 
 // ------------------------------------------------------------------ i18n context
@@ -55,6 +55,19 @@ function Card({ title, children, actions, className = "" }: { title?: string; ch
   );
 }
 
+function FixtureBadge({ show }: { show?: boolean }) {
+  const { t } = useI18n();
+  if (!show) return null;
+  return <span className="badge badge-fixture" title={t("fixtureTip")}>{t("fixture")}</span>;
+}
+
+function SignalChip({ id }: { id: string }) {
+  const { t } = useI18n();
+  const k = `sig_${id}` as Key;
+  const label = t(k);
+  return <span className="chip chip-sig" title={id}>{label === k ? id.replace(/_/g, " ") : label}</span>;
+}
+
 const Ltr = ({ children }: { children: React.ReactNode }) => <bdi dir="ltr" className="ltr">{children}</bdi>;
 
 // ------------------------------------------------------------------ verdict detail
@@ -73,6 +86,7 @@ function VerdictCard({ r }: { r: ScanResult }) {
             <span className={`badge ${v.mode === "domain_only" ? "badge-warn" : "badge-info"}`}>
               {v.mode === "domain_only" ? t("modeDomainOnly") : t("modeFull")}
             </span>
+            <FixtureBadge show={r.is_fixture} />
           </div>
           <p className="summary">{lang === "ar" ? v.summary_ar || v.summary_en : v.summary_en || v.summary_ar}</p>
           <dl className="kv">
@@ -311,7 +325,7 @@ function RecentScans({ go, refreshKey }: { go: (r: string) => void; refreshKey: 
           <thead><tr><th>{t("colWhen")}</th><th>{t("colUrl")}</th><th>{t("score")}</th><th>{t("colVerdict")}</th></tr></thead>
           <tbody>{rows.map((s) => (
             <tr key={s.scan_id} className="click" onClick={() => go(`/scan/${s.scan_id}`)}>
-              <td className="nowrap"><Ltr>{fmtUtc(s.created_at)}</Ltr></td><td className="url"><Ltr>{s.url}</Ltr></td>
+              <td className="nowrap"><Ltr>{fmtUtc(s.created_at)}</Ltr></td><td className="url"><Ltr>{s.url}</Ltr> <FixtureBadge show={s.is_fixture} /></td>
               <td className="num">{s.score}</td><td><LabelPill label={s.label} /></td>
             </tr>))}</tbody>
         </table></div>
@@ -366,6 +380,8 @@ function RadarPage({ go }: { go: (r: string) => void }) {
   }, [running, load]);
   const backfill = async () => { setRunning(true); await api.backfill().catch(() => setRunning(false)); };
   return (
+    <>
+    {rows && <RadarKpis rows={rows} />}
     <Card title={t("radarTitle")} actions={<>
       <BundleButton ids={(rows || []).filter((h) => h.scan_id).map((h) => h.scan_id as string)} />
       <button className="btn" onClick={load}>{t("refresh")}</button>
@@ -375,12 +391,87 @@ function RadarPage({ go }: { go: (r: string) => void }) {
           <thead><tr><th>{t("colDomain")}</th><th>{t("colSource")}</th><th>{t("colTerm")}</th><th>{t("colBrand")}</th><th>{t("colFirstSeen")}</th><th>{t("colFlagged")}</th><th>{t("colTtd")}</th><th>{t("colVerdict")}</th></tr></thead>
           <tbody>{rows.map((h) => (
             <tr key={h.id} className={h.scan_id ? "click" : ""} onClick={() => h.scan_id && go(`/scan/${h.scan_id}`)}>
-              <td><Ltr><code>{h.domain}</code></Ltr></td><td><span className="chip">{h.source}</span></td><td><Ltr>{h.matched_term}</Ltr></td>
+              <td><Ltr><code>{h.domain}</code></Ltr> <FixtureBadge show={h.is_fixture} /></td><td><span className="chip">{h.source}</span></td><td><Ltr>{h.matched_term}</Ltr></td>
               <td>{h.brand_id || "—"}</td><td className="nowrap"><Ltr>{fmtUtc(h.first_seen)}</Ltr></td><td className="nowrap"><Ltr>{fmtUtc(h.flagged_at)}</Ltr></td>
               <td className="nowrap ttd">{humanDuration(h.time_to_detection_seconds, t)}</td>
               <td className="nowrap">{h.score != null && <span className="num">{h.score} </span>}<LabelPill label={h.label} /></td>
             </tr>))}</tbody>
         </table></div>
+      )}
+    </Card>
+    <AccuracyCard />
+    </>
+  );
+}
+
+function median(xs: number[]): number | null {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b), m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function Kpi({ value, label, sub }: { value: React.ReactNode; label: string; sub?: React.ReactNode }) {
+  return <div className="kpi"><div className="kpi-v">{value}</div><div className="kpi-l">{label}</div>{sub && <div className="kpi-s">{sub}</div>}</div>;
+}
+
+function RadarKpis({ rows }: { rows: RadarRow[] }) {
+  const { t } = useI18n();
+  const live = rows.filter((r) => !r.is_fixture);
+  const base = live.length ? live : rows;
+  const ttd = base.map((r) => r.time_to_detection_seconds).filter((x): x is number => x != null && x >= 0);
+  const counts: Record<string, number> = {};
+  base.forEach((r) => { const k = r.label || "unlabelled"; counts[k] = (counts[k] || 0) + 1; });
+  const order = ["scam", "likely_scam", "suspicious", "legitimate", "unlabelled"];
+  return (
+    <section className="card kpis" aria-label={t("resultsTitle")}>
+      <Kpi value={live.length} label={t("kpiHits")} sub={rows.length !== live.length ? <><FixtureBadge show /> +{rows.length - live.length}</> : undefined} />
+      <Kpi value={humanDuration(median(ttd), t)} label={t("kpiMedianTtd")} />
+      <Kpi value={humanDuration(ttd.length ? Math.min(...ttd) : null, t)} label={t("kpiFastest")} />
+      <Kpi value={base.filter((r) => r.scan_id).length} label={t("kpiScanned")} />
+      <div className="kpi kpi-wide">
+        <div className="kpi-labels">{order.filter((k) => counts[k]).map((k) => (
+          <span key={k} className="kpi-lab">{k === "unlabelled" ? <span className="pill pill-none">{t("unlabelled")}</span> : <LabelPill label={k as Label} />} <b>{counts[k]}</b></span>
+        ))}{!base.length && "—"}</div>
+        <div className="kpi-l">{t("kpiLabels")}</div>
+      </div>
+    </section>
+  );
+}
+
+const pct = (x?: number) => (x == null ? "—" : `${(x * 100).toFixed(1)}%`);
+
+function AccuracyCard() {
+  const { t } = useI18n();
+  const [ev, setEv] = useState<EvalResult | null | undefined>(undefined);
+  useEffect(() => { api.evalResults().then(setEv).catch(() => setEv(null)); }, []);
+  if (ev === undefined) return null;
+  return (
+    <Card title={t("accuracyTitle")}>
+      {!ev ? <p className="muted">{t("accNone")}</p> : ev.error ? <div className="alert alert-bad">{ev.error}</div> : (
+        <>
+          <div className="kpis kpis-inner">
+            <Kpi value={pct(ev.precision)} label={t("accPrecision")} />
+            <Kpi value={pct(ev.recall)} label={t("accRecall")} />
+            <Kpi value={pct(ev.f1)} label={t("accF1")} />
+            <Kpi value={pct(ev.fpr)} label={t("accFpr")} />
+            <Kpi value={ev.n ?? "—"} label={t("accN")} />
+            {ev.official_fp && <Kpi value={`${ev.official_fp.flagged}/${ev.official_fp.total}`} label={t("accOfficialFp")} />}
+          </div>
+          {ev.tp != null && (
+            <table className="tbl confusion">
+              <thead><tr><th>{t("accConfusion")}</th><th>{t("accPredScam")}</th><th>{t("accPredLegit")}</th></tr></thead>
+              <tbody>
+                <tr><th>{t("accTruthScam")}</th><td className="num good">{ev.tp}</td><td className="num bad">{ev.fn}</td></tr>
+                <tr><th>{t("accTruthLegit")}</th><td className="num bad">{ev.fp}</td><td className="num good">{ev.tn}</td></tr>
+              </tbody>
+            </table>
+          )}
+          {(["false_positives", "false_negatives"] as const).map((k) => (ev[k]?.length ? (
+            <details key={k}><summary>{t(k === "false_positives" ? "accFalsePos" : "accFalseNeg")} ({ev[k]!.length})</summary>
+              <ul className="small">{ev[k]!.map((x, i) => <li key={i}><Ltr>{x.url}</Ltr> {x.label && <LabelPill label={x.label as Label} />} {x.score}</li>)}</ul>
+            </details>) : null))}
+          <p className="muted small">{t("accDataset")}: <Ltr>{ev.dataset || "—"}</Ltr>{ev.threshold && <> · ≥ {ev.threshold}</>} · <Ltr>{fmtUtc(ev.generated_at)}</Ltr></p>
+        </>
       )}
     </Card>
   );
@@ -412,7 +503,7 @@ function HelplinePage() {
               <td className="nowrap"><Ltr><code>{f.number_e164 || f.raw_number}</code></Ltr>{f.number_e164 && f.raw_number && <div className="muted small"><Ltr>{f.raw_number}</Ltr></div>}</td>
               <td>{f.official_numbers.map((n) => <div key={n}><Ltr><code>{n}</code></Ltr></div>)}</td>
               <td><span className={`pill st-${f.status}`}>{t(`status_${f.status}` as Key)}</span></td>
-              <td>{f.second_signals.map((s) => <span key={s} className="chip">{s}</span>)}</td>
+              <td>{f.second_signals.map((s) => <SignalChip key={s} id={s} />)}</td>
             </tr>))}</tbody>
         </table></div>
       )}

@@ -385,7 +385,7 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
     det = run.det
     start = time.monotonic()
     deadline = start + budget
-    capture_reserve = min(4.0, budget * 0.3)
+    capture_reserve = min(4.5, budget * 0.3)
     browser = await _browser.get_browser()
     cfg = PERSONA_CONFIG[persona]
     version = str(getattr(browser, "version", "") or "131.0.0.0")
@@ -405,9 +405,13 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
         nav_err = ""
         goto_timeout = max(1.0, budget - capture_reserve - 1.0)
         try:
-            await page.goto(url, wait_until="load", timeout=goto_timeout * 1000, referer=referer)
+            await page.goto(url, wait_until="domcontentloaded", timeout=goto_timeout * 1000, referer=referer)
         except Exception as e:  # noqa: BLE001
             nav_err = str(e)
+            # Slow sub-resources on a document that did arrive: still a usable page, not a timeout.
+            if _classify_error(nav_err) == "timeout" and run.main_response is not None:
+                run.notes.append("page did not finish loading within the time limit (captured as-is)")
+                nav_err = ""
             # "Download is starting" / aborted while a client redirect continues are not fatal
             if "ERR_ABORTED" in nav_err or "interrupted by another navigation" in nav_err:
                 if run.main_response is not None:
@@ -428,6 +432,9 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
             det.error = _short_err(nav_err)
         else:
             # Settle: follow meta/JS redirects until the main frame is quiet or budget runs low.
+            await _safe(page.wait_for_load_state("load",
+                                                 timeout=max(100, (deadline - capture_reserve - 2 - time.monotonic()) * 1000)),
+                        max(0.1, min(6.0, deadline - capture_reserve - 2 - time.monotonic())))
             await _safe(page.wait_for_load_state("networkidle",
                                                  timeout=max(100, (deadline - capture_reserve - time.monotonic()) * 1000)),
                         max(0.1, min(3.0, deadline - capture_reserve - time.monotonic())))
@@ -455,6 +462,8 @@ async def _run(run: _Run, url: str, persona: str, referer: str | None, budget: f
                 det.status = "blank"
             if _CHALLENGE_RE.search(det.title or "") or "cf-chl" in (html_snip := (det.visible_text or "")[:2000])                     or "Verify you are human" in html_snip:
                 run.notes.append("anti-bot challenge page (content hidden from scanner)")
+            if re.search(r"Suspected phishing|Deceptive site ahead|Phishing site warning", det.title or "", re.I):
+                run.notes.append(f"hosting provider phishing-warning interstitial: {det.title[:80]}")
     finally:
         await _safe(context.close(), 4)  # writes the HAR
         har = run.out_dir / "page.har"
@@ -500,7 +509,7 @@ async def detonate(url: str, persona: Persona = "uae_mobile_ad_click", scan_id: 
             det.started_at = utcnow()
             try:
                 await asyncio.wait_for(_run(run, norm, persona, PERSONA_CONFIG[persona]["referer"], budget),
-                                       budget + 1.5)
+                                       budget + 1.0)
             except asyncio.TimeoutError:
                 det.status = "timeout"
                 det.error = det.error or f"hard timeout after {budget:.0f}s"

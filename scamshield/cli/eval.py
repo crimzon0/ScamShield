@@ -103,8 +103,59 @@ def main(argv=None) -> int:
     for p in fns:
         print(f"  [{p.get('label')} {p.get('score')} {p.get('mode')}] {p.get('url')}\n      {p.get('reasons_en')}")
 
-    if not a.no_official:
-        official_fp(a)
+    # ablation: same stored scans, feed/blocklist hits ignored (eval scams come from the same feeds)
+    abl = None
+    if not a.ignore_blocklist:
+        prev = os.environ.get("SCAMSHIELD_IGNORE_BLOCKLIST")
+        os.environ["SCAMSHIELD_IGNORE_BLOCKLIST"] = "1"
+        try:
+            ab = {(p.get("url") or "").strip(): rescore(p, a.threshold) for p in preds}
+            abl_pairs = [(t, is_scam(ab[u].get("label", ""), a.threshold)) for u, t in truth.items() if u in ab]
+            abl = metrics(abl_pairs)
+            do = [(t, is_scam(ab[u].get("label", ""), a.threshold)) for u, t in truth.items()
+                  if u in ab and ab[u].get("mode") == "domain_only"]
+            dm = metrics(do)
+            print(f"\nABLATION (blocklist ignored): precision {abl['precision']:.3f}  recall {abl['recall']:.3f}  "
+                  f"F1 {abl['f1']:.3f}  FPR {abl['fpr']:.3f}  (TP {abl['tp']} FN {abl['fn']} FP {abl['fp']} TN {abl['tn']})")
+            print(f"  domain_only subset (n={len(do)}): recall {dm['recall']:.3f}  FPR {dm['fpr']:.3f}  "
+                  f"(TP {dm['tp']} FN {dm['fn']} FP {dm['fp']} TN {dm['tn']})")
+            for u, t in truth.items():
+                if u in ab and t and not is_scam(ab[u].get("label", ""), a.threshold):
+                    print(f"  FN w/o blocklist [{ab[u].get('label')} {ab[u].get('score')} {ab[u].get('mode')}] {u}"
+                          f"\n      {ab[u].get('reasons_en')}")
+        finally:
+            if prev is None:
+                os.environ.pop("SCAMSHIELD_IGNORE_BLOCKLIST", None)
+            else:
+                os.environ["SCAMSHIELD_IGNORE_BLOCKLIST"] = prev
+    do_all = [(t, is_scam(pmap[u].get("label", ""), a.threshold)) for u, t in truth.items()
+              if u in pmap and pmap[u].get("mode") == "domain_only"]
+    dm_all = metrics(do_all)
+    print(f"domain_only subset with blocklist (n={len(do_all)}): recall {dm_all['recall']:.3f}  FPR {dm_all['fpr']:.3f}")
+
+    off = official_fp(a) if not a.no_official else None
+    from datetime import datetime, timezone
+
+    rep = {"generated_at": datetime.now(timezone.utc).isoformat(), "dataset": a.labelled, "n": len(pairs),
+           "threshold": a.threshold, **{k: m[k] for k in ("tp", "fp", "fn", "tn")},
+           **{k: round(m[k], 4) for k in ("precision", "recall", "f1", "fpr", "accuracy")},
+           "blocklist_ignored": bool(a.ignore_blocklist),
+           "official_fp": off, "modes": dict(modes), "labels": dict(labels),
+           "domain_only": {k: round(dm_all[k], 4) for k in ("recall", "fpr")} | {"n": len(do_all)},
+           "false_positives": [{"url": p.get("url"), "label": p.get("label"), "score": p.get("score"),
+                                "reasons_en": p.get("reasons_en")} for p in fps[:20]],
+           "false_negatives": [{"url": p.get("url"), "label": p.get("label"), "score": p.get("score"),
+                                "mode": p.get("mode")} for p in fns[:20]]}
+    if abl:
+        rep["ablation_no_blocklist"] = {k: round(abl[k], 4) for k in ("precision", "recall", "f1", "fpr")}
+    try:
+        import json
+
+        with open("data/eval/last_eval.json", "w", encoding="utf-8") as f:
+            json.dump(rep, f, ensure_ascii=False, indent=2)
+        print("wrote data/eval/last_eval.json")
+    except Exception as e:
+        print(f"could not write last_eval.json: {e}")
     return 0
 
 
@@ -124,13 +175,13 @@ def rescore(p: dict, threshold: str) -> dict:
         return p
 
 
-def official_fp(a) -> None:
+def official_fp(a) -> dict:
     from scamshield.brand import load_registry
 
     doms = sorted({d for b in load_registry() if not b.get("fictional") for d in (b.get("official_domains") or [])})
     if not doms:
         print("\nofficial domains FP: 0/0 (registry has no real brands yet)")
-        return
+        return {"flagged": 0, "total": 0}
     path = "var/eval_official_in.csv"
     os.makedirs("var", exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -147,6 +198,7 @@ def official_fp(a) -> None:
     print(f"\nofficial domains FP: {len(flagged)}/{len(preds)}  (not 'legitimate': {len(bad)})")
     for p in bad:
         print(f"  [{p.get('label')} {p.get('score')}] {p.get('url')} -> {p.get('final_url')}  {p.get('reasons_en')}")
+    return {"flagged": len(flagged), "total": len(preds), "not_legitimate": len(bad)}
 
 
 if __name__ == "__main__":

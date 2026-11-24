@@ -224,3 +224,20 @@ async def test_llm_bad_brand_id_ignored(monkeypatch):
     monkeypatch.setattr(llm_mod, "llm_json", lambda p, s: {"brand_id": "evil; drop", "confidence": "x"})
     m = await match_brand(det("https://blog.example/", "Recipes", "hummus"))
     assert m.brand_id is None and m.llm_used
+
+
+@pytest.mark.parametrize("host,bid", [("aramex.a-track-au.com", "aramex"), ("emiratesnbd.com.verify-login.xyz", "emirates_nbd"),
+                                      ("tamm.gov-ae.pay-fines.top", "tamm"), ("secure-adcb.login.example", "adcb")])
+def test_subdomain_brand(host, bid):
+    r = lookalike(host)
+    assert r.brand_id == bid and "subdomain_brand" in r.techniques and r.score >= 0.85, r
+
+
+def test_official_host_subdomain_zero():
+    assert lookalike("online.emiratesnbd.com").score == 0
+    assert lookalike("www.aramex.com").score == 0
+
+
+async def test_gate_page_brand_from_subdomain():
+    m = await match_brand(det("https://aramex.a-track-au.com/", "يرجى التحقق من أنك إنسان", "يرجى التحقق من أنك إنسان Privacy Help"))
+    assert m.brand_id == "aramex" and not m.is_official_domain and "domain_keyword" in m.methods

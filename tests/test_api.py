@@ -167,3 +167,26 @@ def test_bundle(client, monkeypatch, tmp_path):
     assert r.status_code == 200 and r.headers["content-type"] == "application/zip"
     assert zipfile.ZipFile(io.BytesIO(r.content)).read("index.csv") == b"a,b"
     assert client.post("/api/bundle", json={"scan_ids": []}).status_code == 400
+
+
+def test_fixture_flags(client):
+    from scamshield.api.app import is_fixture
+
+    assert is_fixture("https://sandbox-bank-login.example/verify")
+    assert is_fixture("www.tamm.abudhabi", "sandbox_bank")
+    assert not is_fixture("https://www.tamm.abudhabi/")
+    sid = client.post("/api/scan", json={"url": "https://x.example/"}).json()["scan_id"]
+    assert client.get(f"/api/scans/{sid}").json()["is_fixture"] is True
+    assert client.get("/api/scans").json()[0]["is_fixture"] is True
+    db.save_radar_hit(fixtures.radar_hit())
+    assert client.get("/api/radar").json()[0]["is_fixture"] is True
+
+
+def test_eval_endpoint(client, monkeypatch, tmp_path):
+    import scamshield.api.app as appmod
+
+    monkeypatch.setattr(appmod, "EVAL_PATH", tmp_path / "last_eval.json")
+    assert client.get("/api/eval").json() is None
+    (tmp_path / "last_eval.json").write_text('{"n": 10, "precision": 1.0, "recall": 0.8}', encoding="utf-8")
+    out = client.get("/api/eval").json()
+    assert out["precision"] == 1.0 and out["generated_at"]

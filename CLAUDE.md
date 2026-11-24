@@ -40,7 +40,7 @@ You may add private helpers/submodules inside your folder freely; keep the publi
 
 ## Rules
 - Edit only files in your own folders. For a change elsewhere, message the owner (SendMessage). Contract changes (core/) go through the **lead**.
-- Only the lead runs git or adds dependencies. Need a package? Message the lead. Installed: playwright(+chromium), fastapi, uvicorn, httpx, pydantic, tldextract, dnstwist, imagehash, pillow, phonenumbers, dnspython, rapidfuzz, websockets, jinja2, pytest, pytest-asyncio, python-dotenv, python-whois, python-multipart.
+- Only the lead runs git or adds dependencies. Need a package? Message the lead. Installed: playwright(+chromium), fastapi, uvicorn, httpx, pydantic, tldextract, dnstwist, imagehash, pillow, phonenumbers, dnspython, rapidfuzz, websockets, jinja2, pytest, pytest-asyncio, python-dotenv, python-whois, python-multipart, psycopg[binary] (crt.sh SQL).
 - Build against the stubs; never wait for another module.
 - Done = your tests pass AND you ran the real thing once and pasted the output in your report to the lead.
 - Every external call: timeout, SQLite cache (`db.cached/acached`), graceful "unavailable" result recorded (e.g. `Intel.sources`). A missing API key never crashes anything. Public functions never raise.

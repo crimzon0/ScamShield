@@ -160,3 +160,21 @@ html[lang="ar"] .scanbox input:placeholder-shown { direction: rtl; font-family: 
 
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
+
+/* fixture badge, signal chips */
+.badge-fixture { background: repeating-linear-gradient(45deg, #fff3d6, #fff3d6 6px, #ffe7a8 6px, #ffe7a8 12px); color: #6b4700; border: 1px dashed #c99700; letter-spacing: .5px; }
+.chip-sig { background: #fff3d6; border-color: #f0d58a; color: #6b4700; }
+
+/* KPI strip */
+.kpis { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.kpis-inner { margin-block-end: 12px; }
+.kpi { flex: 1 1 140px; min-width: 0; padding: 10px 14px; border-radius: 8px; background: #f5f7fb; border: 1px solid var(--line); }
+.kpi-wide { flex: 2 1 280px; }
+.kpi-v { font-size: 24px; font-weight: 800; color: var(--navy-800); font-variant-numeric: tabular-nums; }
+.kpi-l { color: var(--muted); font-size: 12px; }
+.kpi-s { font-size: 12px; margin-block-start: 2px; }
+.kpi-labels { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-height: 36px; }
+.kpi-lab b { font-variant-numeric: tabular-nums; }
+.confusion { max-width: 460px; margin-block-end: 10px; }
+.confusion th { text-align: start; }
+.num.good { color: var(--legit); } .num.bad { color: var(--scam); }

@@ -1,6 +1,8 @@
 """Owner: dashboard. `make demo` -> seed the db, build the web UI if needed, serve API + UI on :8000.
 
-    python -m scamshield.api.demo [--no-seed] [--rebuild] [--port 8000] [--host 127.0.0.1]
+    python -m scamshield.api.demo [--no-seed] [--with-fixtures] [--rebuild] [--port 8000] [--host 127.0.0.1]
+
+Fictional Sandbox Bank fixture data is only seeded with --with-fixtures; the UI badges it FIXTURE / تجريبي.
 """
 from __future__ import annotations
 
@@ -27,14 +29,14 @@ def _p(msg: str) -> None:
     print(f"[demo] {msg}", flush=True)
 
 
-async def _seed_scans() -> None:
-    # fixture scan (fictional Sandbox Bank), always available offline
-    fx = ScanResult(scan_id="fixture0001", url="https://sandbox-bank-login.example/verify",
-                    detonations=[fixtures.detonation()], intel=fixtures.intel(), brand=fixtures.brand_match(),
-                    lookalike=fixtures.lookalike(), verdict=fixtures.verdict(), created_at=fixtures.NOW)
-    if not db.get_scan(fx.scan_id):
-        db.save_scan(fx)
-    _p(f"fixture scan {fx.scan_id}: {fx.verdict.label} {fx.verdict.score}")
+async def _seed_scans(with_fixtures: bool) -> None:
+    if with_fixtures:  # fictional Sandbox Bank scan, available offline
+        fx = ScanResult(scan_id="fixture0001", url="https://sandbox-bank-login.example/verify",
+                        detonations=[fixtures.detonation()], intel=fixtures.intel(), brand=fixtures.brand_match(),
+                        lookalike=fixtures.lookalike(), verdict=fixtures.verdict(), created_at=fixtures.NOW)
+        if not db.get_scan(fx.scan_id):
+            db.save_scan(fx)
+        _p(f"fixture scan {fx.scan_id}: {fx.verdict.label} {fx.verdict.score}")
     from scamshield import pipeline
 
     for url in DEMO_URLS:
@@ -47,7 +49,7 @@ async def _seed_scans() -> None:
             _p(f"scan {url} failed: {e!r}")
 
 
-async def _seed_radar() -> None:
+async def _seed_radar(with_fixtures: bool) -> None:
     hits = []
     if not settings.offline:
         try:
@@ -59,9 +61,11 @@ async def _seed_radar() -> None:
                 db.save_radar_hit(h)
         except Exception as e:
             _p(f"radar backfill unavailable: {e!r}")
-    if not hits:
+    if not hits and with_fixtures:
         db.save_radar_hit(fixtures.radar_hit())
-        _p("radar: saved fixture hit")
+        _p("radar: no live hits; saved fixture hit (badged FIXTURE)")
+    elif not hits:
+        _p("radar: no live hits (use --with-fixtures for a sample row)")
     else:
         _p(f"radar: {len(hits)} hits")
 
@@ -99,9 +103,9 @@ def _build_web(force: bool = False) -> None:
     subprocess.run("npm run build", cwd=WEB, shell=shell, check=False)
 
 
-async def seed() -> None:
-    await _seed_scans()
-    await _seed_radar()
+async def seed(with_fixtures: bool = False) -> None:
+    await _seed_scans(with_fixtures)
+    await _seed_radar(with_fixtures)
     await _seed_helpline()
 
 
@@ -109,6 +113,7 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="ScamShield demo server")
     ap.add_argument("--no-seed", action="store_true")
     ap.add_argument("--rebuild", action="store_true")
+    ap.add_argument("--with-fixtures", action="store_true", help="also seed fictional Sandbox Bank sample data")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8000)
     a = ap.parse_args(argv)
@@ -118,7 +123,7 @@ def main(argv: list[str] | None = None) -> None:
         except Exception:
             pass
     if not a.no_seed:
-        asyncio.run(seed())
+        asyncio.run(seed(a.with_fixtures))
     _build_web(a.rebuild)
     import uvicorn
 

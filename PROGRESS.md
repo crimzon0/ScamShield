@@ -6,6 +6,7 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - [x] Phase 0 scaffold, core contract, stubs, CLAUDE.md, Makefile (done 19:44:54 UTC, commit c4558db)
 
 ## Team log
+- 20:05 brand DONE: 42 tests; 31 UAE brands / 110 official domains / 60 phones; text EN/AR/Arabizi, lookalike incl. subdomain_brand, favicon pHash for 24 brands, LLM hook (mock-tested). 23 TODO facts in data/registry_todo.md. dashboard DONE v1 (9 tests, browser-verified EN/AR RTL, ZIP/PDF export). docs drafts in. radar: crt.sh %kw% queries returning [] / 429; working alternatives.
 - **19:57 MILESTONE: real end-to-end scan works** (16 min after start; target was 75 min). Lead integration check:
   - https://www.tamm.abudhabi/ -> legitimate 0 (brand tamm, official_domain), 6.7 s
   - https://this-domain-does-not-exist-sc4m.ae/ -> legitimate 15, domain_only, det=dead (no crash) [takedown signals being added]

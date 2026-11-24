@@ -33,8 +33,11 @@ ASKS = {
     },
     "payment": {
         "en": ["pay now", "pay fine", "pay your fine", "fine payment", "traffic fine", "traffic fines", "outstanding fine",
-               "amount due", "pay the fee", "delivery fee", "customs fee", "payment", "aed"],
-        "ar": ["مخالفة", "مخالفات", "غرامة", "سداد", "ادفع", "دفع", "رسوم", "درهم", "المبلغ المستحق"],
+               "amount due", "pay the fee", "delivery fee", "customs fee", "payment", "aed",
+               "shipment on hold", "redelivery", "re-delivery", "reschedule delivery", "parcel is on hold",
+               "unpaid shipping", "shipping fee", "toll", "salik fine"],
+        "ar": ["مخالفة", "مخالفات", "غرامة", "سداد", "ادفع", "دفع", "رسوم", "درهم", "المبلغ المستحق",
+               "رسوم التوصيل", "رسوم الشحن", "شحنتك معلقة", "اعادة التوصيل", "رسوم جمركية"],
     },
     "personal_info": {
         "en": ["full name", "date of birth", "phone number", "mobile number", "address", "passport number",

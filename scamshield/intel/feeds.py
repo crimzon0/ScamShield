@@ -143,6 +143,17 @@ def hits(url_or_host: str, registrable_level: Optional[bool] = None) -> list[str
     return out
 
 
+def listed_hosts(reg: str, limit: int = 3) -> list[str]:
+    """Hosts under registrable domain `reg` that appear in local feeds (used to find an A record when the
+    apex has none)."""
+    out: list[str] = []
+    for name in FEEDS:
+        idx = _load(name)
+        if idx:
+            out += sorted(h for h in idx[3] if h != reg and h.endswith("." + reg))
+    return list(dict.fromkeys(out))[:limit]
+
+
 def feed_urls(limit: int = 200) -> dict[str, list[str]]:
     """Most recent URLs per feed (feeds list newest first). Refreshes if stale and online. Never raises."""
     out: dict[str, list[str]] = {}
