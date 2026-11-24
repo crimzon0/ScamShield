@@ -335,7 +335,7 @@ export const dict: Record<Lang, Record<Key, string>> = { en, ar };
 export function humanDuration(seconds: number | null | undefined, t: (k: Key) => string): string {
   if (seconds == null || isNaN(seconds)) return "—";
   const s = Math.max(0, Math.round(seconds));
-  if (s < 60) return `${s} ${t("s")}`;
+  if (s < 60) return `< 1 ${t("min")}`;
   if (s < 3600) return `${Math.round(s / 60)} ${t("min")}`;
   if (s < 86400) {
     const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60);
