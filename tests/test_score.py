@@ -144,3 +144,44 @@ def test_global_brand_combosquat_domain_only():
     v = score("t16", url, [d], Intel(domain="coinbase-secured.com", age_days=20, raw_rdap={"found": True}), None, None)
     assert "brand_in_hostname" in {r.id for r in v.reasons}
     assert v.label in ("scam", "likely_scam")
+
+
+def _dom(tmp_path, html):
+    p = tmp_path / "dom.html"
+    p.write_text(html, encoding="utf-8")
+    return str(p)
+
+
+def test_sso_integration_is_not_impersonation(tmp_path):
+    url = "https://sandbox-bank-connect.dev.integrator.example/"
+    html = '<a href="https://id.sandboxbank.example/oauth/authorize?client_id=x&redirect_uri=y">Sign in with Sandbox Bank</a>'
+    d = _det(url, title="Sign in with Sandbox Bank", dom_path=_dom(tmp_path, html))
+    b = BrandMatch(brand_id="sandbox_bank", name_en="Sandbox Bank", confidence=0.9, methods=["text"],
+                   official_domains=["sandboxbank.example"], asks_for=[])
+    v = score("t20", url, [d], Intel(domain="integrator.example"), b, fixtures.lookalike())
+    ids = {r.id for r in v.reasons}
+    assert "sso_integration" in ids and "brand_on_unofficial_domain" not in ids
+    assert v.label in ("legitimate", "suspicious")
+
+
+def test_phish_posting_credentials_locally_still_scam(tmp_path):
+    url = "https://sandbox-bank-login.example/verify"
+    html = ('<form action="/post.php"><input type="password" name="pw"></form>'
+            '<a href="https://id.sandboxbank.example/login">real site</a>')
+    d = _det(url, title="Sandbox Bank", dom_path=_dom(tmp_path, html),
+             form_fields=[FormField(name="pw", type="password")])
+    b = BrandMatch(brand_id="sandbox_bank", name_en="Sandbox Bank", confidence=0.9, methods=["text"],
+                   official_domains=["sandboxbank.example"], asks_for=["credentials"])
+    v = score("t21", url, [d], Intel(domain="sandbox-bank-login.example", age_days=3), b, fixtures.lookalike())
+    assert v.label == "scam"
+    assert "sso_integration" not in {r.id for r in v.reasons}
+
+
+def test_footer_link_to_official_homepage_is_not_sso(tmp_path):
+    url = "https://sandbox-bank-rewards.example/"
+    html = '<a href="https://www.sandboxbank.example/">Sandbox Bank</a>'
+    d = _det(url, title="Sandbox Bank rewards", dom_path=_dom(tmp_path, html))
+    b = BrandMatch(brand_id="sandbox_bank", name_en="Sandbox Bank", confidence=0.9, methods=["text"],
+                   official_domains=["sandboxbank.example"], asks_for=[])
+    v = score("t22", url, [d], Intel(domain="sandbox-bank-rewards.example", age_days=3), b, None)
+    assert v.label == "scam"

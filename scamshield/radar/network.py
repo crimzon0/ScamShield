@@ -80,8 +80,12 @@ def _features() -> dict[str, dict[str, set]]:
     for d, f in feats.items():
         for k in list(f):
             f[k] = {v for v in f[k] if count[(k, v)] <= MAX_SHARE}
-        if is_shared_host(d):
-            f["ip"] = set()
+        if is_shared_host(d):  # platform infra (blogspot/pages.dev IPs, NS, wildcard cert) is not a link
+            f["ip"], f["ns"], f["favicon"] = set(), set(), set()
+            f["cert"] = {v for v in f["cert"] if v.startswith(("crtsh:", "fp:"))}
+        # stub/fixture data (documentation ranges, .example NS) must never form a network
+        f["ip"] = {v for v in f["ip"] if not v.startswith(("203.0.113.", "192.0.2."))}
+        f["ns"] = {v for v in f["ns"] if not v.endswith(".example")}
     return feats
 
 
@@ -131,8 +135,15 @@ def clusters(min_size: int = 2) -> list[list[str]]:
             for o in doms[1:]:
                 parent[find(o)] = find(doms[0])
         groups: dict[str, list] = defaultdict(list)
+        try:
+            from .watchlist import _is_official_fast, _wl
+
+            off = _wl()["official_set"]
+        except Exception:
+            off = frozenset()
         for d in feats:
-            groups[find(d)].append(d)
+            if not (off and _is_official_fast(d, off)):  # official brand networks are not scam networks
+                groups[find(d)].append(d)
         return sorted([sorted(g) for g in groups.values() if len(g) >= min_size], key=len, reverse=True)
     except Exception:
         return []
