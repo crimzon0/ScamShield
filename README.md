@@ -275,7 +275,7 @@ Time to detection is quoted only where the start time is a CT log timestamp or a
 
 Not all radar verdicts are right. Some `uaepass` hosts look like legitimate third-party UAE PASS integrations: after re-scan `uaepass.hubpay.io` and `uaepass.appchecker.net` are suspicious 59, `uaepass.magure.ai` legitimate 25, and `uaepass.uat.finwall.studio` still scam 88 (unverified either way). Radar hits are not part of the precision numbers above, which is why the pilot keeps an analyst in the loop before any takedown.
 
-**Engineering checks:** `make test` result as recorded in PROGRESS.md (no `.env`, no API keys). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput. Final scoring-engine fingerprint: `db475dd39c6eb6a5`.
+**Engineering checks:** `make test`: 300 passed, 87 skipped (network-marked) on the final engine, with no `.env` and no API keys; network suites run separately (87/87 passed). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput. Final scoring-engine fingerprint: `db475dd39c6eb6a5`.
 
 ## 8. Limitations (honest)
 

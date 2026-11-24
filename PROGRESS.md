@@ -31,9 +31,15 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - 19:46 UTC wave 1 spawned: detonator, intel, brand, verdict, radar, helpline, evidence, dashboard
 
 ## Needs a human
-- GOOGLE_PLACES_API_KEY (helpline live Maps mode; synthetic mode used meanwhile)
-- SERPAPI_KEY (ads/search radar + snippet check)
-- LLM_API_KEY (brand LLM claim analysis; keyword rules used meanwhile)
+- GOOGLE_PLACES_API_KEY: live Google Maps helpline search is implemented and unit-tested but has never run live; synthetic, clearly-labelled samples are used meanwhile.
+- SERPAPI_KEY: sponsored/organic search-ad collector (radar) and search-snippet helpline check; both report "unavailable" without it.
+- LLM_API_KEY (+ LLM_PROVIDER): LLM brand-claim analysis is wired and mock-tested only; keyword rules used meanwhile.
+- URLSCAN_API_KEY, SAFE_BROWSING_API_KEY, a Cert Spotter key: optional intel sources (no_key today); crt.sh rate-limits us (429), so cert_first_seen is often empty.
+- Registry review: all 33 brands are verified:false; 23+ open facts in data/registry_todo.md (ADCB/Salik/DEWA/ADNOC/Aramex/Emirates/Etihad confirmed only via search extracts; Dubai Police has no E.164 number; moi-cpc.ae; emiratesnbd.com.eg).
+- Pilot facts: Aman 8002626 and the u.ae eCrime page are from news/search sources; confirm with Abu Dhabi Police (docs/pilot.md).
+- README team names placeholder; Marp render of docs/slides.md not checked; record the 60 s video.
+- Stop background processes when done: the demo server on :8000, `docker compose down` (certstream container), and radar's collectors. Radar reported PIDs 23408, 19616, 61584, 59928, 45560, 61036; its own attempt to stop the orphaned loop (23408) was blocked by the permission check, so the lead did not do it on its behalf.
+- Open accuracy question: uaepass.uat.finwall.studio still scores scam 88 (possibly a legitimate integrator staging host); unverified.
 
 ## Done-when verification
 ### 1. make test — PASS (20:24-20:29 UTC, no .env / no API keys)
