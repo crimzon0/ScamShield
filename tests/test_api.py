@@ -190,3 +190,11 @@ def test_eval_endpoint(client, monkeypatch, tmp_path):
     (tmp_path / "last_eval.json").write_text('{"n": 10, "precision": 1.0, "recall": 0.8}', encoding="utf-8")
     out = client.get("/api/eval").json()
     assert out["precision"] == 1.0 and out["generated_at"]
+
+
+def test_radar_collectors_and_feed_extra(client):
+    c = client.get("/api/radar/collectors").json()
+    assert "certstream" in c and "state" in c["certstream"] and "backfill" in c
+    db.save_radar_hit(fixtures.radar_hit())
+    rows = client.get("/api/radar").json()
+    assert rows and rows[0]["time_to_detection_seconds"] is not None and "extra" in rows[0]

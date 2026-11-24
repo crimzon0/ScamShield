@@ -31,7 +31,8 @@ export interface ScanResult {
 export interface ScanRow { scan_id: string; url: string; created_at: string; score: number; label: Label; domain?: string; is_fixture?: boolean }
 export interface RadarRow {
   id: number; domain: string; source: string; matched_term: string; brand_id?: string | null; first_seen: string;
-  flagged_at: string; scan_id?: string | null; score?: number | null; label?: Label | null; time_to_detection_seconds?: number | null; is_fixture?: boolean;
+  flagged_at: string; scan_id?: string | null; score?: number | null; label?: Label | null; time_to_detection_seconds?: number | null; is_fixture?: boolean; time_to_detection_human?: string;
+  extra?: { official?: string; fuzzer?: string; match_kind?: string; crtsh_url?: string; host?: string; [k: string]: unknown };
 }
 export interface PhoneRow {
   id: number; brand_id: string; brand_name_en?: string; brand_name_ar?: string; query: string; source: string;
@@ -53,6 +54,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
+export interface CollectorStatus { state?: string; reason?: string; certs?: number; messages?: number; hits?: number; started_at?: string; last_error?: string; queries?: number; at?: string }
+export interface Collectors { certstream?: CollectorStatus; search?: CollectorStatus; backfill?: { running: boolean; last_started?: string | null } }
 export interface EvalMetrics { precision?: number; recall?: number; f1?: number; fpr?: number; n?: number; dataset?: string; tp?: number; fp?: number; fn?: number; tn?: number }
 export interface EvalResult {
   generated_at?: string; dataset?: string; n?: number; threshold?: string; error?: string;
@@ -81,6 +84,7 @@ export const api = {
   radar: () => req<RadarRow[]>("/api/radar"),
   radarStatus: () => req<{ running: boolean; last_started?: string | null; last_count?: number | null; error?: string }>("/api/radar/status"),
   backfill: () => req<{ started: boolean }>("/api/radar/backfill", { method: "POST" }),
+  collectors: () => req<Collectors>("/api/radar/collectors"),
   evalResults: () => req<EvalResult | null>("/api/eval"),
   helpline: () => req<PhoneRow[]>("/api/helpline"),
   helplineRun: () => req<{ findings: number }>("/api/helpline/run", json({})),

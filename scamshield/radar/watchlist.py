@@ -25,6 +25,10 @@ DEFAULT_STOP = {"bank", "login", "secure", "police", "dubai", "abudhabi", "emira
 # ASCII terms shorter than this (tamm, adcb, rta, icp, salik, ...) must be a whole host token, or a token
 # made of the term plus a scam-typical affix (tamm-pay, adcbverify, uaesalik), never an arbitrary substring.
 SUBSTRING_MIN = 7
+# registry-controlled / proxy namespaces scammers cannot register (government zone, Microsoft Defender for
+# Cloud Apps session proxy which rewrites every visited host as <host>.mcas.ms)
+BENIGN_SUFFIXES = (".gov.ae", ".mil.ae", ".mcas.ms", ".mcas-df.ms", ".admin-mcas.ms", ".admin-mcas-df.ms",
+                   ".mcas-gov.us", ".mcas.us")
 PERM_MIN_LABEL = 7
 AFFIXES = sorted({
     "pay", "payment", "payments", "fine", "fines", "login", "signin", "gov", "ae", "uae", "online", "verify",
@@ -343,6 +347,8 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         if not host or "." not in host:
             return None
         wl = _wl(include_fictional)
+        if host.endswith(BENIGN_SUFFIXES):
+            return None
         if wl["official"] and _is_official_fast(host, wl["official_set"]):
             return None
         squashed0 = _squash(host)

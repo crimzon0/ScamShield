@@ -287,8 +287,44 @@ def _radar_row(h) -> dict:
 
 
 @app.get("/api/radar")
-def radar_hits(limit: int = 200):
-    return [_radar_row(h) for h in db.list_radar_hits(limit=max(1, min(limit, 1000)))]
+def radar_hits(limit: int = 200, source: Optional[str] = None):
+    """radar.feed() (richer: extra.official / extra.fuzzer, human TTD) with a db fallback."""
+    limit = max(1, min(limit, 1000))
+    try:
+        from scamshield.radar import feed
+
+        rows = feed(limit=limit, source=source)
+        if isinstance(rows, list):
+            out = []
+            for r in rows:
+                d = _dump(r) if isinstance(r, BaseModel) else dict(r)
+                if d.get("time_to_detection_seconds") is None:
+                    fs, fa = _parse_dt(d.get("first_seen")), _parse_dt(d.get("flagged_at"))
+                    d["time_to_detection_seconds"] = int((fa - fs).total_seconds()) if fs and fa else None
+                d["is_fixture"] = is_fixture(d.get("domain", ""), d.get("brand_id"))
+                out.append(d)
+            return out
+    except Exception:
+        log.exception("radar.feed failed; falling back to db")
+    hits = db.list_radar_hits(limit=limit)
+    return [_radar_row(h) for h in hits if not source or h.source == source]
+
+
+@app.get("/api/radar/collectors")
+def radar_collectors():
+    """Collector health for the Radar page: live CT stream, search collector, API-triggered backfill."""
+    out: dict[str, Any] = {"backfill": _radar_state}
+    try:
+        from scamshield.radar import certstream
+
+        out["certstream"] = certstream.status()
+    except Exception as e:
+        out["certstream"] = {"state": "unavailable", "reason": str(e)}
+    try:
+        out["search"] = json.loads((ROOT / "data" / "radar" / "search_status.json").read_text(encoding="utf-8"))
+    except Exception:
+        out["search"] = {"state": "unavailable", "reason": "never ran"}
+    return out
 
 
 @app.get("/api/radar/status")

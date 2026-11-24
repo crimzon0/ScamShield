@@ -73,7 +73,7 @@ def test_match_basic_and_official_excluded():
     assert match("emiratesndb.com")[1] == "emirates_nbd"  # transposition
     # official domains and their subdomains never match
     for d in ("uaepass.ae", "id.uaepass.ae", "www.uaepass.ae", "online.emiratesnbd.com", "emiratesnbd.com",
-              "*.salik.ae", "tamm.abudhabi", "x.tamm.abudhabi"):
+              "*.salik.ae", "tamm.abudhabi", "x.tamm.abudhabi", "uaepass.federalerp.gov.ae", "uaepass.ae.mcas.ms"):
         assert match(d) is None, d
 
 

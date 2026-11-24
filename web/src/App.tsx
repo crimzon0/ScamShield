@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { api, downloadBundle, EvalResult, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
+import { api, Collectors, downloadBundle, EvalResult, Label, PhoneRow, RadarRow, ScanResult, ScanRow } from "./api";
 import { dict, fmtUtc, humanDuration, Key, Lang } from "./i18n";
 
 // ------------------------------------------------------------------ i18n context
@@ -391,6 +391,7 @@ function RadarPage({ go }: { go: (r: string) => void }) {
   const sinceHm = since ? fmtUtc(since).slice(11, 16) : "";
   return (
     <>
+    <CollectorBar />
     {rows && <RadarKpis rows={rows} />}
     <Card title={t("radarTitle")} actions={<>
       <BundleButton ids={(rows || []).filter((h) => h.scan_id).map((h) => h.scan_id as string)} />
@@ -401,9 +402,10 @@ function RadarPage({ go }: { go: (r: string) => void }) {
           <thead><tr><th>{t("colDomain")}</th><th>{t("colSource")}</th><th>{t("colTerm")}</th><th>{t("colBrand")}</th><th>{t("colFirstSeen")}</th><th>{t("colFlagged")}</th><th>{t("colTtd")}</th><th>{t("colVerdict")}</th></tr></thead>
           <tbody>{rows.map((h) => (
             <tr key={h.id} className={h.scan_id ? "click" : ""} onClick={() => h.scan_id && go(`/scan/${h.scan_id}`)}>
-              <td><Ltr><code>{h.domain}</code></Ltr> <FixtureBadge show={h.is_fixture} /></td><td><span className="chip">{h.source}</span></td><td><Ltr>{h.matched_term}</Ltr></td>
+              <td><Ltr><code>{h.domain}</code></Ltr> <FixtureBadge show={h.is_fixture} />
+                {h.extra?.official && <div className="muted small">{t("imitates")} <Ltr><code>{h.extra.official}</code></Ltr>{h.extra.fuzzer && <> (<span className="chip">{h.extra.fuzzer}</span>)</>}</div>}</td><td><span className="chip">{h.source}</span></td><td><Ltr>{h.matched_term}</Ltr></td>
               <td>{h.brand_id || "—"}</td><td className="nowrap"><Ltr>{fmtUtc(h.first_seen)}</Ltr></td><td className="nowrap"><Ltr>{fmtUtc(h.flagged_at)}</Ltr></td>
-              <td className="nowrap ttd">{humanDuration(h.time_to_detection_seconds, t)}</td>
+              <td className="nowrap ttd" title={h.time_to_detection_human}>{humanDuration(h.time_to_detection_seconds, t)}</td>
               <td className="nowrap">{h.score != null && <span className="num">{h.score} </span>}<LabelPill label={h.label} /></td>
             </tr>))}</tbody>
         </table></div>
@@ -411,6 +413,35 @@ function RadarPage({ go }: { go: (r: string) => void }) {
     </Card>
     <AccuracyCard />
     </>
+  );
+}
+
+function CollectorBar() {
+  const { t, lang } = useI18n();
+  const [c, setC] = useState<Collectors | null>(null);
+  useEffect(() => {
+    const load = () => api.collectors().then(setC).catch(() => undefined);
+    load();
+    const id = window.setInterval(load, 10000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (!c) return null;
+  const ct = c.certstream || {};
+  const st = ct.state === "running" ? "on" : ct.state === "stopped" ? "off" : "na";
+  const word = st === "on" ? t("ctConnected") : st === "off" ? t("ctStopped") : t("ctUnavailable");
+  const n = (x?: number) => (x == null ? "—" : x.toLocaleString(lang === "ar" ? "ar-AE" : "en-US"));
+  const s = c.search || {};
+  return (
+    <div className="collectors" role="status">
+      <span className={`dot dot-${st}`} aria-hidden />
+      <strong>{t("ctStream")}:</strong> {word}
+      {st === "on" && <>, {n(ct.certs ?? ct.messages)} {t("certsProcessed")} <span className="muted small">({t("sinceLabel")} <Ltr>{fmtUtc(ct.started_at)}</Ltr>)</span></>}
+      {st !== "on" && ct.reason && <span className="muted small"> ({ct.reason})</span>}
+      <span className="sep" />
+      <span className={`dot dot-${s.state === "running" || s.state === "ok" ? "on" : "na"}`} aria-hidden />
+      <strong>{t("searchCollector")}:</strong> {s.state === "unavailable" ? t("ctUnavailable") : s.state || "—"}
+      {s.reason && <span className="muted small"> ({s.reason})</span>}
+    </div>
   );
 }
 

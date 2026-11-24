@@ -96,6 +96,8 @@ def hit_from_match(domain: str, source: str, first_seen: datetime, m: dict, extr
     for k in ("fuzzer", "official", "theme", "lang"):
         if m.get(k):
             ex[k] = m[k]
+    if m.get("registrable") and domain != m["registrable"]:
+        ex["subdomain_only"] = True  # brand term only in a subdomain of someone else's domain (lower prior)
     ex.update(extra or {})
     return RadarHit(domain=domain, source=source, matched_term=m.get("term", ""), brand_id=m.get("brand_id"),
                     first_seen=_aware(first_seen), flagged_at=flagged_at or utcnow(), extra=ex)

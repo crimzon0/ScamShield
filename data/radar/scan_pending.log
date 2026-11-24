@@ -1,0 +1,19 @@
+2026-11-25 00:20:10,901 ERROR whois.whois Error trying to connect to socket: closing socket - [Errno 11001] getaddrinfo failed
+scanned 17 hits
+uaepass.hubpay.io                             crtsh          term=uaepass          brand=uae_pass         first_seen=2026-08-05T00:00:00 flagged_at=2026-11-24T20:19:28 ttd=111d20h label=likely_scam score=65 scan=722bb283cff5
+uaepass-choc.staging-api.fill-easy.com        crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-02T05:24:21 flagged_at=2026-11-24T20:19:28 ttd= 83d14h label=suspicious score=50 scan=fd1c8616148d
+uaepass.choc.staging-api.fill-easy.com        crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-02T08:10:10 flagged_at=2026-11-24T20:19:28 ttd= 83d12h label=suspicious score=50 scan=5da20e0a313a
+uaepass-id.dev.signiflow.com                  crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-02T13:31:45 flagged_at=2026-11-24T20:19:28 ttd=  83d6h label=legitimate score=0 scan=3dca260f9b4e
+uaepass.help                                  crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-09T04:16:44 flagged_at=2026-11-24T20:19:28 ttd= 76d16h label=scam score=97 scan=32d17bca37f2
+uaepass.dubaicityguide.com                    crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-12T05:54:44 flagged_at=2026-11-24T20:19:28 ttd= 73d14h label=scam score=85 scan=fc49b6b8c4a8
+uaepass-kyc.adi.web3lab.dev                   crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-12T17:58:24 flagged_at=2026-11-24T20:19:28 ttd=  73d2h label=scam score=100 scan=b54295261633
+uaepass.quadrabay.com                         crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-20T15:02:51 flagged_at=2026-11-24T20:19:28 ttd=  65d5h label=suspicious score=50 scan=7a0920fa46b7
+uaepass.appchecker.net                        crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-21T00:00:00 flagged_at=2026-11-24T20:19:28 ttd= 64d20h label=likely_scam score=65 scan=8856f10f7ac1
+uaepass.digital                               crtsh          term=uaepass          brand=uae_pass         first_seen=2026-09-28T17:37:19 flagged_at=2026-11-24T20:19:28 ttd=  57d2h label=scam score=100 scan=4ce81e048222
+uaepasses.com                                 crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-06T12:47:00 flagged_at=2026-11-24T20:19:28 ttd=  49d7h label=scam score=100 scan=5c55c14f03e0
+uaepassloginflow.prototype.disprz.com         crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-07T13:37:01 flagged_at=2026-11-24T20:19:28 ttd=  48d6h label=suspicious score=53 scan=4417a9de450f
+uaepass.dev.authologic.com                    crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-07T23:10:07 flagged_at=2026-11-24T20:19:28 ttd= 47d21h label=suspicious score=50 scan=a9152a4f769e
+uaepass-auth.directschool.workers.dev         crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-08T08:33:43 flagged_at=2026-11-24T20:19:28 ttd= 47d11h label=likely_scam score=72 scan=30563c09df15
+uaepass.org                                   crtsh          term=uaepass          brand=uae_pass         first_seen=2026-08-20T04:11:44 flagged_at=2026-11-24T20:19:28 ttd= 96d16h label=likely_scam score=70 scan=efd1f6ad4cf0
+uaepass.magure.ai                             crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-09T04:24:38 flagged_at=2026-11-24T20:19:28 ttd= 46d15h label=likely_scam score=60 scan=e98d541988ab
+uaepass.uat.finwall.studio                    crtsh          term=uaepass          brand=uae_pass         first_seen=2026-10-15T05:57:57 flagged_at=2026-11-24T20:19:28 ttd= 40d14h label=scam score=88 scan=909196f6c4ed

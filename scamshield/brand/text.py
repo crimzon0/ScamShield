@@ -47,13 +47,21 @@ ASKS = {
     },
 }
 _EID_RE = re.compile(r"\b784[-\s]?\d{4}[-\s]?\d{7}[-\s]?\d\b")
-_FIELD_HINTS = {  # form field name / type fragments
-    "credentials": ["password", "passwd", "pwd", "username", "userid", "login"],
-    "card": ["card", "cc_", "ccnum", "cvv", "cvc", "expiry", "exp_", "pan"],
-    "otp": ["otp", "sms", "verif", "code"],
-    "emirates_id": ["emiratesid", "emirates_id", "eid"],
-    "personal_info": ["dob", "birth", "phone", "mobile", "address", "passport", "fullname", "email"],
+_FIELD_HINTS = {  # form field name tokens (exact token match, or token startswith for long hints)
+    "credentials": ["password", "passwd", "pwd", "username", "userid", "login", "pass"],
+    "card": ["card", "cardnumber", "ccnum", "ccnumber", "cvv", "cvc", "cvv2", "expiry", "expdate", "pan", "cc"],
+    "otp": ["otp", "smscode", "verificationcode", "verifycode", "onetime", "tac"],
+    "emirates_id": ["emiratesid", "eid", "idnumber"],
+    "personal_info": ["dob", "birthdate", "birthday", "phone", "mobile", "address", "passport", "fullname", "email"],
 }
+
+
+def _field_tokens(name: str) -> set[str]:
+    raw = re.sub(r"([a-z])([A-Z])", r"\1 \2", name or "")
+    toks = [t for t in re.split(r"[^a-z0-9]+", raw.lower()) if t]
+    out = set(toks)
+    out |= {a + b for a, b in zip(toks, toks[1:])}  # card_number -> cardnumber
+    return out
 
 
 # Scam context: urgency / account-action / fine-payment phrasing. Used only to decide whether a body-text
@@ -94,9 +102,11 @@ def detect_asks(text_norm: str, fields) -> list[str]:
         found.add("emirates_id")
     for f in fields or []:
         blob = norm(f"{f.name} {f.label} {f.placeholder}")
-        nm = blob.replace(" ", "").replace("-", "_")
+        if (f.type or "").lower() in ("checkbox", "radio", "search", "submit", "button", "hidden"):
+            continue
+        toks = _field_tokens(f.name)
         for k, hints in _FIELD_HINTS.items():
-            if any(h in nm for h in hints):
+            if toks & set(hints):
                 found.add(k)
         for k, pats in _ask_patterns().items():
             if k != "payment" and any(p.search(blob) for p in pats):

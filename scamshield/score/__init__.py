@@ -54,23 +54,58 @@ EXTRA_SHARED = {
 }
 SHORTENERS = {"urlz.li", "bit.ly", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rebrand.ly", "cutt.ly",
               "s.id", "shorturl.at", "rb.gy", "t.ly", "bitly.com", "lnkd.in", "qrco.de", "flyn.co", "tiny.cc"}
-# Globally phished brand keywords -> display name. Only used to spot the name in an address/title that is NOT theirs.
+# Globally impersonated brands (sectors that dominate public brand-phishing rankings, e.g. Check Point quarterly
+# brand-phishing reports and APWG sector reports: tech/email, social, retail, couriers, payments/fintech, crypto,
+# streaming/gaming, banks across regions) -> display name. Used ONLY to spot the brand's name in an address or page
+# title that is NOT on the brand's own registrable domain (and not a Tranco top-100k site); no official domains are
+# asserted here. Rules: substring-matched names are >= 5 chars and distinctive (not dictionary words); short or
+# common-word names go in SHORT_BRANDS and must stand alone between '.', '-' or digits.
 GLOBAL_BRANDS = {
-    "paypal": "PayPal", "icloud": "Apple iCloud", "microsoft": "Microsoft", "office365": "Microsoft",
-    "outlook": "Microsoft", "onedrive": "Microsoft", "sharepoint": "Microsoft", "netflix": "Netflix",
-    "amazon": "Amazon", "coinbase": "Coinbase", "binance": "Binance", "metamask": "MetaMask", "trustwallet": "Trust Wallet",
+    # tech / email / cloud
+    "microsoft": "Microsoft", "office365": "Microsoft", "microsoft365": "Microsoft", "outlook": "Microsoft",
+    "onedrive": "Microsoft", "sharepoint": "Microsoft", "hotmail": "Microsoft", "google": "Google", "gmail": "Gmail",
+    "youtube": "YouTube", "icloud": "Apple iCloud", "appleid": "Apple", "itunes": "Apple", "adobe": "Adobe",
+    "docusign": "DocuSign", "dropbox": "Dropbox", "wetransfer": "WeTransfer", "yahoo": "Yahoo", 
+    "salesforce": "Salesforce", "godaddy": "GoDaddy", "namecheap": "Namecheap", "mailchimp": "Mailchimp",
+    # social / messaging
     "facebook": "Facebook", "instagram": "Instagram", "whatsapp": "WhatsApp", "telegram": "Telegram",
-    "google": "Google", "gmail": "Gmail", "youtube": "YouTube", "linkedin": "LinkedIn", "fedex": "FedEx",
-    "usps": "USPS", "royalmail": "Royal Mail", "roblox": "Roblox", "steamcommunity": "Steam", "santander": "Santander",
-    "allegro": "Allegro", "telekom": "Telekom", "wellsfargo": "Wells Fargo", "hsbc": "HSBC",
-    "citibank": "Citibank", "barclays": "Barclays", "docusign": "DocuSign", "dropbox": "Dropbox", "adobe": "Adobe",
-    "kraken": "Kraken", "bybit": "Bybit", 
-    "careem": "Careem", "talabat": "talabat", "aramex": "Aramex", 
+    "linkedin": "LinkedIn", "tiktok": "TikTok", "discord": "Discord", "snapchat": "Snapchat", "twitter": "Twitter",
+    # retail / marketplaces
+    "amazon": "Amazon", "walmart": "Walmart", "costco": "Costco", "alibaba": "Alibaba", "aliexpress": "AliExpress",
+    "shopify": "Shopify", "mercadolibre": "Mercado Libre", "allegro": "Allegro", "vinted": "Vinted",
+    "airbnb": "Airbnb",
+    # couriers / post
+    "fedex": "FedEx", "royalmail": "Royal Mail", "postnl": "PostNL", "laposte": "La Poste", "correos": "Correos",
+    "canadapost": "Canada Post", "auspost": "Australia Post", "aramex": "Aramex", 
+    # payments / fintech
+    "paypal": "PayPal", "venmo": "Venmo", "cashapp": "Cash App", "zelle": "Zelle", 
+    "revolut": "Revolut", "mercadopago": "Mercado Pago", "payoneer": "Payoneer", "westernunion": "Western Union",
+    "moneygram": "MoneyGram", "americanexpress": "American Express", "mastercard": "Mastercard",
+    # crypto
+    "coinbase": "Coinbase", "binance": "Binance", "metamask": "MetaMask", "trustwallet": "Trust Wallet",
+    "kraken": "Kraken", "bybit": "Bybit", "kucoin": "KuCoin", "trezor": "Trezor", 
+    "uniswap": "Uniswap", "opensea": "OpenSea", "bitget": "Bitget", 
+    # streaming / gaming
+    "netflix": "Netflix", "spotify": "Spotify", "disneyplus": "Disney+", "roblox": "Roblox",
+    "steamcommunity": "Steam", "steampowered": "Steam", "epicgames": "Epic Games", "playstation": "PlayStation",
+    # banks (global / regional)
+    "santander": "Santander", "wellsfargo": "Wells Fargo", "bankofamerica": "Bank of America", "hsbc": "HSBC",
+    "citibank": "Citibank", "barclays": "Barclays", "lloyds": "Lloyds", "natwest": "NatWest", "bradesco": "Bradesco",
+    "nubank": "Nubank", "bancodobrasil": "Banco do Brasil", "rabobank": "Rabobank", "deutschebank": "Deutsche Bank",
+    "sparkasse": "Sparkasse", "creditagricole": "Credit Agricole", "standardchartered": "Standard Chartered",
+    "alrajhi": "Al Rajhi Bank", 
+    # telecom
+    "telekom": "Telekom", "vodafone": "Vodafone", "verizon": "Verizon", "xfinity": "Xfinity",
+    # UAE / GCC consumer brands not in the registry
+    "careem": "Careem", "talabat": "talabat",
 }
 _KW_RE = re.compile("|".join(sorted(GLOBAL_BRANDS, key=len, reverse=True)))
 SHORT_BRANDS = {"dpd": "DPD", "dhl": "DHL", "ups": "UPS", "ebay": "eBay", "okx": "OKX", "usps": "USPS", "etsy": "Etsy",
-                "hmrc": "HMRC", "irs": "IRS", "bdo": "BDO", "gcash": "GCash", "itau": "Itau", "bradesco": "Bradesco",
-                "chase": "Chase", "apple": "Apple", "meta": "Meta", "steam": "Steam", "ledger": "Ledger"}
+                "hmrc": "HMRC", "irs": "IRS", "bdo": "BDO", "gcash": "GCash", "itau": "Itau", "gls": "GLS",
+                "chase": "Chase", "apple": "Apple", "meta": "Meta", "steam": "Steam", "ledger": "Ledger",
+                "ing": "ING", "bbva": "BBVA", "citi": "Citi", "amex": "American Express", "zoom": "Zoom", "booking": "Booking.com",
+                "phantom": "Phantom", "stripe": "Stripe", "evri": "Evri", "qnb": "QNB", "blockchain": "Blockchain.com", "n26": "N26", "bnp": "BNP Paribas",
+                "stc": "stc", "sabb": "SABB", "kfh": "KFH", "nbk": "NBK"}
 GLOBAL_BRANDS.update(SHORT_BRANDS)
 _SHORT_RE = re.compile(r"(^|[.\-\d])(" + "|".join(SHORT_BRANDS) + r")([.\-\d]|$)")
 _TITLE_RE = re.compile(_KW_RE.pattern + "|webmail|roundcube|zimbra|outlook web|office 365|microsoft 365|"

@@ -152,10 +152,13 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     # (dubaiholding.com: "Dubai Holding became the second-largest shareholder in Emirates NBD").
     # It counts as a claim only if the page also asks for sensitive data; otherwise it is capped below the
     # claim threshold and can only be lifted by another signal (logo/screenshot hash, LLM, hostname).
-    sensitive = bool({"credentials", "card", "otp", "emirates_id"} & set(asks)) or claim_context(parts["text"])
+    form_asks = set(detect_asks("", det.form_fields))
+    form_sensitive = bool({"credentials", "card", "otp", "emirates_id"} & form_asks)
+    ctx = claim_context(parts["text"])
+    sensitive = form_sensitive or ctx
     for r in scored.values():
         if r.get("parts") == ["text"]:
-            cap = 0.5 if sensitive else 0.15
+            cap = 0.5 if form_sensitive else 0.25 if ctx else 0.15
             if r["confidence"] > cap:
                 r["confidence"] = cap
                 r["evidence"] = r["evidence"] + ["body-text mention only" + ("" if sensitive else " (not a brand claim)")]

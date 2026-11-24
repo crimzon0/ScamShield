@@ -184,3 +184,12 @@ html[lang="ar"] .scanbox input:placeholder-shown { direction: rtl; font-family: 
 .acc th { text-align: start; }
 .acc tbody th { font-size: 13px; color: var(--ink); white-space: nowrap; }
 .acc tr.acc-honest td, .acc tr.acc-honest th { background: #fff8e6; }
+
+.collectors { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius); background: var(--navy-800); color: #dbe5f3; font-size: 13px; }
+.collectors .muted { color: #9fb2cf; }
+.collectors .sep { width: 1px; height: 16px; background: #34507a; margin-inline: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #7d8aa0; }
+.dot-on { background: #2ecc71; box-shadow: 0 0 0 3px rgba(46,204,113,.25); animation: pulse 2s ease-in-out infinite; }
+.dot-off { background: var(--susp); }
+.dot-na { background: #7d8aa0; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(46,204,113,.05); } }
