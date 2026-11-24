@@ -2,16 +2,16 @@
  "state": "running",
  "url": "ws://localhost:8080/",
  "started_at": "2026-11-24T20:18:35.790585+00:00",
- "messages": 770290,
- "certs": 770290,
- "hits": 1,
- "new_hits": 0,
+ "messages": 1124006,
+ "certs": 1124006,
+ "hits": 3,
+ "new_hits": 2,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "salik.work",
-  "term": "salik",
-  "at": "2026-11-24 20:17:29.546705+00:00"
+  "domain": "almashreqmedical.com",
+  "term": "mashreq",
+  "at": "2026-11-24 20:23:58.475614+00:00"
  },
  "queue": 0
 }

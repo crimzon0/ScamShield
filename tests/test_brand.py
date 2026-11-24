@@ -271,3 +271,52 @@ async def test_body_mention_is_not_a_claim():
     m2 = await match_brand(det("https://holding-verify.example/", "Verify", text,
                                [FormField(name="card", label="Card number"), FormField(name="otp", label="OTP")]))
     assert m2.brand_id == "emirates_nbd" and not m2.is_official_domain
+
+
+def _synthetic_page(path, seed):
+    import random
+
+    from PIL import Image, ImageDraw
+
+    rnd = random.Random(seed)
+    im = Image.new("RGB", (390, 844), "white")
+    dr = ImageDraw.Draw(im)
+    for _ in range(14):  # header band with random blocks = a distinctive "logo/nav" layout
+        x, y = rnd.randrange(0, 360), rnd.randrange(0, 180)
+        dr.rectangle([x, y, x + rnd.randrange(20, 120), y + rnd.randrange(10, 60)],
+                     fill=(rnd.randrange(256), rnd.randrange(256), rnd.randrange(256)))
+    im.save(path)
+    return path
+
+
+async def test_screenshot_hash_on_unofficial_domain(tmp_path, monkeypatch):
+    from scamshield.brand import visual
+
+    ref = _synthetic_page(tmp_path / "ref.png", 7)
+    monkeypatch.setattr(visual, "_refs", lambda: {"sandbox_bank": {"favicon": [], "screenshot_top": [visual.phash_image(ref, 0.25)]}})
+    clone = Detonation(url="https://secure-portal.example/", final_url="https://secure-portal.example/",
+                       title="Welcome", visible_text="Sign in", screenshot_path=str(ref))
+    m = await match_brand(clone)
+    assert m.brand_id == "sandbox_bank" and "screenshot_hash" in m.methods and m.confidence >= 0.5
+    assert not m.is_official_domain
+    official = clone.model_copy(update={"url": "https://www.sandboxbank.example/", "final_url": "https://www.sandboxbank.example/"})
+    m2 = await match_brand(official)
+    assert m2.brand_id == "sandbox_bank" and m2.is_official_domain
+    other = Detonation(url="https://blog.example/", final_url="https://blog.example/",
+                       screenshot_path=str(_synthetic_page(tmp_path / "other.png", 99)))
+    assert (await match_brand(other)).brand_id is None
+
+
+def test_reference_hashes_do_not_collide_across_brands():
+    import json
+
+    import imagehash
+
+    from scamshield.brand.visual import HASHES_PATH, SCREEN_MAX
+
+    d = json.loads(HASHES_PATH.read_text(encoding="utf-8"))
+    refs = [(b, imagehash.hex_to_hash(h)) for b, v in d.items() if not b.startswith("_") for h in v.get("screenshot_top", [])]
+    for i, (b1, h1) in enumerate(refs):
+        for b2, h2 in refs[i + 1:]:
+            if b1 != b2:
+                assert h1 - h2 > 2 * SCREEN_MAX, (b1, b2, h1 - h2)

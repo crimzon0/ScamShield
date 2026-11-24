@@ -15,7 +15,7 @@ from scamshield.core.config import DATA_DIR
 log = logging.getLogger(__name__)
 HASHES_PATH = DATA_DIR / "brand_assets" / "hashes.json"
 FAVICON_MAX = 6      # Hamming distance (64-bit phash)
-SCREEN_MAX = 8
+SCREEN_MAX = 8       # audit 2026-11-25: closest cross-brand reference pair = 20; 0 non-official captures within 14
 
 
 @lru_cache(maxsize=1)
@@ -82,7 +82,7 @@ def match(det) -> list[dict]:
                 for bid, r in refs.items():
                     ds = [h - x for x in r["screenshot_top"]]
                     if ds and min(ds) <= SCREEN_MAX:
-                        out.append({"id": bid, "method": "screenshot_hash", "weight": 0.35,
+                        out.append({"id": bid, "method": "screenshot_hash", "weight": 0.6 if min(ds) <= 4 else 0.45,
                                     "evidence": f"screenshot header pHash distance {min(ds)} to {bid} reference"})
     except Exception as e:
         log.debug("screenshot hash failed: %s", e)
