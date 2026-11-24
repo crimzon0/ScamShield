@@ -2,16 +2,16 @@
  "state": "running",
  "url": "ws://localhost:8080/",
  "started_at": "2026-11-24T20:32:22.502921+00:00",
- "messages": 2466971,
- "certs": 2466971,
- "hits": 2,
- "new_hits": 2,
+ "messages": 3308587,
+ "certs": 3308587,
+ "hits": 3,
+ "new_hits": 3,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "skywards.com.hk",
-  "term": "skywards",
-  "at": "2026-11-24 20:40:52.932582+00:00"
+  "domain": "tamm.works",
+  "term": "tamm",
+  "at": "2026-11-24 20:45:57.638234+00:00"
  },
  "queue": 0
 }

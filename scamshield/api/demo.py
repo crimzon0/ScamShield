@@ -1,6 +1,8 @@
 """Owner: dashboard. `make demo` -> seed the db, build the web UI if needed, serve API + UI on :8000.
 
-    python -m scamshield.api.demo [--no-seed] [--with-fixtures] [--rebuild] [--port 8000] [--host 127.0.0.1]
+    python -m scamshield.api.demo [--no-seed] [--with-fixtures] [--backfill] [--rebuild] [--port 8000] [--host 127.0.0.1]
+
+Radar hits come from the radar collectors already in the db; --backfill also queries crt.sh (rate-limited, slow).
 
 Fictional Sandbox Bank fixture data is only seeded with --with-fixtures; the UI badges it FIXTURE / تجريبي.
 """
@@ -21,7 +23,9 @@ from scamshield.core.schemas import ScanResult
 WEB = ROOT / "web"
 DEMO_URLS = [
     "https://www.tamm.abudhabi/",  # real official UAE gov site -> must be legitimate
-    "https://sandboxbank-verify-account-ae.example/login",  # dead domain -> domain-only verdict
+]
+FIXTURE_URLS = [
+    "https://sandboxbank-verify-account-ae.example/login",  # fictional dead domain -> domain-only verdict
 ]
 
 
@@ -39,7 +43,7 @@ async def _seed_scans(with_fixtures: bool) -> None:
         _p(f"fixture scan {fx.scan_id}: {fx.verdict.label} {fx.verdict.score}")
     from scamshield import pipeline
 
-    for url in DEMO_URLS:
+    for url in DEMO_URLS + (FIXTURE_URLS if with_fixtures else []):
         t0 = time.time()
         try:
             res = await asyncio.wait_for(pipeline.scan_url(url), timeout=120)
@@ -49,9 +53,9 @@ async def _seed_scans(with_fixtures: bool) -> None:
             _p(f"scan {url} failed: {e!r}")
 
 
-async def _seed_radar(with_fixtures: bool) -> None:
+async def _seed_radar(with_fixtures: bool, backfill: bool = False) -> None:
     hits = []
-    if not settings.offline:
+    if backfill and not settings.offline:
         try:
             from scamshield import radar
 
@@ -61,13 +65,19 @@ async def _seed_radar(with_fixtures: bool) -> None:
                 db.save_radar_hit(h)
         except Exception as e:
             _p(f"radar backfill unavailable: {e!r}")
-    if not hits and with_fixtures:
+    existing = [h for h in db.list_radar_hits(limit=1000) if not h.domain.endswith(".example")]
+    if existing:
+        by_src: dict[str, int] = {}
+        for h in existing:
+            by_src[h.source] = by_src.get(h.source, 0) + 1
+        _p(f"radar: {len(existing)} hits in db from collectors {by_src}")
+    if not hits and not existing and with_fixtures:
         db.save_radar_hit(fixtures.radar_hit())
         _p("radar: no live hits; saved fixture hit (badged FIXTURE)")
-    elif not hits:
-        _p("radar: no live hits (use --with-fixtures for a sample row)")
-    else:
-        _p(f"radar: {len(hits)} hits")
+    elif not hits and not existing:
+        _p("radar: no hits yet (run the radar collectors, or --backfill / --with-fixtures)")
+    elif hits:
+        _p(f"radar: crt.sh backfill added {len(hits)} hits")
 
 
 async def _seed_helpline() -> None:
@@ -103,9 +113,9 @@ def _build_web(force: bool = False) -> None:
     subprocess.run("npm run build", cwd=WEB, shell=shell, check=False)
 
 
-async def seed(with_fixtures: bool = False) -> None:
+async def seed(with_fixtures: bool = False, backfill: bool = False) -> None:
     await _seed_scans(with_fixtures)
-    await _seed_radar(with_fixtures)
+    await _seed_radar(with_fixtures, backfill)
     await _seed_helpline()
 
 
@@ -113,6 +123,7 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description="ScamShield demo server")
     ap.add_argument("--no-seed", action="store_true")
     ap.add_argument("--rebuild", action="store_true")
+    ap.add_argument("--backfill", action="store_true", help="also run a 7-day crt.sh backfill (slow, rate-limited)")
     ap.add_argument("--with-fixtures", action="store_true", help="also seed fictional Sandbox Bank sample data")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8000)
@@ -123,7 +134,7 @@ def main(argv: list[str] | None = None) -> None:
         except Exception:
             pass
     if not a.no_seed:
-        asyncio.run(seed(a.with_fixtures))
+        asyncio.run(seed(a.with_fixtures, a.backfill))
     _build_web(a.rebuild)
     import uvicorn
 
