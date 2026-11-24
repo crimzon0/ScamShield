@@ -15,6 +15,8 @@ def _lines(items, empty="-"):
 def notice_en(ctx: dict[str, Any]) -> str:
     to = ", ".join(ctx["registrar_contacts"]) or "(registrar abuse contact not found — look up via RDAP/ICANN)"
     host = ctx["hosting_contact"]
+    if not ctx.get("hosting_abuse_emails"):
+        host += " (no abuse e-mail on file — look up via IP RDAP)"
     hashes = _lines([f"{h['path']}  sha256={h['sha256']}" for h in ctx["key_hashes"]])
     return f"""DRAFT — NOT SENT — REQUIRES OFFICER REVIEW BEFORE USE
 
@@ -73,7 +75,7 @@ def notice_ar(ctx: dict[str, Any]) -> str:
 
 إلى (قسم إساءة الاستخدام لدى المسجّل): {to}
 المسجّل: {ctx['registrar'] or 'غير معروف'}
-نسخة إلى (قسم إساءة الاستخدام لدى مزوّد الاستضافة): {ctx['hosting_contact']}
+نسخة إلى (قسم إساءة الاستخدام لدى مزوّد الاستضافة): {ctx['hosting_contact_ar']}
 
 فريق مكافحة إساءة الاستخدام المحترم،
 

@@ -73,8 +73,13 @@ async def test_blank(base):
 
 
 async def test_dead():
-    # nothing listens on port 9 of localhost -> connection refused
-    d = await detonate("http://127.0.0.1:9/", scan_id="t-dead")
+    # grab a free port and release it: nothing listens there -> connection refused
+    import socket
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    d = await detonate(f"http://127.0.0.1:{port}/", scan_id="t-dead")
     assert d.status == "dead"
     assert d.error.startswith("net::ERR_")
     assert kinds(d) == ["start"]
@@ -111,13 +116,13 @@ async def test_bad_inputs_never_raise():
         assert d.status == "error" and d.error
 
 
-def test_normalize_url():
+async def test_normalize_url():
     assert normalize_url("example.ae/x") == ("http://example.ae/x", "")
     assert normalize_url("https://a.ae")[1] == ""
     assert normalize_url("file:///etc/passwd")[1]
 
 
-def test_cloak_diff_unit():
+async def test_cloak_diff_unit():
     a = Detonation(url="u", persona="uae_mobile_ad_click", final_url="https://evil.example/x", visible_text="login now",
                    form_fields=[FormField(type="password")])
     b = Detonation(url="u", persona="crawler", final_url="https://other.example/", visible_text="login now")

@@ -95,7 +95,7 @@ async def test_build_case_full(env):
         html = z.read("report.html").decode("utf-8")
         assert 'dir="rtl"' in html and 'lang="ar"' in html
         assert "بنك التجربة" in html and "سلسلة حفظ الأدلة" in html
-        assert "data:image/png;base64," in html
+        assert "data:image/jpeg;base64," in html
         rdap = json.loads(z.read("intel/rdap_whois.json"))
         assert rdap["parsed_rdap"]["registrar_abuse_emails"] == ["rdap-abuse@registrar.example"]
         assert rdap["raw_rdap"]["ldhName"] == "SANDBOX-BANK-LOGIN.EXAMPLE"
@@ -129,3 +129,33 @@ async def test_build_case_domain_only(env):
     assert Path(case.zip_path).is_file()
     with zipfile.ZipFile(case.zip_path) as z:
         assert "verdict.json" in z.namelist()
+
+
+async def test_hosting_abuse_email_and_tall_screenshot(env):
+    scan = _scan(env, scan_id="evtall01")
+    tall = env / "tall.png"
+    Image.new("RGB", (1280, 10000), (240, 240, 240)).save(tall)
+    scan.detonations[0].screenshot_path = str(tall)
+    scan.intel.hosting_abuse_emails = ["abuse@hoster.example"]
+    db.save_scan(scan)
+    case = await build_case("evtall01")
+    assert "abuse@hoster.example" in case.notice_en and "abuse@hoster.example" in case.notice_ar
+    with zipfile.ZipFile(case.zip_path) as z:
+        html = z.read("report.html").decode("utf-8")
+        assert "Top of page shown" in html and "1280x10000" in html
+        # original full-page screenshot is preserved byte-for-byte in the ZIP
+        assert z.read("screenshots/01_uae_mobile_ad_click.png") == tall.read_bytes()
+        hosting = json.loads(z.read("intel/dns_hosting.json"))
+        assert hosting["hosting_abuse_emails"] == ["abuse@hoster.example"]
+    pdf = Path(case.pdf_path).read_bytes()
+    import re
+    pages = len(re.findall(rb"/Type\s*/Page(?!s)", pdf))
+    assert 1 <= pages <= 5, pages
+
+
+def test_hosting_contact_fallback():
+    from scamshield.evidence.case import _context
+    scan = ScanResult(scan_id="x", url="https://a.example/", intel=fixtures.intel(), verdict=fixtures.verdict("x"))
+    ctx = _context(scan, "C", "2026-11-24T00:00:00Z")
+    assert ctx["hosting_contact"] == "abuse desk of Example Hosting (AS64500)"
+    assert "قسم إساءة الاستخدام" in ctx["hosting_contact_ar"]

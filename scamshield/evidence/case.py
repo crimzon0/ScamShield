@@ -114,7 +114,16 @@ def _context(scan: ScanResult, case_id: str, generated_at: str) -> dict[str, Any
     final = v.final_url or next((d.final_url for d in scan.detonations if d.final_url), "")
     asn_org = intel.asn_org if intel else ""
     asn = intel.asn if intel else ""
-    hosting_contact = (f"abuse desk of {asn_org} ({asn})" if (asn_org or asn) else "hosting provider unknown")
+    host_emails = [m for m in dict.fromkeys(getattr(intel, "hosting_abuse_emails", None) or []) if m]
+    host_desc = f"{asn_org} ({asn})" if (asn_org or asn) else ""
+    if host_emails:
+        hosting_contact = ", ".join(host_emails) + (f" — {host_desc}" if host_desc else "")
+    else:
+        hosting_contact = f"abuse desk of {host_desc}" if host_desc else "hosting provider unknown"
+    if host_emails:
+        hosting_contact_ar = hosting_contact
+    else:
+        hosting_contact_ar = f"قسم إساءة الاستخدام لدى {host_desc}" if host_desc else "مزوّد الاستضافة غير معروف"
     tls = next((d.tls for d in scan.detonations if d.tls), None)
     captured = next((iso(d.finished_at or d.started_at) for d in scan.detonations), "")
     urls = [scan.url] + [u for u in dict.fromkeys(d.url for d in scan.detonations) if u != scan.url]
@@ -134,7 +143,8 @@ def _context(scan: ScanResult, case_id: str, generated_at: str) -> dict[str, Any
         "official_domains": list(brand.official_domains) if brand else [],
         "asks_for": list(brand.asks_for) if brand else [],
         "registrar": (intel.registrar if intel else "") or rd["registrar"], "registrar_contacts": reg_contacts,
-        "hosting_contact": hosting_contact, "rdap": rd,
+        "hosting_contact": hosting_contact, "hosting_contact_ar": hosting_contact_ar,
+        "hosting_abuse_emails": host_emails, "rdap": rd,
         "domain_created": iso(intel.created) if intel else "", "age_days": intel.age_days if intel else None,
         "nameservers": (intel.nameservers if intel else []) or rd["nameservers"],
         "ip": intel.ip if intel else "", "a_records": intel.a_records if intel else [],
@@ -152,6 +162,32 @@ def _context(scan: ScanResult, case_id: str, generated_at: str) -> dict[str, Any
                          "chain": [{"url": h.url, "status": h.status, "kind": h.kind, "at": iso(h.at)}
                                    for h in d.redirect_chain]} for d in scan.detonations],
     }
+
+
+def _embed_image(path: Path, max_w: int = 900, max_ratio: float = 1.6) -> tuple[str, bool, str]:
+    """Downscale to max_w and crop to the top max_ratio*width px so a 10000px full-page capture
+    stays on one PDF page. The full original stays in the ZIP (hash-listed). Returns (data_uri, cropped, dims)."""
+    raw = path.read_bytes()
+    try:
+        from io import BytesIO
+
+        from PIL import Image
+
+        with Image.open(BytesIO(raw)) as im:
+            w, h = im.size
+            dims = f"{w}x{h}"
+            im = im.convert("RGB")
+            if w > max_w:
+                im = im.resize((max_w, max(1, round(h * max_w / w))))
+            cw, ch = im.size
+            cropped = ch > cw * max_ratio
+            if cropped:
+                im = im.crop((0, 0, cw, int(cw * max_ratio)))
+            buf = BytesIO()
+            im.save(buf, "JPEG", quality=82)
+            return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode(), cropped, dims
+    except Exception:
+        return "data:image/png;base64," + base64.b64encode(raw).decode(), False, ""
 
 
 def render_html(ctx: dict[str, Any]) -> str:
@@ -245,6 +281,7 @@ async def _build(scan: ScanResult) -> CaseFile:
         "nameservers": intel.nameservers, "ip": intel.ip, "asn": intel.asn, "asn_org": intel.asn_org,
         "hosting_country": intel.hosting_country, "cert_first_seen": intel.cert_first_seen,
         "cert_count": intel.cert_count, "blocklist_hits": intel.blocklist_hits, "safe_browsing": intel.safe_browsing,
+        "hosting_abuse_emails": getattr(intel, "hosting_abuse_emails", []),
         "tranco_rank": intel.tranco_rank, "urlscan": intel.urlscan, "sources": intel.sources,
         "fetched_at": intel.fetched_at,
     }.items()} if intel else {"error": "no intel recorded"}, kind="hosting")
@@ -268,12 +305,12 @@ async def _build(scan: ScanResult) -> CaseFile:
     ctx["screenshots"] = []
     for f in st.files:
         if f.get("kind") == "screenshot":
-            data = (stage_dir / f["path"]).read_bytes()
-            ctx["screenshots"].append({
+            data_uri, cropped, dims = _embed_image(stage_dir / f["path"])
+            ctx["screenshots"].append({"cropped": cropped, "dims": dims,
                 "persona": f.get("persona", ""), "sha256": f["sha256"],
                 "captured_at": next((iso(d.finished_at or d.started_at) for d in scan.detonations
                                      if d.persona == f.get("persona")), ""),
-                "data_uri": "data:image/png;base64," + base64.b64encode(data).decode()})
+                "data_uri": data_uri})
     html = render_html(ctx)
     st.write_text("report.html", html, kind="report_html")
     pdf_err = await html_to_pdf(html, stage_dir / "report.pdf")

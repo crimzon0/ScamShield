@@ -1,0 +1,56 @@
+url,label,source
+https://www.emiratesnbd.com/en,legit,official site (verified 200 on 2026-11-24)
+https://www.emiratesnbd.com/en/personal-banking,legit,official deep link
+https://www.adcb.com/en/personal/,legit,official deep link (403 to curl - bot protection)
+https://www.bankfab.com/en-ae/personal,legit,official deep link
+https://www.mashreq.com/en/uae/neo/,legit,official deep link
+https://www.dib.ae/,legit,official site
+https://www.adib.ae/en,legit,official site
+https://u.ae/en,legit,UAE government portal
+https://www.tamm.abudhabi/en,legit,Abu Dhabi government services
+https://uaepass.ae/,legit,UAE PASS
+https://www.adpolice.gov.ae/en,legit,Abu Dhabi Police
+https://www.dubaipolice.gov.ae/,legit,Dubai Police
+https://www.rta.ae/,legit,RTA
+https://www.etisalat.ae/en/,legit,e& (redirects to eand.ae)
+https://www.du.ae/,legit,du
+https://www.emiratespost.ae/,legit,Emirates Post
+https://www.centralbank.ae/en/,legit,CBUAE
+https://icp.gov.ae/en/,legit,ICP
+https://www.emirates.com/ae/english/,legit,Emirates airline (blocks curl)
+https://www.etihad.com/en-ae/,legit,Etihad (blocks curl)
+https://www.careem.com/,legit,Careem
+https://www.noon.com/uae-en/,legit,noon
+https://www.amazon.ae/,legit,Amazon UAE
+https://www.adnoc.ae/,legit,ADNOC
+https://www.khaleejtimes.com/,legit,news site (mentions banks)
+https://www.google.com/,legit,global
+https://www.wikipedia.org/,legit,global
+https://github.com/login,legit,global login page
+https://www.microsoft.com/en-ae,legit,global
+https://1141y-maq-4a7n-th3jc-01-10-2026-aa.pages.dev/,scam,openphish 2026-11-24
+https://sp28ct11-kavmelo-biz-zundari.pages.dev/,scam,openphish 2026-11-24
+https://mekucoinlogon.gitbook.io/us,scam,openphish 2026-11-24
+https://ephemeral-squirrel-f84ee4.netlify.app/,scam,openphish 2026-11-24
+https://my-business-105356-106518.square.site/,scam,openphish 2026-11-24
+http://hotelbs.websiteseguro.com/css/outl0ok/true/login/aces.php,scam,openphish 2026-11-24
+https://b4gpg-w01-6siw-0xlm2-18-10-2026-aa.pages.dev/qaz-wsx-edc-rfv,scam,openphish 2026-11-24
+https://stepflow2mt.swedencentral.cloudapp.azure.com/ch/ch_css_mkit/,scam,openphish 2026-11-24
+https://flyn.co/www-roblox-coms-users-2610432075-profiles,scam,openphish 2026-11-24
+https://www.belepes-telekom-hu.vh22325.vh.net.pl/,scam,openphish 2026-11-24
+http://id2140.business-support-partner.com/,scam,openphish 2026-11-24
+https://1920489-coinbase.com,scam,phishunt 2026-11-24
+https://buscarmi-icloud.app,scam,phishunt 2026-11-24
+https://procasmexico.com,scam,phishunt 2026-11-24
+https://binanceii.com,scam,phishunt 2026-11-24
+https://login.microsoftonline.xrb.okx.mybluehost.me,scam,phishunt 2026-11-24
+http://mi-santander.com,scam,phishunt 2026-11-24
+https://apexrecoveryconsulting.com.glovonetwork.com,scam,phishunt 2026-11-24
+https://user.coinbase-secured.com,scam,phishunt 2026-11-24
+https://ld-icloud.com,scam,phishunt 2026-11-24
+https://dpd-ie-kmr.club,scam,phishunt 2026-11-24
+https://netflix-dashboard-login.8-219-97-148.cpanel.site,scam,phishunt 2026-11-24
+https://binance-red-packet.vercel.app,scam,phishunt 2026-11-24
+http://allegrolokalnie.pspsp.sbs,scam,phishunt 2026-11-24
+https://office365.internal-alerts.com/i/d5b9af0d256f14c03ab8396a78d3687bf,scam,phishunt 2026-11-24
+https://security.email-microsoft.com/diyc_smavt1av3ltaq,scam,phishunt 2026-11-24

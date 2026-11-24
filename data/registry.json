@@ -1,19 +1,1202 @@
 {
-  "version": 1,
-  "brands": [
-    {
-      "id": "sandbox_bank",
-      "fictional": true,
-      "category": "bank",
-      "name_en": "Sandbox Bank",
-      "name_ar": "بنك التجربة",
-      "official_domains": ["sandboxbank.example"],
-      "keywords_en": ["sandbox bank", "sandboxbank"],
-      "keywords_ar": ["بنك التجربة"],
-      "arabizi": ["bank el tajroba"],
-      "phones": ["+97180000000"],
-      "sources": ["fictional test brand"],
-      "verified": false
-    }
-  ]
+ "version": 2,
+ "brands": [
+  {
+   "id": "sandbox_bank",
+   "fictional": true,
+   "category": "bank",
+   "name_en": "Sandbox Bank",
+   "name_ar": "بنك التجربة",
+   "official_domains": [
+    "sandboxbank.example"
+   ],
+   "keywords_en": [
+    "sandbox bank",
+    "sandboxbank"
+   ],
+   "keywords_ar": [
+    "بنك التجربة"
+   ],
+   "arabizi": [
+    "bank el tajroba"
+   ],
+   "phones": [
+    "+97180000000"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "sandboxbank",
+    "sandbox-bank"
+   ],
+   "sources": [
+    "fictional test brand"
+   ],
+   "verified": false
+  },
+  {
+   "id": "emirates_nbd",
+   "category": "bank",
+   "name_en": "Emirates NBD",
+   "name_ar": "بنك الإمارات دبي الوطني",
+   "official_domains": [
+    "emiratesnbd.com",
+    "online.emiratesnbd.com",
+    "businessonline.emiratesnbd.com",
+    "signonline.emiratesnbd.com",
+    "emiratesnbdsecurities.com"
+   ],
+   "keywords_en": [
+    "emirates nbd",
+    "emiratesnbd",
+    "enbd"
+   ],
+   "keywords_ar": [
+    "بنك الإمارات دبي الوطني",
+    "الإمارات دبي الوطني"
+   ],
+   "arabizi": [
+    "bank el emarat dubai el watani",
+    "bank al emarat dubai al watani",
+    "emarat dubai watani"
+   ],
+   "phones": [
+    "+971600540000"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "emiratesnbd",
+    "enbd"
+   ],
+   "sources": [
+    "https://www.emiratesnbd.com/en/contact-us",
+    "https://www.emiratesnbd.com/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "fab",
+   "category": "bank",
+   "name_en": "First Abu Dhabi Bank",
+   "name_ar": "بنك أبوظبي الأول",
+   "official_domains": [
+    "bankfab.com",
+    "online.bankfab.com",
+    "business.bankfab.com",
+    "ibanking.bankfab.com",
+    "fabeaccess.bankfab.com",
+    "securitiesfab.com",
+    "magnati.com"
+   ],
+   "keywords_en": [
+    "first abu dhabi bank",
+    "bankfab",
+    "fab islamic",
+    "fab bank"
+   ],
+   "keywords_ar": [
+    "بنك أبوظبي الأول",
+    "أبوظبي الأول"
+   ],
+   "arabizi": [
+    "bank abu dhabi al awal",
+    "bank abudhabi el awal",
+    "abu dhabi el awal"
+   ],
+   "phones": [
+    "+971600525500",
+    "+97126811511",
+    "+9718002200",
+    "+97180040000",
+    "+971600522235"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "bankfab",
+    "fabbank",
+    "firstabudhabibank"
+   ],
+   "sources": [
+    "https://www.bankfab.com/en-ae/contact-us",
+    "https://www.bankfab.com/ar-ae"
+   ],
+   "verified": false
+  },
+  {
+   "id": "adcb",
+   "category": "bank",
+   "name_en": "Abu Dhabi Commercial Bank (ADCB)",
+   "name_ar": "بنك أبوظبي التجاري",
+   "official_domains": [
+    "adcb.com"
+   ],
+   "keywords_en": [
+    "adcb",
+    "abu dhabi commercial bank",
+    "adcb islamic"
+   ],
+   "keywords_ar": [
+    "بنك أبوظبي التجاري",
+    "أبوظبي التجاري"
+   ],
+   "arabizi": [
+    "bank abu dhabi al tijari",
+    "bank abudhabi el tejari",
+    "abu dhabi tijari"
+   ],
+   "phones": [
+    "+971600502030",
+    "+97126210090"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "adcb"
+   ],
+   "sources": [
+    "https://www.adcb.com/en/get-in-touch/call-us/ (search excerpt)",
+    "https://www.adcb.com/mib/faq.aspx (search excerpt)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "mashreq",
+   "category": "bank",
+   "name_en": "Mashreq",
+   "name_ar": "بنك المشرق",
+   "official_domains": [
+    "mashreq.com",
+    "corporate.mashreq.com",
+    "einvestweb.mashreq.com",
+    "mashreqbank.com",
+    "mashreqalislami.com",
+    "mashreqsecurities.com",
+    "mashreqcapital.ae"
+   ],
+   "keywords_en": [
+    "mashreq",
+    "mashreq bank",
+    "mashreq neo",
+    "mashreqbank"
+   ],
+   "keywords_ar": [
+    "بنك المشرق"
+   ],
+   "arabizi": [
+    "bank el mashreq",
+    "bank al mashreq"
+   ],
+   "phones": [
+    "+97144244444",
+    "+9718007748283",
+    "+97180044653",
+    "+9718002278",
+    "+97144244763",
+    "+97144244550"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "mashreq"
+   ],
+   "sources": [
+    "https://www.mashreq.com/en/uae/customer-care/contact-us/",
+    "https://www.mashreq.com/ar/uae/customer-care/contact-us/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "liv",
+   "category": "bank",
+   "name_en": "Liv. (by Emirates NBD)",
+   "name_ar": "بنك لِف",
+   "official_domains": [
+    "liv.me",
+    "application.liv.me"
+   ],
+   "keywords_en": [
+    "liv bank",
+    "liv by emirates nbd",
+    "liv.me"
+   ],
+   "keywords_ar": [
+    "بنك لِف"
+   ],
+   "arabizi": [
+    "bank liv"
+   ],
+   "phones": [
+    "+971600521212"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "livbank"
+   ],
+   "sources": [
+    "https://www.liv.me/en",
+    "https://www.liv.me/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "emirates_islamic",
+   "category": "bank",
+   "name_en": "Emirates Islamic",
+   "name_ar": "مصرف الإمارات الإسلامي",
+   "official_domains": [
+    "emiratesislamic.ae",
+    "businessonline.emiratesislamic.ae",
+    "business.emiratesislamic.ae",
+    "signonline.emiratesislamic.ae",
+    "digital.emiratesislamic.ae",
+    "application.emiratesislamic.ae"
+   ],
+   "keywords_en": [
+    "emirates islamic",
+    "emiratesislamic"
+   ],
+   "keywords_ar": [
+    "مصرف الإمارات الإسلامي",
+    "بنك الإمارات الإسلامي"
+   ],
+   "arabizi": [
+    "masraf el emarat el islami",
+    "masraf al emarat al islami"
+   ],
+   "phones": [
+    "+971600599995"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "emiratesislamic"
+   ],
+   "sources": [
+    "https://www.emiratesislamic.ae/en/ways-to-bank/phone-banking",
+    "https://www.emiratesislamic.ae/en/contact-us",
+    "https://www.emiratesislamic.ae/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "dubai_islamic_bank",
+   "category": "bank",
+   "name_en": "Dubai Islamic Bank",
+   "name_ar": "بنك دبي الإسلامي",
+   "official_domains": [
+    "dib.ae",
+    "istatement.dib.ae"
+   ],
+   "keywords_en": [
+    "dubai islamic bank",
+    "dib bank",
+    "alt by dib"
+   ],
+   "keywords_ar": [
+    "بنك دبي الإسلامي",
+    "دبي الإسلامي"
+   ],
+   "arabizi": [
+    "bank dubai el islami",
+    "dubai al islami",
+    "bank dubai al islamy"
+   ],
+   "phones": [
+    "+97146092222"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "dubaiislamic",
+    "dib"
+   ],
+   "sources": [
+    "https://dib.ae/alt/banking-on-the-go/phone-banking",
+    "https://www.dib.ae/",
+    "https://www.dib.ae/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "adib",
+   "category": "bank",
+   "name_en": "Abu Dhabi Islamic Bank (ADIB)",
+   "name_ar": "مصرف أبوظبي الإسلامي",
+   "official_domains": [
+    "adib.ae",
+    "simple.adib.ae",
+    "adib.com",
+    "adibdirect.com",
+    "adibwealth.ae",
+    "adibsecurities.ae"
+   ],
+   "keywords_en": [
+    "adib",
+    "abu dhabi islamic bank",
+    "adib direct"
+   ],
+   "keywords_ar": [
+    "مصرف أبوظبي الإسلامي",
+    "أبوظبي الإسلامي"
+   ],
+   "arabizi": [
+    "masraf abu dhabi al islami",
+    "abudhabi el islami",
+    "masraf abudhabi islami"
+   ],
+   "phones": [
+    "+971600543216",
+    "+97126100600",
+    "+971600543220",
+    "+97126578777",
+    "+971800200",
+    "+97124129000",
+    "+97126100116"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "adib"
+   ],
+   "sources": [
+    "https://www.adib.ae/en/contact-us",
+    "https://www.adib.ae/ar/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "rakbank",
+   "category": "bank",
+   "name_en": "RAKBANK",
+   "name_ar": "راك بنك",
+   "official_domains": [
+    "rakbank.ae",
+    "apps.rakbank.ae"
+   ],
+   "keywords_en": [
+    "rakbank",
+    "rak bank",
+    "national bank of ras al khaimah"
+   ],
+   "keywords_ar": [
+    "راك بنك",
+    "بنك رأس الخيمة"
+   ],
+   "arabizi": [
+    "bank ras al khaima",
+    "bank ras alkhaimah"
+   ],
+   "phones": [
+    "+971600544049",
+    "+971600540044"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "rakbank"
+   ],
+   "sources": [
+    "https://www.rakbank.ae/en/contact-us",
+    "https://www.rakbank.ae/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "cbd",
+   "category": "bank",
+   "name_en": "Commercial Bank of Dubai (CBD)",
+   "name_ar": "بنك دبي التجاري",
+   "official_domains": [
+    "cbd.ae",
+    "cbdonline.cbd.ae",
+    "ibusiness.cbd.ae",
+    "aysha.cbd.ae",
+    "fxtradr.cbd.ae",
+    "scf.cbd.ae"
+   ],
+   "keywords_en": [
+    "commercial bank of dubai",
+    "cbd bank",
+    "cbd online"
+   ],
+   "keywords_ar": [
+    "بنك دبي التجاري",
+    "دبي التجاري"
+   ],
+   "arabizi": [
+    "bank dubai al tijari",
+    "dubai el tijari",
+    "bank dubai tejari"
+   ],
+   "phones": [
+    "+971600575556"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "cbdonline",
+    "cbdbank"
+   ],
+   "sources": [
+    "https://www.cbd.ae/general/customer-care",
+    "https://www.cbd.ae/ar",
+    "https://www.cbd.ae/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "central_bank_uae",
+   "category": "regulator",
+   "name_en": "Central Bank of the UAE (CBUAE)",
+   "name_ar": "مصرف الإمارات العربية المتحدة المركزي",
+   "official_domains": [
+    "centralbank.ae",
+    "rulebook.centralbank.ae",
+    "sanadak.gov.ae"
+   ],
+   "keywords_en": [
+    "cbuae",
+    "uae central bank",
+    "central bank of the uae",
+    "sanadak"
+   ],
+   "keywords_ar": [
+    "مصرف الإمارات العربية المتحدة المركزي",
+    "مصرف الإمارات المركزي",
+    "المصرف المركزي"
+   ],
+   "arabizi": [
+    "al masraf al markazi",
+    "el masraf el markazi"
+   ],
+   "phones": [
+    "+97126915555"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "centralbank",
+    "cbuae",
+    "sanadak"
+   ],
+   "sources": [
+    "https://www.centralbank.ae/en/contact-us/",
+    "https://www.centralbank.ae/ar/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "wio_bank",
+   "category": "bank",
+   "name_en": "Wio Bank",
+   "name_ar": "بنك ويو",
+   "official_domains": [
+    "wio.io",
+    "secure-account.wio.io",
+    "wioinvest.io"
+   ],
+   "keywords_en": [
+    "wio bank",
+    "wio business",
+    "wio personal"
+   ],
+   "keywords_ar": [
+    "بنك ويو"
+   ],
+   "arabizi": [
+    "bank wio"
+   ],
+   "phones": [
+    "+971600500946"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "wiobank"
+   ],
+   "sources": [
+    "https://www.wio.io/en-ae/support",
+    "https://www.wio.io/",
+    "https://www.wio.io/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "tamm",
+   "category": "government",
+   "name_en": "TAMM (Abu Dhabi Government Services)",
+   "name_ar": "تم",
+   "official_domains": [
+    "tamm.abudhabi"
+   ],
+   "keywords_en": [
+    "tamm",
+    "tamm abu dhabi",
+    "abu dhabi government services"
+   ],
+   "keywords_ar": [
+    "منصة تم",
+    "تطبيق تم",
+    "حكومة أبوظبي"
+   ],
+   "arabizi": [
+    "tamm abu dhabi",
+    "hukumat abu dhabi"
+   ],
+   "phones": [
+    "+971800555"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "tamm"
+   ],
+   "sources": [
+    "https://www.tamm.abudhabi/en/contact-us",
+    "https://www.adpolice.gov.ae/en/contact-us"
+   ],
+   "verified": false
+  },
+  {
+   "id": "uae_pass",
+   "category": "government",
+   "name_en": "UAE PASS",
+   "name_ar": "الهوية الرقمية",
+   "official_domains": [
+    "uaepass.ae",
+    "id.uaepass.ae"
+   ],
+   "keywords_en": [
+    "uae pass",
+    "uaepass"
+   ],
+   "keywords_ar": [
+    "الهوية الرقمية",
+    "يو اي اي باس"
+   ],
+   "arabizi": [
+    "al hawiya al raqamiya"
+   ],
+   "phones": [
+    "+971600561111"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "uaepass"
+   ],
+   "sources": [
+    "https://icp.gov.ae/en/uae-pass/",
+    "https://icp.gov.ae/ar/uae-pass/",
+    "https://u.ae/en/Help/FAQs/about-this-platform (links id.uaepass.ae)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "abu_dhabi_police",
+   "category": "government",
+   "name_en": "Abu Dhabi Police",
+   "name_ar": "شرطة أبوظبي",
+   "official_domains": [
+    "adpolice.gov.ae",
+    "aman.adpolice.gov.ae",
+    "cas.adpolice.gov.ae",
+    "ers.adpolice.gov.ae",
+    "srv.adpolice.gov.ae",
+    "ideas.adpolice.gov.ae"
+   ],
+   "keywords_en": [
+    "abu dhabi police",
+    "adpolice",
+    "ad police"
+   ],
+   "keywords_ar": [
+    "شرطة أبوظبي",
+    "القيادة العامة لشرطة أبوظبي"
+   ],
+   "arabizi": [
+    "shurtat abu dhabi",
+    "shurta abu dhabi"
+   ],
+   "phones": [
+    "+9718003333",
+    "+97124461461",
+    "+9718002626",
+    "+9718008999",
+    "+9718005354"
+   ],
+   "short_codes": [
+    "999"
+   ],
+   "domain_keywords": [
+    "adpolice",
+    "abudhabipolice"
+   ],
+   "sources": [
+    "https://www.adpolice.gov.ae/en/contact-us"
+   ],
+   "verified": false
+  },
+  {
+   "id": "dubai_police",
+   "category": "government",
+   "name_en": "Dubai Police",
+   "name_ar": "شرطة دبي",
+   "official_domains": [
+    "dubaipolice.gov.ae"
+   ],
+   "keywords_en": [
+    "dubai police"
+   ],
+   "keywords_ar": [
+    "شرطة دبي",
+    "القيادة العامة لشرطة دبي"
+   ],
+   "arabizi": [
+    "shurtat dubai",
+    "shurta dubai"
+   ],
+   "phones": [],
+   "short_codes": [
+    "901",
+    "999"
+   ],
+   "domain_keywords": [
+    "dubaipolice"
+   ],
+   "sources": [
+    "https://www.dubaipolice.gov.ae/",
+    "https://mediaoffice.ae/en/news/2020/november/15-11/dhahi-khalfan-inaugurates-dubai-police-newly-renovated-call-centre-901"
+   ],
+   "verified": false
+  },
+  {
+   "id": "rta_dubai",
+   "category": "government",
+   "name_en": "Roads and Transport Authority (RTA) Dubai",
+   "name_ar": "هيئة الطرق والمواصلات",
+   "official_domains": [
+    "rta.ae",
+    "nol.rta.ae",
+    "traffic.rta.ae",
+    "bus.rta.ae",
+    "marine.rta.ae",
+    "noc.rta.ae"
+   ],
+   "keywords_en": [
+    "roads and transport authority",
+    "rta dubai",
+    "nol card"
+   ],
+   "keywords_ar": [
+    "هيئة الطرق والمواصلات",
+    "بطاقة نول"
+   ],
+   "arabizi": [
+    "hay2at al toroq wal muwasalat",
+    "haiat al turuq"
+   ],
+   "phones": [
+    "+9718009090",
+    "+97146051414",
+    "+97142844444",
+    "+971588009090"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "rta",
+    "rtadubai"
+   ],
+   "sources": [
+    "http://www.rta.ae/wps/portal/rta/ae/home/about-rta/contactus"
+   ],
+   "verified": false
+  },
+  {
+   "id": "icp",
+   "category": "government",
+   "name_en": "Federal Authority for Identity, Citizenship, Customs & Port Security (ICP)",
+   "name_ar": "الهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ",
+   "official_domains": [
+    "icp.gov.ae",
+    "smartservices.icp.gov.ae",
+    "cc.icp.gov.ae",
+    "afkar.icp.gov.ae"
+   ],
+   "keywords_en": [
+    "federal authority for identity",
+    "icp smart services",
+    "identity, citizenship, customs"
+   ],
+   "keywords_ar": [
+    "الهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ",
+    "الهيئة الاتحادية للهوية والجنسية"
+   ],
+   "arabizi": [
+    "hawiya wa jinsiya"
+   ],
+   "phones": [
+    "+971600522222"
+   ],
+   "short_codes": [
+    "171"
+   ],
+   "domain_keywords": [
+    "icp",
+    "icpsmart"
+   ],
+   "sources": [
+    "https://icp.gov.ae/",
+    "https://icp.gov.ae/en/uae-pass/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "moi_uae",
+   "category": "government",
+   "name_en": "UAE Ministry of Interior (MOI)",
+   "name_ar": "وزارة الداخلية",
+   "official_domains": [
+    "moi.gov.ae",
+    "moi-cpc.gov.ae"
+   ],
+   "keywords_en": [
+    "ministry of interior",
+    "moi uae",
+    "uae-moi"
+   ],
+   "keywords_ar": [
+    "وزارة الداخلية"
+   ],
+   "arabizi": [
+    "wazarat al dakhiliya",
+    "wizarat al dakhilia"
+   ],
+   "phones": [
+    "+9718005000"
+   ],
+   "short_codes": [
+    "999"
+   ],
+   "domain_keywords": [
+    "moiuae",
+    "uaemoi"
+   ],
+   "sources": [
+    "https://www.adpolice.gov.ae/en/Media-Center/News/2021/06/17/MoI-launches-IM-Chat-Service-via-its-website-and-smart-phone-application",
+    "https://www.moi.gov.ae/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "uae_gov_portal",
+   "category": "government",
+   "name_en": "UAE Government Portal (u.ae) / TDRA",
+   "name_ar": "هيئة تنظيم الاتصالات والحكومة الرقمية",
+   "official_domains": [
+    "u.ae",
+    "ask.u.ae",
+    "tdra.gov.ae",
+    "dgov.tdra.gov.ae",
+    "digital.tdra.gov.ae",
+    "171.ae",
+    "bayanat.ae",
+    "sharik.ae"
+   ],
+   "keywords_en": [
+    "uae government portal",
+    "tdra",
+    "tawasul 171"
+   ],
+   "keywords_ar": [
+    "هيئة تنظيم الاتصالات والحكومة الرقمية",
+    "البوابة الرسمية لحكومة الإمارات"
+   ],
+   "arabizi": [
+    "bawabat hukumat al emarat"
+   ],
+   "phones": [
+    "+97180012"
+   ],
+   "short_codes": [
+    "171"
+   ],
+   "domain_keywords": [
+    "tdra"
+   ],
+   "sources": [
+    "https://u.ae/en/Help/FAQs/about-this-platform",
+    "https://tdra.gov.ae/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "mohre",
+   "category": "government",
+   "name_en": "Ministry of Human Resources and Emiratisation (MOHRE)",
+   "name_ar": "وزارة الموارد البشرية والتوطين",
+   "official_domains": [
+    "mohre.gov.ae",
+    "eservices.mohre.gov.ae",
+    "twasoul.mohre.gov.ae",
+    "support.mohre.gov.ae",
+    "observatory.mohre.gov.ae",
+    "ibtikar.mohre.gov.ae"
+   ],
+   "keywords_en": [
+    "mohre",
+    "ministry of human resources and emiratisation"
+   ],
+   "keywords_ar": [
+    "وزارة الموارد البشرية والتوطين",
+    "الموارد البشرية والتوطين"
+   ],
+   "arabizi": [
+    "wazarat al mawared al bashariya"
+   ],
+   "phones": [
+    "+971600590000",
+    "+97168034000",
+    "+97180084"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "mohre"
+   ],
+   "sources": [
+    "https://www.mohre.gov.ae/en/contact-us",
+    "https://www.mohre.gov.ae/ar/home"
+   ],
+   "verified": false
+  },
+  {
+   "id": "dubai_municipality",
+   "category": "government",
+   "name_en": "Dubai Municipality",
+   "name_ar": "بلدية دبي",
+   "official_domains": [
+    "dm.gov.ae",
+    "hub.dm.gov.ae",
+    "portal.dm.gov.ae",
+    "appointmentsystem.dm.gov.ae",
+    "childrencity.dm.gov.ae",
+    "dmpmedia.dm.gov.ae"
+   ],
+   "keywords_en": [
+    "dubai municipality"
+   ],
+   "keywords_ar": [
+    "بلدية دبي"
+   ],
+   "arabizi": [
+    "baladiyat dubai",
+    "baladiya dubai"
+   ],
+   "phones": [
+    "+971800900",
+    "+97142215555"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "dubaimunicipality"
+   ],
+   "sources": [
+    "https://www.dm.gov.ae/contact-us/"
+   ],
+   "verified": false
+  },
+  {
+   "id": "salik",
+   "category": "government",
+   "name_en": "Salik (Dubai toll)",
+   "name_ar": "سالك",
+   "official_domains": [
+    "salik.ae",
+    "salik.rta.ae"
+   ],
+   "keywords_en": [
+    "salik",
+    "salik tag",
+    "salik pjsc"
+   ],
+   "keywords_ar": [
+    "سالك",
+    "بطاقة سالك",
+    "مخالفات سالك"
+   ],
+   "arabizi": [
+    "salek"
+   ],
+   "phones": [
+    "+97180072545"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "salik"
+   ],
+   "sources": [
+    "https://www.rta.ae/wps/portal/rta/ae/home/about-rta/contactus?lang=en (links salik.ae)",
+    "https://www.salik.rta.ae/ar/support/faqs (search excerpt, 800 72545)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "emirates_post",
+   "category": "postal",
+   "name_en": "Emirates Post",
+   "name_ar": "بريد الإمارات",
+   "official_domains": [
+    "emiratespost.ae",
+    "box.emiratespost.ae",
+    "epg.ae",
+    "7x.ae"
+   ],
+   "keywords_en": [
+    "emirates post",
+    "emiratespost",
+    "emirates post group"
+   ],
+   "keywords_ar": [
+    "بريد الإمارات",
+    "مجموعة بريد الإمارات"
+   ],
+   "arabizi": [
+    "bareed al emarat",
+    "bareed el emarat"
+   ],
+   "phones": [
+    "+971600599999",
+    "+97142303000"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "emiratespost",
+    "emirates-post"
+   ],
+   "sources": [
+    "https://www.emiratespost.ae/contact-us",
+    "https://www.emiratespost.ae/ar"
+   ],
+   "verified": false
+  },
+  {
+   "id": "dewa",
+   "category": "utility",
+   "name_en": "Dubai Electricity and Water Authority (DEWA)",
+   "name_ar": "هيئة كهرباء ومياه دبي",
+   "official_domains": [
+    "dewa.gov.ae",
+    "mobile.dewa.gov.ae"
+   ],
+   "keywords_en": [
+    "dewa",
+    "dubai electricity and water authority"
+   ],
+   "keywords_ar": [
+    "هيئة كهرباء ومياه دبي",
+    "ديوا"
+   ],
+   "arabizi": [
+    "kahraba dubai"
+   ],
+   "phones": [
+    "+97146019999"
+   ],
+   "short_codes": [
+    "991"
+   ],
+   "domain_keywords": [
+    "dewa"
+   ],
+   "sources": [
+    "https://www.dewa.gov.ae/en/about-us/support-and-points-of-interest/contact-us (search excerpt)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "adnoc_distribution",
+   "category": "fuel",
+   "name_en": "ADNOC Distribution",
+   "name_ar": "أدنوك للتوزيع",
+   "official_domains": [
+    "adnocdistribution.ae",
+    "onlineorder.adnocdistribution.ae"
+   ],
+   "keywords_en": [
+    "adnoc distribution",
+    "adnoc"
+   ],
+   "keywords_ar": [
+    "أدنوك للتوزيع",
+    "أدنوك"
+   ],
+   "arabizi": [
+    "adnoc lil tawzee3"
+   ],
+   "phones": [
+    "+971800300"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "adnoc"
+   ],
+   "sources": [
+    "https://onlineorder.adnocdistribution.ae/ (search excerpt)",
+    "https://www.adnocdistribution.ae/en/faqs (search excerpt)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "etisalat_eand",
+   "category": "telecom",
+   "name_en": "etisalat by e&",
+   "name_ar": "اتصالات من إي آند",
+   "official_domains": [
+    "etisalat.ae",
+    "eand.ae",
+    "eand.com"
+   ],
+   "keywords_en": [
+    "etisalat",
+    "etisalat by e&",
+    "e& uae"
+   ],
+   "keywords_ar": [
+    "اتصالات من إي آند",
+    "إي آند"
+   ],
+   "arabizi": [
+    "itisalat"
+   ],
+   "phones": [
+    "+971800101",
+    "+971400444101"
+   ],
+   "short_codes": [
+    "101"
+   ],
+   "domain_keywords": [
+    "etisalat",
+    "eand"
+   ],
+   "sources": [
+    "https://www.eand.ae/en/index.html",
+    "https://www.eand.ae/en/system/wst/assets/docs/consumer/general/customer-service-charter-en.pdf"
+   ],
+   "verified": false
+  },
+  {
+   "id": "du",
+   "category": "telecom",
+   "name_en": "du (EITC)",
+   "name_ar": "دو",
+   "official_domains": [
+    "du.ae"
+   ],
+   "keywords_en": [
+    "du telecom",
+    "emirates integrated telecommunications"
+   ],
+   "keywords_ar": [
+    "شركة الإمارات للاتصالات المتكاملة"
+   ],
+   "arabizi": [
+    "du telecom"
+   ],
+   "phones": [
+    "+971555678155"
+   ],
+   "short_codes": [
+    "155"
+   ],
+   "domain_keywords": [
+    "dutelecom"
+   ],
+   "sources": [
+    "http://www.du.ae/du-contactus"
+   ],
+   "verified": false
+  },
+  {
+   "id": "aramex",
+   "category": "courier",
+   "name_en": "Aramex",
+   "name_ar": "أرامكس",
+   "official_domains": [
+    "aramex.com"
+   ],
+   "keywords_en": [
+    "aramex"
+   ],
+   "keywords_ar": [
+    "أرامكس"
+   ],
+   "arabizi": [
+    "aramks"
+   ],
+   "phones": [
+    "+971600544000"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "aramex"
+   ],
+   "sources": [
+    "https://www.aramex.com/ae/en/find-aramex-office (search excerpt)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "emirates_airline",
+   "category": "airline",
+   "name_en": "Emirates (airline)",
+   "name_ar": "طيران الإمارات",
+   "official_domains": [
+    "emirates.com"
+   ],
+   "keywords_en": [
+    "emirates airline",
+    "fly emirates",
+    "emirates skywards"
+   ],
+   "keywords_ar": [
+    "طيران الإمارات"
+   ],
+   "arabizi": [
+    "tayaran al emarat"
+   ],
+   "phones": [
+    "+971600555555"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "flyemirates",
+    "emiratesairline"
+   ],
+   "sources": [
+    "https://www.emirates.com/english/help/offices/dxb/dubai/ (search excerpt)"
+   ],
+   "verified": false
+  },
+  {
+   "id": "etihad_airways",
+   "category": "airline",
+   "name_en": "Etihad Airways",
+   "name_ar": "الاتحاد للطيران",
+   "official_domains": [
+    "etihad.com"
+   ],
+   "keywords_en": [
+    "etihad airways",
+    "etihad guest",
+    "fly etihad"
+   ],
+   "keywords_ar": [
+    "الاتحاد للطيران",
+    "طيران الاتحاد"
+   ],
+   "arabizi": [
+    "tayaran al etihad"
+   ],
+   "phones": [
+    "+971600555666"
+   ],
+   "short_codes": [],
+   "domain_keywords": [
+    "etihad"
+   ],
+   "sources": [
+    "https://www.etihad.com/en/legal/terms-and-conditions (search excerpt)"
+   ],
+   "verified": false
+  }
+ ]
 }
