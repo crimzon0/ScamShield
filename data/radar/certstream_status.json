@@ -2,12 +2,16 @@
  "state": "running",
  "url": "ws://localhost:8080/",
  "started_at": "2026-11-24T20:28:01.983222+00:00",
- "messages": 29174,
- "certs": 29174,
- "hits": 0,
- "new_hits": 0,
+ "messages": 334545,
+ "certs": 334545,
+ "hits": 2,
+ "new_hits": 1,
  "reconnects": 0,
  "last_error": "",
- "last_hit": null,
+ "last_hit": {
+  "domain": "aramexservice.com",
+  "term": "aramex",
+  "at": "2026-11-24 20:26:29.788661+00:00"
+ },
  "queue": 0
 }

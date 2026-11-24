@@ -4,3 +4,6 @@
 2026-11-25 00:23:58,476 INFO scamshield.radar certstream HIT almashreqmedical.com term=mashreq brand=mashreq
 2026-11-25 00:25:24,147 INFO scamshield.radar certstream HIT ghaziabadpolice.com term=adpolice brand=abu_dhabi_police
 2026-11-25 00:26:29,790 INFO scamshield.radar certstream HIT aramexservice.com term=aramex brand=aramex
+2026-11-25 00:28:02,068 INFO scamshield.radar certstream connected: ws://localhost:8080/
+2026-11-25 00:28:31,868 INFO scamshield.radar certstream HIT etisalat.ae.rproxy.govskope.ca term=etisalat brand=etisalat_eand
+2026-11-25 00:29:14,270 INFO scamshield.radar certstream HIT aramexservice.com term=aramex brand=aramex

@@ -59,11 +59,14 @@ def test_metrics():
     assert m["precision"] == 0.5 and m["fpr"] == 0.5
 
 
-def test_resume_refuses_stale_output(tmp_path, monkeypatch):
+def test_resume_refuses_stale_output(tmp_path, monkeypatch, capsys):
     inp = _write(tmp_path / "in.csv", "url\nhttps://a.example/\n")
     out = str(tmp_path / "out.csv")
     cli.main([inp, "--out", out, "-q"])
-    first = _read(out)[0]["scan_id"]
+    capsys.readouterr()
+    cli.main([inp, "--out", out, "-q"])
+    assert "WARNING" not in capsys.readouterr().err  # same fingerprint -> resume
     monkeypatch.setattr(cli, "_fingerprint", lambda: "different-version")
     cli.main([inp, "--out", out, "-q"])
-    assert _read(out)[0]["scan_id"] != first  # re-scanned, not resumed
+    assert "starting a fresh scan" in capsys.readouterr().err
+    assert len(_read(out)) == 1

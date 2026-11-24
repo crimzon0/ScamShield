@@ -73,7 +73,7 @@ Code map:
 |---|---|
 | `scamshield/detonate/` | Playwright detonation, 3 personas, shortener expansion, redirect chain (HTTP / meta / JS), screenshot, DOM, HAR, TLS, favicon; `cloak_diff` |
 | `scamshield/intel/` | RDAP (domain age, registrar), DNS / ASN, crt.sh certificate first-seen, Tranco rank, phishing feeds (OpenPhish, phishunt), optional urlscan / Safe Browsing |
-| `scamshield/brand/` + `data/registry.json` | 32-brand registry (31 UAE brands + 1 fictional test brand), brand claim detection, look-alike / typosquat detection, perceptual-hash visual match |
+| `scamshield/brand/` + `data/registry.json` | Registry of 31 UAE brands (110 official domains, 60 official phone numbers, each with a source link) + 1 fictional test brand; brand claim detection; look-alike / typosquat detection; favicon perceptual-hash match (24 brands) |
 | `scamshield/score/` | Rule-based scoring engine, bilingual reasons |
 | `scamshield/pipeline.py` | Orchestration, timeouts, caching, domain-only fallback |
 | `scamshield/radar/` | Watchlist (registry terms + dnstwist permutations + UAE scam themes), CT collectors |
@@ -152,7 +152,7 @@ cp .env.example .env        # optional
 | `URLSCAN_API_KEY`, `SAFE_BROWSING_API_KEY` | extra reputation sources | public feeds only |
 | `CERTSTREAM_URL` | live certificate stream (default `ws://localhost:8080/`) | crt.sh backfill |
 
-For the live certificate stream run a local certstream server (for example the public `calidog/certstream-server` image with Docker, `docker run -p 8080:4000 calidog/certstream-server`) and point `CERTSTREAM_URL` at it. Without it the radar uses the crt.sh backfill.
+For the live certificate stream, `docker compose up -d` starts `certstream-server-go` (see `docker-compose.yml`), which tails the public CT logs and serves certstream JSON on `ws://localhost:8080/` (the default `CERTSTREAM_URL`). Without it the radar still has the crt.sh backfill and the newly-registered-domain list.
 
 Set `SCAMSHIELD_OFFLINE=1` to forbid all network access (used by the tests).
 
@@ -208,7 +208,7 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 .venv/Scripts/python -m scamshield.radar watchlist                 # watchlist stats (registry terms, permutations, themes)
 .venv/Scripts/python -m scamshield.radar match uaepass-verify.top  # does a domain hit the watchlist?
 .venv/Scripts/python -m scamshield.radar backfill --days 30        # crt.sh backfill, every hit scanned (--no-scan to skip)
-.venv/Scripts/python -m scamshield.radar certstream --minutes 10   # live CT stream (needs a certstream server)
+.venv/Scripts/python -m scamshield.radar certstream --minutes 10   # live CT stream (needs `docker compose up -d`)
 .venv/Scripts/python -m scamshield.radar nrd --days 4              # newly registered domains (whoisds daily list)
 .venv/Scripts/python -m scamshield.radar search                    # sponsored / organic results (needs SERPAPI_KEY)
 .venv/Scripts/python -m scamshield.radar feed --limit 50           # hits with first_seen, flagged_at, time to detection
@@ -253,7 +253,7 @@ All numbers below are from real runs of `make eval` on `data/eval/sample.csv` (2
 - **Few of the scams are UAE-branded.** Public feeds on a given day contain mostly global brands. The UAE-specific logic (registry, Arabic keywords, look-alikes) is exercised by the official-domain sweep, the fixtures and the radar, more than by the scam half of the eval.
 - **Registry is unverified by a human.** All 31 real brands carry `verified: false`; some facts were confirmed only from search excerpts because the official site blocked automated fetches (`data/registry_todo.md`).
 - **Keyless mode.** Without an LLM key the brand claim uses keyword rules; without a Places key the helpline demo uses **labelled synthetic** listings; without SerpApi there is no ads radar.
-- **Visual similarity** needs reference hashes of each brand's favicon / header (`data/brand_assets/hashes.json`); coverage is partial.
+- **Visual similarity** relies on reference favicon hashes (`data/brand_assets/hashes.json`, 24 of 31 brands); screenshot similarity coverage is partial.
 - **Cloaking** that targets specific IP ranges (for example only UAE residential IPs) is not defeated from a data-centre IP; personas change user agent, locale, time zone and referrer only.
 - **Rules, not a trained model.** Weights were set by hand and tuned on the same small set; a pilot should re-tune them on labelled ADP data.
 

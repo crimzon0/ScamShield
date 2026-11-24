@@ -39,3 +39,20 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 EXIT 0
 ```
 (45 skipped = network-marked tests; breaker ran the network suites separately: 45/45 legit deep links legitimate.)
+
+### 2. Batch scan, no API keys — PASS (20:27-20:30 UTC, fresh output file)
+`python -m scamshield.scan data/eval/sample.csv --out predictions.csv --fast`
+```
+done: 127 rows in 144s -> predictions.csv  legitimate=68 scam=59
+real	2m26.414s
+EXIT 0
+rows 127 labels {'legitimate': 68, 'scam': 59} modes {'full': 92, 'domain_only': 35}
+dead/blank/timeout/error detonations: 15
+   ('https://www.etisalat.ae/en/', ['timeout'], 'legitimate', '0')
+   ('https://stepflow2mt.swedencentral.cloudapp.azure.com/ch/ch_css_mkit/', ['dead'], 'scam', '100')
+   ('https://netflix-dashboard-login.8-219-97-148.cpanel.site', ['blank'], 'scam', '100')
+   ('http://aktiffkan-paylatterz.jmm.my.id/', ['dead'], 'scam', '100')
+   ('https://ac20s.lat/', ['dead'], 'scam', '100')
+   ('https://hawkinsinc.microsoft-alerts.org', ['blank'], 'scam', '100')
+```
+Every input row has a verdict, input order preserved, all rows have EN+AR reasons; 15 dead/blank/timeout pages still got verdicts (domain-only). Note: an earlier run silently resumed a stale predictions.csv; fixed by using a fresh file (verdict adding fingerprint check to resume).
