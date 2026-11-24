@@ -83,3 +83,13 @@ official domains FP: 0/112  (not 'legitimate': 0)
 EXIT 0
 ```
 Every false negative is listed with reasons in var/verify_eval.log. Will re-run after hard-legit FP fixes.
+
+### 4. make demo — PASS (20:50-20:56 UTC; dashboard teammate ran it with default flags, lead re-verified endpoints)
+```
+[demo] scan https://www.tamm.abudhabi/ -> legitimate 0 mode=full id=b7cd4a68580e (0.1s)
+[demo] radar: 862 hits in db from collectors {'certstream': 9, 'crtsh': 850, 'nrd': 3}
+[demo] helpline: 9 findings across 12 brands
+[demo] ScamShield running at http://127.0.0.1:8000  (API docs: http://127.0.0.1:8000/docs)
+```
+UI scan of https://aramex.p-track-au.com/ (holdout scam row) -> scam 100 with EN reasons (+60 openphish, +50 imitates aramex.com subdomain_brand, +30 domain 1 day old) and AR reasons after the toggle (<html dir="rtl" lang="ar">, mirrored layout); screenshot served; redirect chain shown. https://www.rta.ae/ -> legitimate 0 (official domain; brand RTA via arabic+logo_hash+screenshot_hash).
+Lead re-check via curl: /api/health ok; / 200 text/html; /api/scans/5c8df41f307d -> 100 scam, 4 reasons with Arabic, screenshot URL; case export: zip 200 application/zip 150582 B, pdf 200 application/pdf 119217 B (%PDF-1.4). ZIP: screenshots, dom, har, favicon, redirect_chain, rdap_whois, dns_hosting, brand_match, verdict, report.pdf, takedown_en/ar, manifest.json + manifest.sha256.
