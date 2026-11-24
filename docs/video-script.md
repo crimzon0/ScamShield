@@ -13,7 +13,7 @@ Voice-over: 114 words.
 | 32-40 s | Click **Export police case file**, then **Evidence ZIP** and **Bilingual PDF report**. Show the PDF first page and the manifest with SHA-256 hashes. | "One click builds the police case file: screenshots, redirect chain, registration data, a takedown notice, all hashed." |
 | 40-50 s | Nav: **Early-warning radar**. Table of newly seen look-alike domains with "First seen (UTC)", "Flagged (UTC)" and **Time to detection** column highlighted. | "The radar watches new certificates for UAE brand look-alikes and measures how fast we flag them." |
 | 50-56 s | Nav: **Fake helplines**. Table with Likely scam / Official badges, number, second-signal chips (SYNTHETIC tag visible if no Places key). | "It also finds fake helpline numbers on Maps." |
-| 56-60 s | Title card: "ScamShield AI", results line "Official UAE domains flagged: 0/109 · blind held-out: precision 1.000, recall 0.619, no blocklists", "42 Abu Dhabi x Abu Dhabi Police". | "Fewer victims, faster takedowns. ScamShield." |
+| 56-60 s | Title card: "ScamShield AI", results line "Official UAE domains flagged: 0/112 · blind held-out: precision 1.000, recall 0.619, no blocklists", "42 Abu Dhabi x Abu Dhabi Police". | "Fewer victims, faster takedowns. ScamShield." |
 
 ## Notes for recording
 

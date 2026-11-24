@@ -81,7 +81,7 @@ export const api = {
   scan: (url: string) => req<ScanResult>("/api/scan", json({ url })),
   getScan: (id: string) => req<ScanResult>(`/api/scans/${encodeURIComponent(id)}`),
   scans: () => req<ScanRow[]>("/api/scans"),
-  radar: () => req<RadarRow[]>("/api/radar"),
+  radar: () => req<RadarRow[]>("/api/radar?limit=1000"),
   radarStatus: () => req<{ running: boolean; last_started?: string | null; last_count?: number | null; error?: string }>("/api/radar/status"),
   backfill: () => req<{ started: boolean }>("/api/radar/backfill", { method: "POST" }),
   collectors: () => req<Collectors>("/api/radar/collectors"),

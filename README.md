@@ -73,7 +73,7 @@ Code map:
 |---|---|
 | `scamshield/detonate/` | Playwright detonation, 3 personas, shortener expansion, redirect chain (HTTP / meta / JS), screenshot, DOM, HAR, TLS, favicon; `cloak_diff` |
 | `scamshield/intel/` | RDAP (domain age, registrar), DNS / ASN, crt.sh certificate first-seen, Tranco rank, phishing feeds (OpenPhish, phishunt), optional urlscan / Safe Browsing |
-| `scamshield/brand/` + `data/registry.json` | Registry of 31 UAE brands (110 official domains, 60 official phone numbers, each with a source link) + 1 fictional test brand; brand claim detection; look-alike / typosquat detection; favicon perceptual-hash match (24 brands) |
+| `scamshield/brand/` + `data/registry.json` | Registry of 31 UAE brands (112 official domains, 59 official phone numbers, each with a source link) + 1 fictional test brand; brand claim detection; look-alike / typosquat detection; favicon perceptual-hash match (24 brands) |
 | `scamshield/score/` | Rule-based scoring engine, bilingual reasons |
 | `scamshield/pipeline.py` | Orchestration, timeouts, caching, domain-only fallback |
 | `scamshield/radar/` | Watchlist (registry terms + dnstwist permutations + UAE scam themes), CT collectors |
@@ -231,7 +231,7 @@ make eval        # = python -m scamshield.cli.eval data/eval/sample.csv
 ## 7. Measured results
 
 <!-- RESULTS:BEGIN -->
-Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20:27 UTC. `is_scam` = label `likely_scam` or `scam` unless stated. Raw output: `data/eval/last_eval.json`, `data/eval/last_eval_holdout.json`.
+Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20:43 UTC. `is_scam` = label `likely_scam` or `scam` unless stated. Raw output: `data/eval/last_eval.json`, `data/eval/last_eval_holdout.json`.
 
 | Set | Blocklists | Threshold | Precision | Recall | F1 | FPR |
 |---|---|---|---|---|---|---|
@@ -240,11 +240,11 @@ Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20
 | Held-out, after one round of generalisation (no longer blind) | ignored | likely_scam | 1.000 | 0.714 | 0.833 | 0.000 |
 | Held-out, after generalisation | ignored | suspicious | 1.000 | 0.857 | 0.923 | 0.000 |
 | Held-out | used | likely_scam | 1.000 | 1.000 | 1.000 | 0.000 |
-| Sample, tuned on (n=127: 68 legit / 59 scam) | ignored | likely_scam | 1.000 | 0.814 | 0.897 | 0.000 |
+| Sample, tuned on (n=127: 68 legit / 59 scam) | ignored | likely_scam | 1.000 | 0.797 | 0.887 | 0.000 |
 | Sample | ignored | suspicious | 1.000 | 0.898 | 0.946 | 0.000 |
 | Sample | used | likely_scam | 1.000 | 1.000 | 1.000 | 0.000 |
 
-**Official-domain sweep:** the home page of every official domain of every real brand in the registry was scanned: **0/109 flagged as scam.**
+**Official-domain sweep:** the home page of every official domain of every real brand in the registry was scanned: **0/112 flagged as scam.**
 
 **How to read this honestly**
 
@@ -257,18 +257,25 @@ Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20
 - Most misses without blocklists: old compromised sites hosting a kit in a sub-path, kits that show nothing to our mobile persona, brands outside our registry and global keyword list, and dead pages on registered-but-not-new domains (these usually reach `suspicious`, not `likely_scam`). Details in `data/eval/README.md`.
 <!-- RESULTS:END -->
 
-**Early-warning radar, real hits (2026-11-24, one evening, no API keys):**
+**Adversarial checks (breaker team, network suites run live):**
+- **45/45** real UAE official deep links labelled legitimate.
+- **42/42** "hard legit" pages labelled legitimate: real UAE government, university, exchange-house and SaaS login pages that look risky (login forms, UAE PASS sign-in buttons, regulator footers). This pass first found 12 false positives (UAE PASS SSO buttons, regulator footers, "etihad" used as an ordinary Arabic word), which were fixed before the final runs.
+- **92** offline adversarial cases pass: IDN / homoglyph domains, combosquats, `user@host` URL tricks, obfuscated IP hosts, 12-hop redirect chains, persona cloaking, closed shadow DOM.
 
-| Source | Domain | Why it matched | Verdict |
-|---|---|---|---|
-| certstream (live CT) | `salik.work` | TLD swap of `salik.ae` | suspicious 53, flagged within the hour of certificate issue |
-| newly registered domains | `adinwealth.org` | look-alike of ADIB's `adibwealth.ae` | scam 87 |
-| newly registered domains | `trafficrta.xyz` | RTA + traffic-fine theme | likely scam 70 |
-| crt.sh backfill (`uaepass`) | `uaepasses.com`, `uaepass.digital`, `uaepass.help` ... | UAE PASS keyword on non-official domain | 11 hosts scam / likely scam |
+**Early-warning radar, real hits (2026-11-24, one evening, no API keys):** 820+ hits from crt.sh (most), certstream and newly-registered-domain lists; 71+ scored scam or likely scam so far.
 
-Not all radar verdicts are right: several of the 11 `uaepass` hosts look like legitimate third-party UAE PASS integrations (for example `uaepass.hubpay.io`, `uaepass.uat.finwall.studio`, `uaepass.magure.ai`), which a brand-keyword rule cannot tell apart from phishing. Radar hits are not part of the precision numbers above, and this is why the pilot keeps an analyst in the loop before any takedown.
+| Source | Domain | Why it matched | Verdict | Time to detection |
+|---|---|---|---|---|
+| newly registered domains | `adinwealth.org` | look-alike of ADIB's `adibwealth.ae` | scam 87 | 4 d 20 h after the NRD list date |
+| newly registered domains | `trafficrta.xyz` | RTA + traffic-fine theme | likely scam 70 | 2 d 20 h after the NRD list date |
+| certstream (live CT) | `salik.work` | TLD swap of `salik.ae` | suspicious 53 | within the hour of certificate issue |
+| crt.sh backfill (`uaepass`) | `uaepasses.com`, `uaepass.digital`, `uaepass.help` ... | UAE PASS keyword on non-official domain | scam / likely scam | not measured (backfill) |
 
-**Engineering checks:** `make test`: 273 passed, 45 skipped (network-marked) with no `.env` and no API keys (PROGRESS.md, 20:29 UTC). Detonation of 16 real URLs: p50 7.7 s, p95 12.5 s per URL.
+Time to detection is quoted only where the start time is a CT log timestamp or a newly-registered-domain list date. The two NRD figures mostly reflect when we started watching (that afternoon), not how fast the radar can be. The radar also groups related domains into networks (for example the `a-track-au.com` / `p-track-au.com` / `s-track-au.com` cluster).
+
+Not all radar verdicts are right. Some `uaepass` hosts look like legitimate third-party UAE PASS integrations: after re-scan `uaepass.hubpay.io` and `uaepass.appchecker.net` are suspicious 59, `uaepass.magure.ai` legitimate 25, and `uaepass.uat.finwall.studio` still scam 88 (unverified either way). Radar hits are not part of the precision numbers above, which is why the pilot keeps an analyst in the loop before any takedown.
+
+**Engineering checks:** `make test` result as recorded in PROGRESS.md (no `.env`, no API keys). Detonation fast mode: 8 concurrent browsers, p50 6.4 s per URL, about 1 s per URL batch throughput. Final scoring-engine fingerprint: `db475dd39c6eb6a5`.
 
 ## 8. Limitations (honest)
 
@@ -279,7 +286,7 @@ Not all radar verdicts are right: several of the 11 `uaepass` hosts look like le
 - **Only one blind run.** The held-out set was blind exactly once (recall 0.619). The global-brand list was then broadened with its misses in mind, so later held-out numbers are not blind; a fresh time-split set is needed.
 - **Registry is unverified by a human.** All 31 real brands carry `verified: false`; some facts were confirmed only from search excerpts because the official site blocked automated fetches (`data/registry_todo.md`, 23 open items).
 - **Keyless mode.** Without an LLM key the brand claim uses keyword rules; without a Places key the helpline demo uses **labelled synthetic** listings; without SerpApi there is no ads radar.
-- **Time to detection** is computed from certificate notBefore or the registration date given by the source. CAs often backdate notBefore (Let's Encrypt by one hour), so live certstream hits read ~59 minutes when the real lag is minutes. crt.sh's index lagged by weeks during the hackathon, so backfill hits measure coverage, not speed.
+- **Time to detection** is computed from certificate notBefore or the registration date given by the source. CAs often backdate notBefore (Let's Encrypt by one hour), so live certstream hits read ~59 minutes when the real lag is minutes. crt.sh's index lagged by weeks during the hackathon, so backfill hits measure coverage, not speed; we quote time to detection only for CT-log and NRD-list-date hits.
 - **Visual similarity** relies on reference favicon hashes (`data/brand_assets/hashes.json`, 24 of 31 brands); screenshot similarity coverage is partial.
 - **Cloaking** that targets specific IP ranges (for example only UAE residential IPs) is not defeated from a data-centre IP; personas change user agent, locale, time zone and referrer only.
 - **Known misses:** old compromised sites hosting a kit in a sub-path, kits that show a blank page to our persona, brands outside the registry, some radar hits on wildcard-DNS hosts (e.g. `sslip.io`).

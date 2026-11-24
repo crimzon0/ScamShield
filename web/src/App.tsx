@@ -366,6 +366,7 @@ function ScanPage({ id, go }: { id?: string; go: (r: string) => void }) {
 function RadarPage({ go }: { go: (r: string) => void }) {
   const { t } = useI18n();
   const [rows, setRows] = useState<RadarRow[] | null>(null);
+  const [filter, setFilter] = useState<"live" | "backfill" | "scanned" | "all">("live");
   const [running, setRunning] = useState(false);
   const [since, setSince] = useState<string | null>(null);
   const load = useCallback(() => api.radar().then(setRows).catch(() => setRows([])), []);
@@ -397,10 +398,19 @@ function RadarPage({ go }: { go: (r: string) => void }) {
       <BundleButton ids={(rows || []).filter((h) => h.scan_id).map((h) => h.scan_id as string)} />
       <button className="btn" onClick={load}>{t("refresh")}</button>
       <button className="btn btn-accent" onClick={backfill} disabled={running}>{running ? (sinceHm ? `${t("radarRunningSince")} ${sinceHm} UTC` : t("radarRunning")) : t("radarBackfill")}</button></>}>
+      {rows && rows.length > 0 && (
+        <div className="tabs" role="tablist">
+          {(["live", "scanned", "backfill", "all"] as const).map((f) => {
+            const n = rows.filter((h) => f === "all" || (f === "live" ? h.source !== "crtsh" : f === "backfill" ? h.source === "crtsh" : !!h.scan_id)).length;
+            return <button key={f} role="tab" aria-selected={filter === f} className={filter === f ? "tab on" : "tab"} onClick={() => setFilter(f)}>
+              {t(f === "live" ? "fLive" : f === "backfill" ? "fBackfill" : f === "scanned" ? "fScanned" : "fAll")} ({n})</button>;
+          })}
+        </div>
+      )}
       {!rows ? <p className="muted">{t("loading")}</p> : rows.length === 0 ? <p className="muted">{t("noRadar")}</p> : (
         <div className="tblwrap"><table className="tbl">
           <thead><tr><th>{t("colDomain")}</th><th>{t("colSource")}</th><th>{t("colTerm")}</th><th>{t("colBrand")}</th><th>{t("colFirstSeen")}</th><th>{t("colFlagged")}</th><th>{t("colTtd")}</th><th>{t("colVerdict")}</th></tr></thead>
-          <tbody>{rows.map((h) => (
+          <tbody>{rows.filter((h) => filter === "all" || (filter === "live" ? h.source !== "crtsh" : filter === "backfill" ? h.source === "crtsh" : !!h.scan_id)).slice(0, 300).map((h) => (
             <tr key={h.id} className={h.scan_id ? "click" : ""} onClick={() => h.scan_id && go(`/scan/${h.scan_id}`)}>
               <td><Ltr><code>{h.domain}</code></Ltr> <FixtureBadge show={h.is_fixture} />
                 {h.extra?.official && <div className="muted small">{t("imitates")} <Ltr><code>{h.extra.official}</code></Ltr>{h.extra.fuzzer && <> (<span className="chip">{h.extra.fuzzer}</span>)</>}</div>}</td><td><span className="chip">{h.source}</span></td><td><Ltr>{h.matched_term}</Ltr></td>

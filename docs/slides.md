@@ -51,7 +51,7 @@ link -> detonate (headless Chromium, 3 personas: UAE mobile ad click, desktop, c
 - **An error is never a verdict:** dead, blank or cloaked page -> domain-only verdict.
 
 <!--
-Speaker notes: The core rule is simple and explainable: the page says "Emirates NBD", but the domain is not Emirates NBD's. The registry has 31 real UAE brands, 110 official domains and 60 official numbers, each with a source link. Most feed URLs are dead within hours, so the domain-only path is the normal case.
+Speaker notes: The core rule is simple and explainable: the page says "Emirates NBD", but the domain is not Emirates NBD's. The registry has 31 real UAE brands, 112 official domains and 59 official numbers, each with a source link. Most feed URLs are dead within hours, so the domain-only path is the normal case.
 -->
 
 ---
@@ -64,8 +64,9 @@ Speaker notes: The core rule is simple and explainable: the page says "Emirates 
 
 **Real hits, 2026-11-24 (one evening, no API keys):**
 - certstream live: `salik.work` (TLD swap of salik.ae) flagged in the same hour its certificate was issued
-- newly registered domains: `adinwealth.org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta.xyz` **likely scam 70**
-- crt.sh backfill on `uaepass`: 11 hosts scored scam / likely scam (e.g. `uaepasses.com`, `uaepass.digital` scam 100); some are real third-party UAE PASS integrations -> analyst review
+- newly registered domains: `adinwealth.org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta.xyz` **likely scam 70** (4 d 20 h / 2 d 20 h after the list date, mostly because we started watching that day)
+- 820+ radar hits in one evening, 71+ scam / likely scam; related domains grouped into networks
+- caveat: some `uaepass` hits are real third-party UAE PASS integrations -> analyst review
 
 <!--
 Speaker notes: A phishing site needs an HTTPS certificate, and certificates are public. That gives us a window between certificate issue and the first SMS. We record both timestamps, so time to detection is measured, not claimed. Honest note: certificate notBefore is often backdated (Let's Encrypt by one hour), so a ~59-minute reading from certstream really means minutes. Backfill hits are weeks old only because we started watching today.
@@ -111,14 +112,15 @@ Speaker notes: Fines, tolls, government sign-in and bank OTP pages are the UAE s
 | After one round of generalisation (not blind) | 1.000 | 0.714 | 0.000 |
 | Blocklists used | 1.000 | 1.000 | 0.000 |
 
-- **Official UAE domains flagged as scam: 0 / 109** · zero false positives in every run
-- Tuned sample (n=127), blocklists ignored: precision 1.000, recall 0.814
+- **Official UAE domains flagged as scam: 0 / 112** · zero false positives in every run
+- Adversarial: **45/45** UAE official deep links and **42/42** risky-looking real UAE login pages legitimate; 92 offline attack cases pass
+- Tuned sample (n=127), blocklists ignored: precision 1.000, recall 0.797
 <!-- RT:END -->
 
 Caveats: small sets (79 held-out, 127 tuned); scam URLs come from the same public feeds our blocklist uses, so the headline ignores blocklists; feed labels not hand-verified.
 
 <!--
-Speaker notes: Numbers come from `make eval` on data/eval/holdout.csv and sample.csv, latest run 2026-11-24 20:27 UTC. The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there. The headline is the first blind held-out run (20:18 UTC, recall 0.619). We then broadened the global-brand list with those misses in mind, so the "after generalisation" row is not blind and we say so.
+Speaker notes: Numbers come from `make eval` on data/eval/holdout.csv and sample.csv, latest run 2026-11-24 20:43 UTC (engine fingerprint db475dd39c6eb6a5). The official-domain sweep scans the home page of every official domain in the registry; the target is zero false positives there. The headline is the first blind held-out run (20:18 UTC, recall 0.619). We then broadened the global-brand list with those misses in mind, so the "after generalisation" row is not blind and we say so.
 -->
 
 ---
