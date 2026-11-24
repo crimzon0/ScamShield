@@ -39,15 +39,30 @@ AFFIXES = sorted({
 def _token_hit(term: str, tokens: list[str]) -> bool:
     """Short ASCII term vs host tokens (public suffix excluded). 3-letter terms (rta, icp, moi, dib) also
     need a scam/UAE context token elsewhere in the host (rta-fines, icp-uae); 4+ letters may stand alone."""
-    ctx = len(term) > 3 or any(t in AFFIXES for t in tokens if t != term)
+    short = len(term) <= 3
+    ctx = not short or any(t in AFFIXES for t in tokens if t != term)
+    amin = 3 if short else 2  # 'pierre-emoi' must not read as e+moi
     for tok in tokens:
         if tok == term and ctx:
             return True
-        if tok.startswith(term) and tok[len(term):] in AFFIXES:
+        rest = tok[len(term):]
+        if tok.startswith(term) and len(rest) >= amin and rest in AFFIXES:
             return True
-        if tok.endswith(term) and tok[: -len(term)] in AFFIXES:
+        rest = tok[: -len(term)]
+        if tok.endswith(term) and len(rest) >= amin and rest in AFFIXES:
             return True
     return False
+
+
+def hit_domain(m: dict) -> str:
+    """The domain a hit is filed under: the registrable domain, unless the brand term only appears in the
+    subdomain part (central-bank.sdm.network) - then the full host, so the feed shows what matched."""
+    reg = m.get("registrable") or registrable_of(m.get("host", ""))
+    if m.get("kind") == "keyword":
+        core = _squash(m.get("term", ""))
+        if core and core not in _squash(reg) and core not in _squash(skeleton(reg)):
+            return m.get("host") or reg
+    return reg
 
 
 # ------------------------------------------------------------------ helpers

@@ -42,7 +42,7 @@
     {"term": "الهويةالرقمية", "brand_hint": "uae_pass", "query": false},
     {"term": "بريدالامارات", "brand_hint": "emirates_post", "query": false}
   ],
-  "stop": ["bank", "banking", "login", "secure", "verify", "update", "account", "police", "dubai", "abudhabi",
+  "stop": ["centralbank", "central-bank", "bank", "banking", "login", "secure", "verify", "update", "account", "police", "dubai", "abudhabi",
            "abu-dhabi", "emirates", "emirate", "online", "service", "services", "support", "payment", "portal",
            "mobile", "united", "arab", "national", "first", "smart", "digital", "group", "global", "post",
            "بنك", "الامارات", "الإمارات", "دبي", "ابوظبي", "خدمة"]

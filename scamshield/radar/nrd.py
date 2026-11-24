@@ -15,7 +15,7 @@ from scamshield.core.config import DATA_DIR, settings
 from scamshield.core.schemas import RadarHit
 
 from .common import hit_from_match, scan_hits, store_hit
-from .watchlist import match_detail, registrable_of
+from .watchlist import hit_domain, match_detail, registrable_of
 
 log = logging.getLogger("scamshield.radar")
 
@@ -51,7 +51,7 @@ def match_domains(domains: Iterable[str], list_date: date) -> list[RadarHit]:
         m = match_detail(d)
         if not m:
             continue
-        reg = registrable_of(m["host"])
+        reg = hit_domain(m)
         if reg not in hits:
             hits[reg] = hit_from_match(reg, "nrd", first_seen, m, extra={
                 "nrd_list": list_date.isoformat(), "nrd_feed": "whoisds", "scan_host": m["host"]})

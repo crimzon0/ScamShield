@@ -16,7 +16,7 @@ from scamshield.core.config import DATA_DIR, settings
 from scamshield.core.schemas import RadarHit, utcnow
 
 from .common import SCAN_CONCURRENCY, existing_hit, hit_from_match, scan_hit, store_hit
-from .watchlist import match_detail, registrable_of
+from .watchlist import hit_domain, match_detail, registrable_of
 
 log = logging.getLogger("scamshield.radar")
 STATUS_PATH = DATA_DIR / "radar" / "certstream_status.json"
@@ -74,7 +74,7 @@ def hits_from_message(msg: Any, now: Optional[datetime] = None) -> list[RadarHit
             m = match_detail(str(d))
             if not m:
                 continue
-            reg = registrable_of(m["host"])
+            reg = hit_domain(m)
             if reg in out:
                 continue
             out[reg] = hit_from_match(reg, "certstream", fs, m, extra={

@@ -61,7 +61,7 @@ def parse_crtsh(rows: list[dict], days: int = 30, now: Optional[datetime] = None
             m = match_detail(n, include_fictional=include_fictional)
             if not m:
                 continue
-            reg = registrable_of(m["host"])
+            reg = hit_domain(m)
             e = out.setdefault(reg, {"first_seen": nb, "hosts": [], "cert_ids": [], "issuers": [], "match": m})
             if nb < e["first_seen"]:
                 e["first_seen"] = nb
