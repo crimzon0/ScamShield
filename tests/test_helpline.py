@@ -238,3 +238,27 @@ def test_registry_phones_all_normalise():
 
     bad = {b["id"]: malformed_phones(b) for b in load_registry() if malformed_phones(b)}
     assert bad == {}
+
+
+def test_phones_on_page():
+    from scamshield.core.schemas import Detonation, FormField
+    from scamshield.helpline import phones_on_page
+
+    det = Detonation(url="https://bit.ly/x", final_url="https://sandbox-bank-refund.example/r",
+                     title="Refund", visible_text="Call our helpline ۰۵۰ ۰۰۰ ۰۹۹۹ or 800 00000",
+                     form_fields=[FormField(name="p", label="WhatsApp us: wa.me/971500000998")])
+    fs = phones_on_page(det, "sandbox_bank")
+    st = {f.number_e164: f for f in fs}
+    assert st["+97180000000"].status == "official"
+    assert st["+971500000999"].status == "likely_scam"
+    assert "brand_name_unofficial_website" in st["+971500000999"].second_signals
+    assert "+971500000998" in st
+    assert all(f.source == "landing" and not f.synthetic for f in fs)
+    assert db.list_phone_findings() == []  # not saved by default
+    fs2 = phones_on_page(det, "sandbox_bank", label="scam")
+    assert all("landing_page_scam" in f.second_signals for f in fs2 if f.status == "likely_scam")
+    assert phones_on_page(det, None) == [] and phones_on_page(det, "nope") == []
+    # official page: unknown number is only unverified
+    off = Detonation(url="https://www.sandboxbank.example/contact", final_url="https://www.sandboxbank.example/contact",
+                     visible_text="Branch line 600 50 0105")
+    assert [f.status for f in phones_on_page(off, "sandbox_bank")] == ["unverified"]

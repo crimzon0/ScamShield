@@ -29,6 +29,13 @@ def main(argv: list[str] | None = None) -> int:
     if a.json:
         print(json.dumps([f.model_dump(mode="json") for f in fs], ensure_ascii=False, indent=2))
         return 0
+    places = last_sources.get("places", "")
+    if a.live and places in ("no_key", "offline"):
+        print(f"MODE: places={places} -> synthetic fallback (set GOOGLE_PLACES_API_KEY in .env for live Google Maps search)")
+    elif last_sources.get("synthetic") == "ok":
+        print("MODE: synthetic (labelled demo samples, not real data)")
+    else:
+        print(f"MODE: live (Google Places{' + SerpApi' if last_sources.get('serpapi') == 'ok' else ''})")
     print(f"sources: {dict(last_sources)}")
     for f in fs:
         tag = {"likely_scam": "LIKELY_SCAM", "unverified": "UNVERIFIED ", "official": "OFFICIAL   "}[f.status]

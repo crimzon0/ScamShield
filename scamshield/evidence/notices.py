@@ -12,6 +12,26 @@ def _lines(items, empty="-"):
     return "\n".join(f"  - {i}" for i in items) if items else f"  {empty}"
 
 
+def _platform_en(ctx):
+    p = ctx.get("platform")
+    return (f"Shared hosting platform: {p} — please also forward to the {p} platform abuse/trust & safety team.\n\n"
+            if p else "")
+
+
+def _platform_ar(ctx):
+    p = ctx.get("platform")
+    return (f"منصة استضافة مشتركة: {p} — يُرجى أيضاً إحالة البلاغ إلى فريق مكافحة الإساءة لدى منصة {p}.\n\n"
+            if p else "")
+
+
+def _warn(ctx, lang):
+    ws = ctx.get("capture_warnings") or []
+    if not ws:
+        return ""
+    head = "Capture notes:" if lang == "en" else "ملاحظات الالتقاط:"
+    return head + "\n" + _lines([w[lang] for w in ws]) + "\n\n"
+
+
 def notice_en(ctx: dict[str, Any]) -> str:
     to = ", ".join(ctx["registrar_contacts"]) or "(registrar abuse contact not found — look up via RDAP/ICANN)"
     host = ctx["hosting_contact"]
@@ -37,7 +57,7 @@ Final URL after redirects: {ctx['final_url'] or '-'}
 Registrable domain: {ctx['domain']}
 Hosting: IP {ctx['ip'] or '-'}, {ctx['asn'] or '-'} {ctx['asn_org'] or ''}, country {ctx['hosting_country'] or '-'}
 
-Brand impersonated: {ctx['brand_en'] or 'not determined'}
+{_platform_en(ctx)}{_warn(ctx, 'en')}Brand impersonated: {ctx['brand_en'] or 'not determined'}
 Official domain(s) of that brand: {', '.join(ctx['official_domains']) or 'not on file'}
 The reported domain is NOT an official domain of this brand.
 
@@ -88,7 +108,7 @@ def notice_ar(ctx: dict[str, Any]) -> str:
 النطاق المسجّل: {ctx['domain']}
 الاستضافة: عنوان IP {ctx['ip'] or '-'}، {ctx['asn'] or '-'} {ctx['asn_org'] or ''}، الدولة {ctx['hosting_country'] or '-'}
 
-العلامة التجارية المنتحَلة: {ctx['brand_ar'] or ctx['brand_en'] or 'غير محددة'}
+{_platform_ar(ctx)}{_warn(ctx, 'ar')}العلامة التجارية المنتحَلة: {ctx['brand_ar'] or ctx['brand_en'] or 'غير محددة'}
 النطاقات الرسمية لهذه العلامة: {'، '.join(ctx['official_domains']) or 'غير مسجّلة لدينا'}
 النطاق المُبلّغ عنه ليس نطاقاً رسمياً لهذه العلامة.
 

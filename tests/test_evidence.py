@@ -159,3 +159,14 @@ def test_hosting_contact_fallback():
     ctx = _context(scan, "C", "2026-11-24T00:00:00Z")
     assert ctx["hosting_contact"] == "abuse desk of Example Hosting (AS64500)"
     assert "قسم إساءة الاستخدام" in ctx["hosting_contact_ar"]
+
+
+async def test_http_error_and_shared_host_flagged(env):
+    d = fixtures.detonation(url="https://sandbox-x.netlify.app/")
+    d.http_status = 404
+    v = fixtures.verdict(scan_id="ev404", url=d.url)
+    scan = ScanResult(scan_id="ev404", url=d.url, detonations=[d], verdict=v)
+    db.save_scan(scan)
+    case = await build_case("ev404")
+    assert "HTTP 404" in case.notice_en and "HTTP 404" in case.notice_ar
+    assert "netlify.app" in case.notice_en and "منصة استضافة مشتركة" in case.notice_ar

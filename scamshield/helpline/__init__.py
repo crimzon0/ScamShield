@@ -13,7 +13,7 @@ import logging
 from scamshield.core import db
 from scamshield.core.config import DATA_DIR, settings
 from scamshield.core.domains import is_official, registrable
-from scamshield.core.schemas import PhoneFinding
+from scamshield.core.schemas import Detonation, PhoneFinding
 
 from .classify import claims_brand, findings_from_listing, malformed_phones, official_numbers  # noqa: F401
 from .phones import extract, normalize  # noqa: F401  (public: normalize)
@@ -25,7 +25,7 @@ MAX_LANDING_SCANS = 5
 # Last run status per source, e.g. {"places": "ok" | "no_key" | "unavailable" | "offline", ...}
 last_sources: dict[str, str] = {}
 
-__all__ = ["check_brand", "check_all", "normalize", "extract", "last_sources", "PhoneFinding"]
+__all__ = ["check_brand", "check_all", "phones_on_page", "normalize", "extract", "last_sources", "PhoneFinding"]
 
 
 def _registry() -> list[dict]:
@@ -180,3 +180,41 @@ async def check_all(live: bool | None = None, scan_landing: bool = True, save: b
     for i in ids:
         out += await check_brand(i, live=use_live, scan_landing=scan_landing, save=save)
     return out
+
+
+def phones_on_page(det: Detonation, brand_id: str | None, label: str | None = None,
+                   save: bool = False) -> list[PhoneFinding]:
+    """Numbers shown on a detonated page (visible_text, title, form labels/placeholders), classified against
+    the claimed brand's official numbers. source="landing", synthetic=False. Pass the page's verdict label
+    (scam/likely_scam) as `label` if already known; it adds the landing_page_scam signal. Not saved unless
+    save=True. Never raises; returns [] if no brand or no numbers."""
+    try:
+        if not brand_id or det is None:
+            return []
+        brand = _brand(brand_id, synthetic_ok=False)
+        if brand is None:
+            return []
+        url = det.final_url or det.url
+        parts = [det.title or "", det.visible_text or ""]
+        parts += [" ".join(x for x in (f.label, f.placeholder) if x) for f in det.form_fields]
+        listing = {"source": "landing", "query": f"detonation of {url}", "url": url,
+                   "name": f"Landing page: {registrable(url) if url else ''}", "text": "\n".join(parts),
+                   "landing_label": label}
+        found = findings_from_listing(listing, brand)
+        # The page itself was detonated as this brand's claimed page, so keep findings even if the
+        # text does not repeat the brand name (relevance filter is for Maps noise, not pages).
+        if not found:
+            from .phones import extract as _extract
+            from .classify import classify as _classify
+            nums = _extract(url + "\n" + listing["text"])
+            found = [_classify(dict(listing, force_named=True), brand, raw, e) for raw, e in nums]
+        if save:
+            for f in found:
+                try:
+                    db.save_phone_finding(f)
+                except Exception as e:  # pragma: no cover
+                    log.warning("save_phone_finding failed: %s", e)
+        return found
+    except Exception as e:
+        log.warning("phones_on_page failed: %s", e)
+        return []

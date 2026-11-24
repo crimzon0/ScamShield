@@ -101,7 +101,8 @@ def classify(listing: dict[str, Any], brand: dict, raw_number: str, number_e164:
     domains = brand.get("official_domains", []) or []
     name = listing.get("name", "") or ""
     site = listing.get("url", "") or ""
-    named = claims_brand(name, brand) or claims_brand(listing.get("text", "") or "", brand)
+    named = (bool(listing.get("force_named")) or claims_brand(name, brand)
+             or claims_brand(listing.get("text", "") or "", brand))
     brand_en = brand.get("name_en") or brand.get("id", "")
     brand_ar = brand.get("name_ar") or brand_en
 

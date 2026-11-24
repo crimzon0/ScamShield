@@ -35,6 +35,7 @@
   h2 { break-after: avoid; page-break-after: avoid; }
   .note, figure, tr { break-inside: avoid; page-break-inside: avoid; }
   .missing { color: #a00; }
+  .warn { color: #8a4b00; background: #fff4e0; border: 1px solid #e0a040; padding: 1.5mm 3mm; font-size: 9.5pt; }
 </style>
 </head>
 <body>
@@ -58,6 +59,7 @@
   <h2>Verdict</h2>
   <p><span class="badge {{ c.label }}">{{ c.label_en }} — {{ c.score }}/100</span>
      &nbsp; mode: {{ c.mode }}</p>
+  {% for w in c.capture_warnings %}<p class="warn">⚠ {{ w.en }}</p>{% endfor %}
   <p>{{ c.summary_en }}</p>
   {% if c.brand_en %}<p><b>Brand impersonated:</b> {{ c.brand_en }}
      &nbsp; <b>Official domains:</b> {{ c.official_domains|join(', ') or 'not on file' }}
@@ -112,6 +114,7 @@
     <tr><td>IP / A records</td><td class="mono">{{ c.ip or '-' }}{% if c.a_records %} ({{ c.a_records|join(', ') }}){% endif %}</td></tr>
     <tr><td>ASN / organisation</td><td>{{ c.asn or '-' }} {{ c.asn_org }}</td></tr>
     <tr><td>Hosting country</td><td>{{ c.hosting_country or '-' }}</td></tr>
+    {% if c.platform %}<tr><td>Shared hosting platform</td><td>{{ c.platform }} — the platform operator can remove this site</td></tr>{% endif %}
     <tr><td>Hosting abuse contact</td><td>{{ c.hosting_contact }}</td></tr>
     <tr><td>MX records</td><td class="mono">{{ c.mx_records|join(', ') or '-' }}</td></tr>
     <tr><td>Certificate first seen (UTC)</td><td>{{ c.cert_first_seen or '-' }}{% if c.cert_count %} ({{ c.cert_count }} certs){% endif %}</td></tr>
@@ -157,6 +160,7 @@
 
   <h2>الحكم</h2>
   <p><span class="badge {{ c.label }}">{{ c.label_ar }} — <span dir="ltr">{{ c.score }}/100</span></span></p>
+  {% for w in c.capture_warnings %}<p class="warn">⚠ {{ w.ar }}</p>{% endfor %}
   <p>{{ c.summary_ar }}</p>
   {% if c.brand_en %}<p><b>العلامة التجارية المنتحَلة:</b> {{ c.brand_ar or c.brand_en }}
      &nbsp; <b>النطاقات الرسمية:</b> <span dir="ltr">{{ c.official_domains|join(', ') or '-' }}</span></p>{% endif %}

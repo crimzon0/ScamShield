@@ -156,6 +156,8 @@ def _context(scan: ScanResult, case_id: str, generated_at: str) -> dict[str, Any
         "tls": ({"issuer": tls.issuer, "subject": tls.subject, "valid_from": iso(tls.valid_from),
                  "valid_to": iso(tls.valid_to)} if tls else None),
         "captured_at": captured,
+        "platform": _platform(final or scan.url),
+        "capture_warnings": _capture_warnings(scan),
         "hop_count": max((len(d.redirect_chain) for d in scan.detonations), default=0),
         "detonations": [{"persona": d.persona, "status": d.status, "http_status": d.http_status,
                          "started_at": iso(d.started_at), "finished_at": iso(d.finished_at), "error": d.error,
@@ -188,6 +190,33 @@ def _embed_image(path: Path, max_w: int = 900, max_ratio: float = 1.6) -> tuple[
             return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode(), cropped, dims
     except Exception:
         return "data:image/png;base64," + base64.b64encode(raw).decode(), False, ""
+
+
+def _platform(url: str) -> str:
+    try:
+        from scamshield.core.domains import is_shared_host, registrable_icann
+
+        return registrable_icann(url) if is_shared_host(url) else ""
+    except Exception:
+        return ""
+
+
+def _capture_warnings(scan: ScanResult) -> list[dict[str, str]]:
+    """Facts an officer must see before relying on page content (e.g. page already removed)."""
+    out = []
+    for d in scan.detonations:
+        if d.status != "ok":
+            out.append({"en": f"Persona {d.persona}: page status '{d.status}' at capture{': ' + d.error if d.error else ''}.",
+                        "ar": f"الملف التعريفي {d.persona}: حالة الصفحة '{d.status}' وقت الالتقاط."})
+        elif d.http_status and d.http_status >= 400:
+            out.append({"en": f"Persona {d.persona}: the server answered HTTP {d.http_status} at capture time — "
+                              f"the content may already have been removed; page-content findings need manual review.",
+                        "ar": f"الملف التعريفي {d.persona}: أعاد الخادم الرمز HTTP {d.http_status} وقت الالتقاط — "
+                              f"ربما أُزيل المحتوى، وتحتاج النتائج المتعلقة بمحتوى الصفحة إلى مراجعة يدوية."})
+    if not scan.detonations or scan.verdict.mode == "domain_only":
+        out.append({"en": "Domain-only assessment: no page content was captured.",
+                    "ar": "تقييم يعتمد على النطاق فقط: لم يُلتقط أي محتوى للصفحة."})
+    return out
 
 
 def render_html(ctx: dict[str, Any]) -> str:

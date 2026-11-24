@@ -37,6 +37,7 @@ class TLSInfo(BaseModel):
     valid_from: Optional[datetime] = None
     valid_to: Optional[datetime] = None
     protocol: str = ""
+    verify_error: str = ""  # e.g. "expired", "self-signed", "hostname mismatch"
 
 
 class Detonation(BaseModel):
@@ -59,7 +60,8 @@ class Detonation(BaseModel):
     started_at: datetime = Field(default_factory=utcnow)
     finished_at: Optional[datetime] = None
     duration_ms: int = 0
-    error: str = ""
+    error: str = ""  # failure reason only
+    notes: list[str] = []  # informational: anti-bot challenge, blocked popup, TLS warning
 
 
 class CloakDiff(BaseModel):

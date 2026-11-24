@@ -71,6 +71,9 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/slow":
             time.sleep(30)
             return self._send(200, BENIGN_PAGE)
+        if p == "/tall":
+            return self._send(200, "<html><body><h1>Sandbox Bank tall page</h1>"
+                              "<div style='height:30000px;background:linear-gradient(#fff,#00f)'>long</div></body></html>")
         if p == "/favicon.png":
             return self._send(200, PNG, ctype="image/png")
         return self._send(404, "<html><body>not found</body></html>")

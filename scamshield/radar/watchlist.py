@@ -22,6 +22,28 @@ MIN_LEN_AR = 4
 # dnstwist fuzzers that create too much noise on their own
 SKIP_FUZZERS = {"*original", "subdomain", "various"}
 DEFAULT_STOP = {"bank", "login", "secure", "police", "dubai", "abudhabi", "emirates", "online", "service"}
+# ASCII terms shorter than this (tamm, adcb, rta, icp, salik, ...) must be a whole host token, or a token
+# made of the term plus a scam-typical affix (tamm-pay, adcbverify, uaesalik), never an arbitrary substring.
+SUBSTRING_MIN = 7
+AFFIXES = sorted({
+    "pay", "payment", "payments", "fine", "fines", "login", "signin", "gov", "ae", "uae", "online", "verify",
+    "verification", "portal", "service", "services", "secure", "security", "update", "bank", "app", "web", "my",
+    "e", "id", "dubai", "abudhabi", "ad", "dxb", "auh", "card", "cards", "help", "support", "care", "customer",
+    "track", "tracking", "delivery", "parcel", "post", "refund", "reward", "rewards", "points", "sms", "otp",
+    "auth", "account", "accounts", "official", "smart", "digital", "net", "info", "center", "centre", "hub",
+    "renew", "renewal", "visa", "toll", "tolls", "traffic", "police", "pass", "ebanking", "mobile", "unlock",
+}, key=len, reverse=True)
+
+
+def _token_hit(term: str, tokens: list[str]) -> bool:
+    for tok in tokens:
+        if tok == term:
+            return True
+        if tok.startswith(term) and tok[len(term):] in AFFIXES:
+            return True
+        if tok.endswith(term) and tok[: -len(term)] in AFFIXES:
+            return True
+    return False
 
 
 # ------------------------------------------------------------------ helpers
@@ -98,6 +120,12 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
             seen.add(key)
             entries.append({"term": term, "brand_id": brand_id, "kind": kind, "lang": lang, "query": query, **extra})
 
+    # curated radar tokens from the registry (domain_keywords), short ones are token-matched
+    for b in reg:
+        for k in b.get("domain_keywords", []):
+            t = k.lower().strip().replace(" ", "")
+            if len(t) >= 3 and _squash(t) not in stop:
+                add(t, b["id"], "keyword", "en", query=len(_squash(t)) >= 5)
     # registry keywords (EN / Arabizi / Arabic)
     for b in reg:
         for k in b.get("keywords_en", []) + [b.get("name_en", "")]:
@@ -155,7 +183,8 @@ def _build(include_fictional: bool, _reg_mtime: float, _seed_mtime: float) -> di
             except Exception as e:  # never raise
                 log.debug("dnstwist failed for %s: %s", r, e)
             # same label on another TLD (tld swap / combo on official label)
-            perms.setdefault(lab, (b["id"], "tld-swap", r))
+            if lab not in stop:
+                perms.setdefault(lab, (b["id"], "tld-swap", r))
     for pl, (bid, fz, off) in perms.items():
         n_perm += 1
         entries.append({"term": pl, "brand_id": bid, "kind": "permutation", "lang": "en", "query": False,
@@ -206,9 +235,15 @@ def match_detail(domain: str, include_fictional: bool = False) -> Optional[dict]
         # 2) keyword anywhere in the host (hyphen-sensitive terms vs hyphen-insensitive)
         squashed = _squash(host)
         dotted = host.replace(".", "-")
+        tokens = [t for t in dotted.split("-") if t]
         for e in wl["keywords"]:
             t = e["term"]
-            hit = (t in dotted) if "-" in t else (t in squashed)
+            if "-" in t:
+                hit = t in dotted
+            elif not t.isascii() or len(t) >= SUBSTRING_MIN:
+                hit = t in squashed
+            else:
+                hit = _token_hit(t, tokens)
             if hit:
                 return {"term": t, "brand_id": e["brand_id"], "kind": "keyword", "lang": e["lang"],
                         "theme": e.get("theme"), "host": host, "registrable": reg}

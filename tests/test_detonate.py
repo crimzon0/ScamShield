@@ -130,3 +130,22 @@ async def test_cloak_diff_unit():
     assert cd.cloaked and any("final domain" in x for x in cd.differences)
     assert cloak_diff([a]).cloaked is False
     assert cloak_diff([]).cloaked is False
+
+
+async def test_tall_page_screenshot_capped(base):
+    from PIL import Image
+
+    d = await detonate(base + "/tall", persona="desktop", scan_id="t-tall")
+    assert d.status == "ok", d.error
+    with Image.open(d.screenshot_path) as im:
+        assert im.height <= 10_000 * 2  # css px * device scale
+
+
+async def test_concurrent_five(base):
+    import asyncio
+
+    t0 = time.monotonic()
+    dets = await asyncio.gather(*[detonate(base + "/r1", scan_id="t-conc") for _ in range(5)])
+    assert all(d.status == "ok" and d.final_url == base + "/final" for d in dets)
+    assert len({d.screenshot_path for d in dets}) == 5  # no artifact clobbering
+    assert time.monotonic() - t0 < 30
