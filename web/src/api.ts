@@ -1,0 +1,68 @@
+export type Label = "scam" | "likely_scam" | "suspicious" | "legitimate";
+
+export interface Signal { id: string; weight: number; en: string; ar: string; evidence?: string }
+export interface RedirectHop { url: string; status?: number | null; kind: string; at: string }
+export interface Detonation {
+  url: string; persona: string; status: string; final_url: string; http_status?: number | null;
+  redirect_chain: RedirectHop[]; title: string; screenshot_path?: string | null; error?: string;
+  form_fields?: { name: string; type: string; label: string }[];
+  tls?: { issuer: string; subject: string; valid_from?: string | null } | null;
+}
+export interface Intel {
+  domain: string; registrable_domain: string; created?: string | null; age_days?: number | null; registrar: string;
+  ip: string; asn: string; asn_org: string; hosting_country: string; cert_first_seen?: string | null;
+  cert_count?: number | null; blocklist_hits: string[]; safe_browsing: string[]; tranco_rank?: number | null;
+  nameservers: string[]; sources: Record<string, string>; abuse_emails: string[];
+}
+export interface Lookalike { domain: string; brand_id?: string | null; closest_official?: string | null; distance?: number | null; techniques: string[]; score: number }
+export interface BrandMatch {
+  brand_id?: string | null; name_en: string; name_ar: string; confidence: number; methods: string[]; evidence: string[];
+  official_domains: string[]; is_official_domain: boolean; asks_for: string[]; lookalike?: Lookalike | null; llm_used: boolean;
+}
+export interface Verdict {
+  scan_id: string; url: string; final_url: string; registrable_domain: string; score: number; label: Label;
+  mode: "full" | "domain_only"; reasons: Signal[]; summary_en: string; summary_ar: string; brand_id?: string | null; created_at: string;
+}
+export interface ScanResult {
+  scan_id: string; url: string; detonations: Detonation[]; cloak?: { cloaked: boolean; personas: string[]; differences: string[]; similarity: number } | null;
+  intel?: Intel | null; brand?: BrandMatch | null; lookalike?: Lookalike | null; verdict: Verdict; created_at: string;
+  screenshots?: Record<string, string>; case?: { zip_url?: string | null; pdf_url?: string | null } | null;
+}
+export interface ScanRow { scan_id: string; url: string; created_at: string; score: number; label: Label; domain?: string }
+export interface RadarRow {
+  id: number; domain: string; source: string; matched_term: string; brand_id?: string | null; first_seen: string;
+  flagged_at: string; scan_id?: string | null; score?: number | null; label?: Label | null; time_to_detection_seconds?: number | null;
+}
+export interface PhoneRow {
+  id: number; brand_id: string; brand_name_en?: string; brand_name_ar?: string; query: string; source: string;
+  listing_name: string; listing_url: string; raw_number: string; number_e164: string; official_numbers: string[];
+  status: "official" | "unverified" | "likely_scam"; second_signals: string[]; reasons_en: string; reasons_ar: string;
+  synthetic: boolean; found_at: string;
+}
+export interface CaseOut { zip_url?: string | null; pdf_url?: string | null; notice_en: string; notice_ar: string }
+
+async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(path, init);
+  if (!r.ok) {
+    let msg = `${r.status}`;
+    try { msg = (await r.json()).detail || msg; } catch { /* ignore */ }
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+export const api = {
+  scan: (url: string) => req<ScanResult>("/api/scan", json({ url })),
+  getScan: (id: string) => req<ScanResult>(`/api/scans/${encodeURIComponent(id)}`),
+  scans: () => req<ScanRow[]>("/api/scans"),
+  radar: () => req<RadarRow[]>("/api/radar"),
+  radarStatus: () => req<{ running: boolean; last_count?: number | null; error?: string }>("/api/radar/status"),
+  backfill: () => req<{ started: boolean }>("/api/radar/backfill", { method: "POST" }),
+  helpline: () => req<PhoneRow[]>("/api/helpline"),
+  helplineRun: () => req<{ findings: number }>("/api/helpline/run", json({})),
+  buildCase: (id: string) => req<CaseOut>(`/api/scans/${encodeURIComponent(id)}/case`, { method: "POST" }),
+  batchCsv: (file: File) => { const fd = new FormData(); fd.append("file", file); return req<{ job_id: string; total: number }>("/api/batch", { method: "POST", body: fd }); },
+  batchStatus: (id: string) => req<{ status: string; total: number; done: number; results: { url: string; status: string; scan_id?: string; score?: number; label?: Label }[] }>(`/api/batch/${id}`),
+};

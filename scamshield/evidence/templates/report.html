@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ScamShield case {{ c.case_id }}</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", "Noto Sans Arabic", Arial, sans-serif;
+         font-size: 10.5pt; color: #111; margin: 0; }
+  [lang="ar"] { font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", "Noto Sans Arabic", "Arial", sans-serif; }
+  h1 { font-size: 17pt; margin: 0 0 2mm; }
+  h2 { font-size: 12.5pt; border-bottom: 1.5px solid #333; padding-bottom: 1mm; margin: 6mm 0 2mm; }
+  .hdr { border: 2px solid #111; padding: 3mm 4mm; margin-bottom: 4mm; }
+  .hdr .draft { color: #a00; font-weight: 700; font-size: 9pt; }
+  .meta { width: 100%; border-collapse: collapse; }
+  .meta td { padding: 0.6mm 2mm 0.6mm 0; vertical-align: top; }
+  .meta td.k { color: #555; width: 38mm; white-space: nowrap; }
+  .badge { display: inline-block; padding: 1mm 3mm; border-radius: 2mm; color: #fff; font-weight: 700; font-size: 12pt; }
+  .scam { background: #b00020; } .likely_scam { background: #d35400; }
+  .suspicious { background: #b8860b; } .legitimate { background: #1e7e34; }
+  table.t { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 1mm 0 2mm; table-layout: fixed; }
+  table.t th, table.t td { border: 1px solid #999; padding: 1mm 1.5mm; text-align: start; vertical-align: top;
+                           overflow-wrap: anywhere; word-break: break-word; }
+  table.t th { background: #eee; }
+  .mono { font-family: Consolas, "Courier New", monospace; font-size: 8pt; overflow-wrap: anywhere; word-break: break-all; }
+  .shot { max-width: 100%; max-height: 150mm; border: 1px solid #666; display: block; margin: 2mm 0; }
+  .shots { display: flex; gap: 3mm; flex-wrap: wrap; }
+  .shots figure { margin: 0; flex: 1 1 55mm; max-width: 90mm; }
+  .shots figcaption { font-size: 8pt; color: #555; }
+  .note { font-size: 8.5pt; color: #333; background: #f5f5f5; border-left: 3px solid #555; padding: 2mm 3mm; }
+  .ar { direction: rtl; text-align: right; }
+  .ar table.t th, .ar table.t td { text-align: right; }
+  .pb { page-break-before: always; }
+  .missing { color: #a00; }
+</style>
+</head>
+<body>
+
+<!-- ============================== ENGLISH ============================== -->
+<section lang="en" dir="ltr">
+  <div class="hdr">
+    <div class="draft">EVIDENCE REPORT — DRAFT FOR OFFICER REVIEW</div>
+    <h1>ScamShield case {{ c.case_id }}</h1>
+    <table class="meta">
+      <tr><td class="k">Scan ID</td><td class="mono">{{ c.scan_id }}</td></tr>
+      <tr><td class="k">Reported URL</td><td class="mono">{{ c.url }}</td></tr>
+      <tr><td class="k">Final URL</td><td class="mono">{{ c.final_url or '-' }}</td></tr>
+      <tr><td class="k">Registrable domain</td><td class="mono">{{ c.domain or '-' }}</td></tr>
+      <tr><td class="k">Scan time (UTC)</td><td>{{ c.scan_created }}</td></tr>
+      <tr><td class="k">Report generated (UTC)</td><td>{{ c.generated_at }}</td></tr>
+      <tr><td class="k">Tool</td><td>{{ c.tool }}</td></tr>
+    </table>
+  </div>
+
+  <h2>Verdict</h2>
+  <p><span class="badge {{ c.label }}">{{ c.label_en }} — {{ c.score }}/100</span>
+     &nbsp; mode: {{ c.mode }}</p>
+  <p>{{ c.summary_en }}</p>
+  {% if c.brand_en %}<p><b>Brand impersonated:</b> {{ c.brand_en }}
+     &nbsp; <b>Official domains:</b> {{ c.official_domains|join(', ') or 'not on file' }}
+     &nbsp; <b>Asks for:</b> {{ c.asks_for|join(', ') or '-' }}</p>{% endif %}
+
+  <h2>Reasons</h2>
+  <table class="t">
+    <tr><th style="width:9%">Weight</th><th style="width:45%">Reason (EN)</th><th lang="ar" dir="rtl" style="width:46%;text-align:right">السبب (AR)</th></tr>
+    {% for r in c.reasons %}
+    <tr><td>{{ '%+d'|format(r.weight) }}</td><td>{{ r.en }}{% if r.evidence %}<br><span class="mono">{{ r.evidence }}</span>{% endif %}</td>
+        <td lang="ar" dir="rtl" style="text-align:right">{{ r.ar }}</td></tr>
+    {% else %}<tr><td colspan="3">No reasons recorded.</td></tr>{% endfor %}
+  </table>
+
+  <h2>Screenshots</h2>
+  {% if c.screenshots %}
+  <div class="shots">
+    {% for s in c.screenshots %}
+    <figure><img class="shot" src="{{ s.data_uri }}" alt="screenshot {{ s.persona }}">
+      <figcaption>{{ s.persona }} — {{ s.captured_at }} — sha256 <span class="mono">{{ s.sha256[:16] }}…</span></figcaption></figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="missing">No screenshot captured (page dead, blank or cloaked — domain-only evidence).</p>{% endif %}
+
+  <h2>Redirect chain</h2>
+  {% for d in c.detonations %}
+  <p><b>Persona:</b> {{ d.persona }} &nbsp; <b>status:</b> {{ d.status }} &nbsp; <b>HTTP:</b> {{ d.http_status or '-' }}
+     &nbsp; <b>started:</b> {{ d.started_at }} &nbsp; <b>finished:</b> {{ d.finished_at or '-' }}
+     {% if d.error %}&nbsp; <b>error:</b> {{ d.error }}{% endif %}</p>
+  <table class="t">
+    <tr><th style="width:5%">#</th><th style="width:12%">Kind</th><th style="width:8%">HTTP</th><th style="width:50%">URL</th><th style="width:25%">Time (UTC)</th></tr>
+    {% for h in d.chain %}
+    <tr><td>{{ loop.index }}</td><td>{{ h.kind }}</td><td>{{ h.status or '-' }}</td><td class="mono">{{ h.url }}</td><td>{{ h.at }}</td></tr>
+    {% else %}<tr><td colspan="5">No redirects recorded.</td></tr>{% endfor %}
+  </table>
+  {% endfor %}
+
+  <h2>Registration (RDAP / WHOIS)</h2>
+  <table class="t">
+    <tr><th style="width:32%">Field</th><th>Value</th></tr>
+    <tr><td>Registrar</td><td>{{ c.registrar or '-' }}{% if c.rdap.registrar_iana_id %} (IANA {{ c.rdap.registrar_iana_id }}){% endif %}</td></tr>
+    <tr><td>Registrar abuse contacts</td><td class="mono">{{ c.registrar_contacts|join(', ') or '-' }}{% if c.rdap.registrar_abuse_phones %} / {{ c.rdap.registrar_abuse_phones|join(', ') }}{% endif %}</td></tr>
+    <tr><td>Domain created (UTC)</td><td>{{ c.domain_created or '-' }}{% if c.age_days is not none %} ({{ c.age_days }} days old){% endif %}</td></tr>
+    {% for k, v in c.rdap.events.items() %}<tr><td>RDAP event: {{ k }}</td><td>{{ v }}</td></tr>{% endfor %}
+    <tr><td>Status</td><td>{{ c.rdap.status|join(', ') or '-' }}</td></tr>
+    <tr><td>Nameservers</td><td class="mono">{{ c.nameservers|join(', ') or '-' }}</td></tr>
+  </table>
+
+  <h2>Hosting &amp; TLS</h2>
+  <table class="t">
+    <tr><th style="width:32%">Field</th><th>Value</th></tr>
+    <tr><td>IP / A records</td><td class="mono">{{ c.ip or '-' }}{% if c.a_records %} ({{ c.a_records|join(', ') }}){% endif %}</td></tr>
+    <tr><td>ASN / organisation</td><td>{{ c.asn or '-' }} {{ c.asn_org }}</td></tr>
+    <tr><td>Hosting country</td><td>{{ c.hosting_country or '-' }}</td></tr>
+    <tr><td>Hosting abuse contact</td><td>{{ c.hosting_contact }}</td></tr>
+    <tr><td>MX records</td><td class="mono">{{ c.mx_records|join(', ') or '-' }}</td></tr>
+    <tr><td>Certificate first seen (UTC)</td><td>{{ c.cert_first_seen or '-' }}{% if c.cert_count %} ({{ c.cert_count }} certs){% endif %}</td></tr>
+    {% if c.tls %}<tr><td>TLS issuer / subject</td><td>{{ c.tls.issuer }} / {{ c.tls.subject }}</td></tr>
+    <tr><td>TLS valid from / to</td><td>{{ c.tls.valid_from or '-' }} → {{ c.tls.valid_to or '-' }}</td></tr>{% endif %}
+    <tr><td>Blocklists</td><td>{{ c.blocklists|join(', ') or 'none' }}</td></tr>
+    <tr><td>Intel sources</td><td class="mono">{% for k, v in c.sources.items() %}{{ k }}={{ v }} {% endfor %}</td></tr>
+  </table>
+
+  <h2>Evidence file hashes (SHA-256)</h2>
+  <table class="t">
+    <tr><th style="width:30%">File</th><th style="width:12%">Bytes</th><th>SHA-256</th></tr>
+    {% for f in c.key_hashes %}<tr><td class="mono">{{ f.path }}</td><td>{{ f.size }}</td><td class="mono">{{ f.sha256 }}</td></tr>{% endfor %}
+    {% for m in c.missing %}<tr><td class="mono">{{ m.path }}</td><td colspan="2" class="missing">missing: {{ m.reason }}</td></tr>{% endfor %}
+  </table>
+
+  <h2>Chain of custody</h2>
+  <div class="note">
+    Evidence was captured automatically by {{ c.tool }} in an isolated headless browser (downloads disabled, no form
+    interaction) at the UTC times shown above. Each file in case package <b>{{ c.case_id }}</b> is listed in
+    <span class="mono">manifest.json</span> with its SHA-256, size and creation time; the SHA-256 of manifest.json itself
+    is recorded in <span class="mono">manifest.sha256</span>. Any alteration of a file changes its hash. This report
+    (report.pdf) is hashed in the manifest. This is an automated assessment and requires review by an authorised officer
+    before any legal action or takedown request is sent.
+  </div>
+</section>
+
+<!-- ============================== ARABIC ============================== -->
+<section class="ar pb" lang="ar" dir="rtl">
+  <div class="hdr">
+    <div class="draft">تقرير أدلة — مسودة لمراجعة الضابط</div>
+    <h1>قضية ScamShield رقم <span dir="ltr">{{ c.case_id }}</span></h1>
+    <table class="meta">
+      <tr><td class="k">رقم الفحص</td><td class="mono" dir="ltr" style="text-align:right">{{ c.scan_id }}</td></tr>
+      <tr><td class="k">الرابط المُبلّغ عنه</td><td class="mono" dir="ltr" style="text-align:right">{{ c.url }}</td></tr>
+      <tr><td class="k">الرابط النهائي</td><td class="mono" dir="ltr" style="text-align:right">{{ c.final_url or '-' }}</td></tr>
+      <tr><td class="k">النطاق المسجّل</td><td class="mono" dir="ltr" style="text-align:right">{{ c.domain or '-' }}</td></tr>
+      <tr><td class="k">وقت الفحص (UTC)</td><td dir="ltr" style="text-align:right">{{ c.scan_created }}</td></tr>
+      <tr><td class="k">وقت إنشاء التقرير (UTC)</td><td dir="ltr" style="text-align:right">{{ c.generated_at }}</td></tr>
+      <tr><td class="k">الأداة</td><td dir="ltr" style="text-align:right">{{ c.tool }}</td></tr>
+    </table>
+  </div>
+
+  <h2>الحكم</h2>
+  <p><span class="badge {{ c.label }}">{{ c.label_ar }} — <span dir="ltr">{{ c.score }}/100</span></span></p>
+  <p>{{ c.summary_ar }}</p>
+  {% if c.brand_en %}<p><b>العلامة التجارية المنتحَلة:</b> {{ c.brand_ar or c.brand_en }}
+     &nbsp; <b>النطاقات الرسمية:</b> <span dir="ltr">{{ c.official_domains|join(', ') or '-' }}</span></p>{% endif %}
+
+  <h2>الأسباب</h2>
+  <table class="t">
+    <tr><th style="width:10%">الوزن</th><th>السبب</th></tr>
+    {% for r in c.reasons %}<tr><td dir="ltr" style="text-align:right">{{ '%+d'|format(r.weight) }}</td><td>{{ r.ar }}</td></tr>
+    {% else %}<tr><td colspan="2">لا توجد أسباب مسجّلة.</td></tr>{% endfor %}
+  </table>
+
+  <h2>البيانات الفنية</h2>
+  <table class="t">
+    <tr><th style="width:35%">الحقل</th><th>القيمة</th></tr>
+    <tr><td>المسجّل</td><td dir="ltr" style="text-align:right">{{ c.registrar or '-' }}</td></tr>
+    <tr><td>جهة الإبلاغ عن الإساءة لدى المسجّل</td><td class="mono" dir="ltr" style="text-align:right">{{ c.registrar_contacts|join(', ') or '-' }}</td></tr>
+    <tr><td>تاريخ تسجيل النطاق (UTC)</td><td dir="ltr" style="text-align:right">{{ c.domain_created or '-' }}</td></tr>
+    {% if c.age_days is not none %}<tr><td>عمر النطاق</td><td>{{ c.age_days }} يوم</td></tr>{% endif %}
+    <tr><td>عنوان IP</td><td class="mono" dir="ltr" style="text-align:right">{{ c.ip or '-' }}</td></tr>
+    <tr><td>مزوّد الاستضافة (ASN)</td><td dir="ltr" style="text-align:right">{{ c.asn or '-' }} {{ c.asn_org }}</td></tr>
+    <tr><td>دولة الاستضافة</td><td dir="ltr" style="text-align:right">{{ c.hosting_country or '-' }}</td></tr>
+    <tr><td>أول ظهور للشهادة الرقمية (UTC)</td><td dir="ltr" style="text-align:right">{{ c.cert_first_seen or '-' }}</td></tr>
+    <tr><td>عدد خطوات إعادة التوجيه</td><td>{{ c.hop_count }}</td></tr>
+  </table>
+  <p>جدول إعادة التوجيه الكامل وصور الشاشة وبصمات الملفات موجودة في القسم الإنجليزي أعلاه وفي حزمة القضية.</p>
+
+  <h2>سلسلة حفظ الأدلة</h2>
+  <div class="note">
+    تم جمع الأدلة آلياً بواسطة الأداة <span dir="ltr">{{ c.tool }}</span> داخل متصفح معزول دون تنزيل ملفات أو إدخال بيانات
+    في النماذج، في الأوقات المبيّنة بالتوقيت العالمي. كل ملف في حزمة القضية <span dir="ltr">{{ c.case_id }}</span> مُدرج في
+    ملف البيان <span class="mono" dir="ltr">manifest.json</span> مع بصمة SHA-256 وحجمه ووقت إنشائه، وبصمة ملف البيان نفسه
+    محفوظة في <span class="mono" dir="ltr">manifest.sha256</span>. أي تعديل على أي ملف يغيّر بصمته. هذا تقييم آلي ويتطلب
+    مراجعة ضابط مختص قبل اتخاذ أي إجراء قانوني أو إرسال طلب الإزالة.
+  </div>
+</section>
+</body>
+</html>

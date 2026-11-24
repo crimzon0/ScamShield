@@ -1,14 +1,162 @@
-"""Owner: intel. STUB."""
-from scamshield.core import fixtures
+"""Owner: intel. Domain intelligence for domain-only verdicts and police evidence.
+
+Public API:
+  async enrich(domain) -> Intel          RDAP/WHOIS, DNS, ASN, crt.sh first-seen, blocklists, Tranco, urlscan, Safe Browsing
+  blocklist_hits(url) -> list[str]       feed names listing this URL/host (local files only; offline-safe)
+  feed_urls(limit=200) -> dict           recent phishing URLs per feed (eval set)
+  async crtsh_search(pattern, days=30)   crt.sh identity search for radar
+
+Intel.sources values: ok | cached | unavailable | offline | no_key | not_found (rdap: domain not registered)
+| no_ip (asn: domain has no A record).
+"""
+from __future__ import annotations
+
+import asyncio
+from datetime import datetime, timezone
+
+from scamshield.core.config import settings
+from scamshield.core.domains import host_of, registrable
 from scamshield.core.schemas import Intel
 
+from . import feeds as _feeds
+from ._common import DAY, HOUR, log, parse_dt, run_source
+from .crtsh import crtsh_search, fetch_first_seen
+from .keyed import fetch_safe_browsing, fetch_urlscan
+from .netinfo import fetch_asn, fetch_dns
+from .rdap import registration
 
-async def enrich(domain: str) -> Intel:
-    """RDAP/WHOIS, DNS, ASN, crt.sh, blocklists, Tranco, optional urlscan/Safe Browsing. Never raises;
-    each unavailable source is recorded in Intel.sources. Cached in SQLite."""
-    return fixtures.intel(domain)
+__all__ = ["enrich", "blocklist_hits", "feed_urls", "crtsh_search"]
+
+TOTAL_CAP = 10.0
 
 
 def blocklist_hits(url: str) -> list[str]:
-    """Feed names (openphish, phishunt, ...) listing this URL or its host. Offline-safe."""
-    return []
+    """Feed names (openphish, phishunt) listing this URL or its host. Reads local feed files; refreshes them
+    (at most hourly) when online. Never raises."""
+    try:
+        if not settings.offline:
+            for name in _feeds.FEEDS:
+                _feeds.refresh_feed(name)
+        return _feeds.hits(url)
+    except Exception as e:
+        log.info("blocklist_hits failed: %r", e)
+        return []
+
+
+def feed_urls(limit: int = 200) -> dict[str, list[str]]:
+    return _feeds.feed_urls(limit)
+
+
+async def enrich(domain: str) -> Intel:
+    """Never raises; each source's status is recorded in Intel.sources. Wall time capped at ~10 s."""
+    try:
+        return await _enrich(domain)
+    except Exception as e:  # pragma: no cover - last resort
+        log.warning("enrich(%s) crashed: %r", domain, e)
+        h = host_of(domain) or domain
+        return Intel(domain=h, registrable_domain=registrable(h) if h else "", sources={"intel": "unavailable"})
+
+
+async def _enrich(domain: str) -> Intel:
+    host = host_of(domain) or domain.strip().lower()
+    reg = registrable(host)
+    intel = Intel(domain=host, registrable_domain=reg)
+    src: dict[str, str] = {}
+
+    async def do_registration():
+        v = await run_source(src, "rdap", f"intel:reg:{reg}", lambda: registration(reg),
+                             lambda v: 7 * DAY if v.get("found") else HOUR)
+        if not v:
+            return
+        if v.get("found") is False:
+            src["rdap"] = "not_found"
+            intel.raw_rdap = {"found": False, "via": v.get("via", "")}
+            return
+        via = v.get("via", "rdap")
+        if via == "whois":
+            src["whois"], src["rdap"] = src["rdap"], "unavailable"
+        elif via == "rdap+whois":
+            src["whois"] = src["rdap"]
+        intel.created = parse_dt(v.get("created"))
+        if intel.created:
+            intel.age_days = max(0, (datetime.now(timezone.utc) - intel.created).days)
+        intel.registrar = v.get("registrar") or ""
+        intel.abuse_emails = v.get("abuse_emails") or []
+        if v.get("nameservers"):
+            intel.nameservers = v["nameservers"]
+        intel.raw_rdap = {"found": True, "via": via, **(v.get("raw") or {})}
+
+    async def do_dns():
+        d = await run_source(src, "dns", f"intel:dns:{host}", lambda: fetch_dns(host, reg), HOUR)
+        if not d:
+            src.setdefault("asn", "unavailable")
+            return
+        intel.a_records = d.get("a", [])
+        intel.mx_records = d.get("mx", [])
+        if d.get("ns") and not intel.nameservers:
+            intel.nameservers = d["ns"]
+        if not intel.a_records:
+            src["asn"] = "no_ip"
+            return
+        intel.ip = intel.a_records[0]
+        a = await run_source(src, "asn", f"intel:asn:{intel.ip}", lambda: fetch_asn(intel.ip), DAY)
+        if a:
+            intel.asn, intel.asn_org, intel.hosting_country = a.get("asn", ""), a.get("asn_org", ""), a.get("country", "")
+
+    async def do_crtsh():
+        v = await run_source(src, "crtsh", f"intel:crtsh:{reg}", lambda: fetch_first_seen(reg), DAY)
+        if v:
+            intel.cert_first_seen = parse_dt(v.get("first_seen"))
+            intel.cert_count = v.get("count")
+
+    async def do_feeds():
+        st = await asyncio.to_thread(_feeds.refresh_feeds)
+        for name, s in st.items():
+            src[name] = s
+
+    async def do_urlscan():
+        if not settings.urlscan_key:
+            src["urlscan"] = "no_key"
+            return
+        v = await run_source(src, "urlscan", f"intel:urlscan:{reg}", lambda: fetch_urlscan(reg), 6 * HOUR)
+        if v:
+            intel.urlscan = v
+
+    async def do_sb():
+        if not settings.safe_browsing_key:
+            src["safe_browsing"] = "no_key"
+            return
+        v = await run_source(src, "safe_browsing", f"intel:sb:{host}", lambda: fetch_safe_browsing(host), HOUR)
+        if v is not None:
+            intel.safe_browsing = v
+
+    jobs = {"rdap": do_registration, "dns": do_dns, "crtsh": do_crtsh, "feeds": do_feeds,
+            "urlscan": do_urlscan, "safe_browsing": do_sb}
+    tasks = {asyncio.create_task(fn()): name for name, fn in jobs.items()}
+    done, pending = await asyncio.wait(tasks, timeout=TOTAL_CAP)
+    for t in pending:
+        t.cancel()
+        src.setdefault(tasks[t], "unavailable")
+    for t in done:
+        if t.exception():
+            log.info("intel job %s failed: %r", tasks[t], t.exception())
+            src.setdefault(tasks[t], "unavailable")
+    if "dns" in src and "asn" not in src:
+        src["asn"] = "unavailable"
+
+    # local lookups (no network)
+    try:
+        _feeds.ensure_tranco_background()
+        if _feeds.tranco_available():
+            intel.tranco_rank = _feeds.tranco_rank(reg)
+            src["tranco"] = "cached"
+        else:
+            src["tranco"] = "offline" if settings.offline else "unavailable"
+        intel.blocklist_hits = _feeds.hits(host)
+        for name in _feeds.FEEDS:
+            if name not in src:
+                src[name] = "cached" if _feeds._path(name).exists() else ("offline" if settings.offline else "unavailable")
+    except Exception as e:
+        log.info("local lookups failed: %r", e)
+    intel.sources = src
+    return intel
