@@ -46,11 +46,15 @@ def main(argv=None) -> int:
     ap.add_argument("--personas", nargs="+", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-official", action="store_true")
+    ap.add_argument("--rebrand", action="store_true",
+                    help="with --rescore: re-run match_brand + lookalike on the stored detonations (current brand code)")
     ap.add_argument("--rescore", action="store_true",
                     help="re-run score() on the stored scans of --predictions (no network) - for threshold tuning")
     ap.add_argument("--ignore-blocklist", action="store_true",
                     help="ablation: ignore feed/blocklist hits (eval scams come from the same feeds)")
     a = ap.parse_args(argv)
+    global REBRAND
+    REBRAND = bool(a.rebrand)
     if a.ignore_blocklist:
         os.environ["SCAMSHIELD_IGNORE_BLOCKLIST"] = "1"
 
@@ -175,6 +179,9 @@ def main(argv=None) -> int:
     return 0
 
 
+REBRAND = False  # --rebrand: re-run match_brand/lookalike on stored detonations before re-scoring
+
+
 def rescore(p: dict, threshold: str) -> dict:
     from scamshield.cli import result_row
     from scamshield.core import db
@@ -186,6 +193,23 @@ def rescore(p: dict, threshold: str) -> dict:
             return p
         extra = [s for s in r.verdict.reasons if s.id == "fake_helpline_on_page"]
         from scamshield.core.schemas import Intel, LookalikeResult
+
+        if REBRAND:
+            import asyncio as _a
+
+            from scamshield.brand import lookalike, match_brand
+            from scamshield.core.domains import host_of
+
+            ok = [d for d in r.detonations if d.status == "ok"]
+            final = next((d.final_url for d in ok if d.final_url), None) or r.verdict.final_url or r.url
+            try:
+                r.brand = _a.run(match_brand(max(ok, key=lambda d: len(d.visible_text or "")))) if ok else None
+            except Exception:
+                r.brand = None
+            try:
+                r.lookalike = lookalike(host_of(final))
+            except Exception:
+                pass
 
         stash = db.cache_get(f"scaninput:{r.scan_id}") or {}
         ii = Intel.model_validate(stash["intel"]) if stash.get("intel") else None

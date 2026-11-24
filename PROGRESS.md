@@ -33,3 +33,9 @@ Start (UTC): **2026-11-24 19:41:29** · Budget 3h -> hard stop 22:41 UTC · E2E 
 - LLM_API_KEY (brand LLM claim analysis; keyword rules used meanwhile)
 
 ## Done-when verification
+### 1. make test — PASS (20:24-20:29 UTC, no .env / no API keys)
+```
+273 passed, 45 skipped, 1 warning in 293.60s (0:04:53)
+EXIT 0
+```
+(45 skipped = network-marked tests; breaker ran the network suites separately: 45/45 legit deep links legitimate.)
