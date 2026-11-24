@@ -6,3 +6,5 @@
 2026-11-25 00:16:24,119 INFO scamshield.intel rdap failed for andre-tamm-001.workers.dev: HTTPStatusError("Client error '400 Bad Request' for url 'https://pubapi.registry.google/rdap/domain/andre-tamm-001.workers.dev'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400")
 2026-11-25 00:16:24,238 ERROR whois.whois Error trying to connect to socket: closing socket - [Errno 11001] getaddrinfo failed
 2026-11-25 00:16:24,810 INFO scamshield.intel whois failed for andre-tamm-001.workers.dev: gaierror(11001, 'getaddrinfo failed')
+2026-11-25 00:17:29,547 INFO scamshield.radar certstream HIT salik.work term=salik brand=salik
+2026-11-25 00:17:29,996 INFO scamshield.intel crt.sh failed for salik.work: RateLimited('crt.sh cooldown active')

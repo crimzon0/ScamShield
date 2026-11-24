@@ -40,7 +40,8 @@ def main(argv=None) -> int:
     ap.add_argument("labelled")
     ap.add_argument("--predictions", default=None)
     ap.add_argument("--out", default="var/verdict_eval_predictions.csv")
-    ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--concurrency", type=int, default=8)
+    ap.add_argument("--fast", action="store_true")
     ap.add_argument("--threshold", default="likely_scam", choices=list(LABEL_RANK))
     ap.add_argument("--personas", nargs="+", default=None)
     ap.add_argument("--force", action="store_true")
@@ -53,6 +54,9 @@ def main(argv=None) -> int:
     if a.ignore_blocklist:
         os.environ["SCAMSHIELD_IGNORE_BLOCKLIST"] = "1"
 
+    from scamshield.cli import configure
+
+    configure(a.concurrency, a.fast)
     fields, rows, url_col = read_input(a.labelled)
     lab_col = next((c for c in fields if c.lower() in ("label", "is_scam", "class")), None)
     if not lab_col:
@@ -181,7 +185,13 @@ def rescore(p: dict, threshold: str) -> dict:
         if r is None:
             return p
         extra = [s for s in r.verdict.reasons if s.id == "fake_helpline_on_page"]
-        r.verdict = score(r.scan_id, r.url, r.detonations, r.intel, r.brand, r.lookalike, r.cloak, extra=extra)
+        from scamshield.core.schemas import Intel, LookalikeResult
+
+        stash = db.cache_get(f"scaninput:{r.scan_id}") or {}
+        ii = Intel.model_validate(stash["intel"]) if stash.get("intel") else None
+        il = LookalikeResult.model_validate(stash["look"]) if stash.get("look") else None
+        r.verdict = score(r.scan_id, r.url, r.detonations, r.intel, r.brand, r.lookalike, r.cloak, extra=extra,
+                          input_intel=ii, input_look=il)
         return dict(p, **result_row(r, threshold))
     except Exception:
         return p

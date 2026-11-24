@@ -148,18 +148,34 @@ async def run_batch(inp: str, out: str, concurrency: int = 4, personas=None, thr
     return ordered
 
 
+def configure(concurrency: int, fast: bool) -> None:
+    """Browser concurrency + optional fast detonation budget. Never raises."""
+    try:
+        from scamshield.detonate import set_concurrency
+
+        set_concurrency(max(1, min(16, concurrency)))
+    except Exception:
+        pass
+    if fast:
+        from scamshield import pipeline
+
+        pipeline.DETONATE_BUDGET = 10
+
+
 def main(argv=None) -> int:
     utf8_stdout()
     ap = argparse.ArgumentParser(prog="scamshield.scan", description="Batch-scan URLs from a CSV.")
     ap.add_argument("input")
     ap.add_argument("--out", default="predictions.csv")
-    ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--concurrency", type=int, default=8)
+    ap.add_argument("--fast", action="store_true", help="10 s detonation budget per URL (batch mode)")
     ap.add_argument("--personas", nargs="+", default=None)
     ap.add_argument("--threshold", default="likely_scam", choices=list(LABEL_RANK),
                     help="lowest label counted as is_scam=1")
     ap.add_argument("--force", action="store_true", help="ignore cached scans")
     ap.add_argument("-q", "--quiet", action="store_true")
     a = ap.parse_args(argv)
+    configure(a.concurrency, a.fast)
     t0 = time.time()
     rows = asyncio.run(run_batch(a.input, a.out, a.concurrency, a.personas, a.threshold, a.force, a.quiet))
     from collections import Counter

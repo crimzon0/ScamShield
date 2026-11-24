@@ -1,0 +1,32 @@
+{
+ "emiratesnbd": {
+  "status": "error:http_404",
+  "ts": 1795550728.7546055,
+  "n": 0
+ },
+ "enbd": {
+  "status": "error:http_404",
+  "ts": 1795551054.4191813,
+  "n": 0
+ },
+ "bankfab": {
+  "status": "error:http_404",
+  "ts": 1795551071.2736285,
+  "n": 0
+ },
+ "fabbank": {
+  "status": "empty",
+  "ts": 1795551112.379211,
+  "n": 0
+ },
+ "firstabudhabibank": {
+  "status": "empty",
+  "ts": 1795551160.2737064,
+  "n": 0
+ },
+ "adcb": {
+  "status": "ok",
+  "ts": 1795551502.4820457,
+  "n": 4
+ }
+}

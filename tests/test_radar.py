@@ -33,7 +33,9 @@ REG = [
 
 @pytest.fixture(autouse=True)
 def registry(monkeypatch, tmp_path):
-    from scamshield.radar import watchlist as wl
+    import importlib
+
+    wl = importlib.import_module("scamshield.radar.watchlist")
 
     monkeypatch.setattr(wl, "_load_registry", lambda: [dict(b) for b in REG])
     wl._build.cache_clear()
@@ -84,6 +86,8 @@ def test_match_short_terms_need_context():
     assert match("trafficrta.xyz")[1] == "rta_dubai"
     assert match("marta.com") is None
     assert match("rta-kitchen.com") is None  # 3-letter token without UAE/scam context
+    assert match("andre-tamm-001.workers.dev") is None  # surname, no context
+    assert match("tamm.xyz")[1] == "tamm"
     assert match("pierre-emoi.com") is None
     assert match("saudi.moi") is None
 

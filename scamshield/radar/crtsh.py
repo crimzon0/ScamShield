@@ -19,7 +19,7 @@ from scamshield.core.config import DATA_DIR, settings
 from scamshield.core.schemas import RadarHit, utcnow
 
 from .common import hit_from_match, parse_dt, scan_hits, store_hit
-from .watchlist import match_detail, query_terms, registrable_of
+from .watchlist import hit_domain, match_detail, query_terms, registrable_of
 
 log = logging.getLogger("scamshield.radar")
 
@@ -177,7 +177,7 @@ def query_patterns(terms: Optional[list[str]] = None, prefixes: bool = True) -> 
 
 async def collect_terms(days: int = 30, limit_terms: Optional[int] = None, force: bool = False,
                         terms: Optional[list[str]] = None, wait_cooldown: bool = True,
-                        max_wait: float = 1800.0) -> dict:
+                        max_wait: float = 6 * 3600.0) -> dict:
     """Query crt.sh pattern by pattern (resumable; raw responses persisted). Returns {pattern: status}."""
     st = _load_state()
     pats = query_patterns(terms)

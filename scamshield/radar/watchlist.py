@@ -40,7 +40,9 @@ def _token_hit(term: str, tokens: list[str]) -> bool:
     """Short ASCII term vs host tokens (public suffix excluded). 3-letter terms (rta, icp, moi, dib) also
     need a scam/UAE context token elsewhere in the host (rta-fines, icp-uae); 4+ letters may stand alone."""
     short = len(term) <= 3
-    ctx = not short or any(t in AFFIXES for t in tokens if t != term)
+    # 3-4 letter brand tokens (tamm, dewa, adcb, rta, icp) are also surnames/words: a bare token needs a
+    # UAE/scam companion token (tamm-pay, adcb-verify, rta-fines), or must be the whole label (tamm.xyz).
+    ctx = len(term) > 4 or any(t in AFFIXES for t in tokens if t != term) or tokens == [term]
     amin = 3 if short else 2  # 'pierre-emoi' must not read as e+moi
     for tok in tokens:
         if tok == term and ctx:

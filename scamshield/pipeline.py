@@ -23,7 +23,8 @@ log = logging.getLogger("scamshield.pipeline")
 DEFAULT_PERSONAS: tuple[str, ...] = ("uae_mobile_ad_click",)
 SCAN_TIMEOUT = 40.0  # global guard (seconds)
 ENRICH_TIMEOUT = 20.0
-CACHE_TTL = 6 * 3600  # reuse a scan of the same URL within this window
+CACHE_TTL = 6 * 3600
+DETONATE_BUDGET: float | None = None  # seconds per detonation (CLI --fast sets 10)  # reuse a scan of the same URL within this window
 
 
 def _normalize(url: str) -> str:
@@ -47,6 +48,8 @@ async def _detonate(url: str, persona: str, scan_id: str) -> Detonation:
     from scamshield.detonate import detonate
 
     try:
+        if DETONATE_BUDGET:
+            return await detonate(url, persona, scan_id=scan_id, budget=DETONATE_BUDGET)
         return await detonate(url, persona, scan_id=scan_id)
     except Exception as e:
         return Detonation(url=url, persona=persona, status="error", final_url="", error=str(e)[:300])
@@ -201,8 +204,15 @@ async def _full(scan_id: str, url: str, personas: tuple[str, ...], state: dict) 
         except Exception:
             cloak = None
     extra = await _helpline_signals(ok, brand, final)
-    v = score(scan_id, url, dets, intel, brand, look, cloak, extra=extra,
-              input_intel=in_intel if in_intel is not intel else None, input_look=in_look)
+    in_i = in_intel if in_intel is not intel else None
+    v = score(scan_id, url, dets, intel, brand, look, cloak, extra=extra, input_intel=in_i, input_look=in_look)
+    if in_i is not None:  # stash for offline re-scoring (eval --rescore); not part of ScanResult
+        try:
+            db.cache_set(f"scaninput:{scan_id}", {"intel": in_i.model_dump(mode="json"),
+                                                  "look": in_look.model_dump(mode="json") if in_look else None},
+                         ttl=30 * 24 * 3600)
+        except Exception:
+            pass
     return ScanResult(scan_id=scan_id, url=url, detonations=dets, cloak=cloak, intel=intel, brand=brand,
                       lookalike=look, verdict=v)
 
