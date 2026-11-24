@@ -2,7 +2,7 @@
 
 Recorded from the real dashboard (`make demo`, http://127.0.0.1:8000). Screen capture at 1920x1080, voice-over recorded separately. Prepare before recording: run the radar backfill and the helpline check once so both tables have rows, and have one scam verdict already in *Recent scans* in case the live scan is slow.
 
-Voice-over: 128 words.
+Voice-over: 114 words.
 
 | Time | Shot (what is on screen) | Voice-over |
 |---|---|---|
@@ -20,4 +20,4 @@ Voice-over: 128 words.
 - Use a real scam URL from the day's public feed only if it is still live and clearly a UAE brand; otherwise use the seeded demo scan. Do not enter anything into the scam page.
 - If the helpline table shows the **SYNTHETIC** tag, keep it visible: it is labelled sample data, and the video must not claim it is live.
 - The numbers on the title card must match README section 7 and slide 7 exactly.
-- Word count check: the voice-over column is 128 words, about 55 s at a calm pace.
+- Word count check: the voice-over column is 114 words, about 50 s at a calm pace.

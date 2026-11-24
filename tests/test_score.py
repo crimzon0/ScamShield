@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("SCAMSHIELD_FICTIONAL", "1")
+
 from datetime import timedelta
 
 from scamshield.core import fixtures
@@ -103,4 +107,40 @@ def test_new_risky_tld_with_card_form():
     d = _det(url, form_fields=[FormField(name="cardnumber", label="Card number")])
     i = Intel(domain="pay-fine-now.top", age_days=2, cert_first_seen=NOW - timedelta(days=1))
     v = score("t12", url, [d], i, None, None)
+    assert v.label in ("scam", "likely_scam")
+
+
+def test_platform_404_ignores_brand_content():
+    url = "https://ephemeral-squirrel-f84ee4.netlify.app/"
+    d = _det(url, http_status=404, title="Site not found", visible_text="Site not found. Looks like you followed a broken link")
+    v = score("t13", url, [d], Intel(domain="ephemeral-squirrel-f84ee4.netlify.app"), fixtures.brand_match(), None)
+    assert v.mode == "domain_only"
+    ids = {r.id for r in v.reasons}
+    assert "brand_on_unofficial_domain" not in ids and "platform_takedown" in ids
+
+
+def test_bounce_to_popular_site_judges_link_domain():
+    url = "https://login-secure-verify.example/"
+    d = Detonation(url=url, final_url="https://www.google.com/", status="ok", title="Google")
+    final_intel = Intel(domain="google.com", tranco_rank=1, age_days=9000)
+    in_intel = Intel(domain="login-secure-verify.example", age_days=2)
+    v = score("t14", url, [d], final_intel, None, None, input_intel=in_intel)
+    ids = {r.id for r in v.reasons}
+    assert "redirect_to_popular_site" in ids and "popular_site" not in ids
+    assert v.label in ("scam", "likely_scam")
+
+
+def test_legit_redirect_between_official_domains():
+    url = "https://www.etisalat.ae/en/"
+    d = Detonation(url=url, final_url="https://www.eand.ae/en/index.html", status="ok", title="e&")
+    v = score("t15", url, [d], Intel(domain="eand.ae", tranco_rank=60000), None, None,
+              input_intel=Intel(domain="etisalat.ae", tranco_rank=20000))
+    assert v.label == "legitimate"
+
+
+def test_global_brand_combosquat_domain_only():
+    url = "https://user.coinbase-secured.com"
+    d = _det(url, status="dead", error="net::ERR_NAME_NOT_RESOLVED")
+    v = score("t16", url, [d], Intel(domain="coinbase-secured.com", age_days=20, raw_rdap={"found": True}), None, None)
+    assert "brand_in_hostname" in {r.id for r in v.reasons}
     assert v.label in ("scam", "likely_scam")

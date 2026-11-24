@@ -102,7 +102,7 @@ async def test_fetch_rdap_bootstrap_fallback(monkeypatch):
         if req.url.host == "rdap.org":
             return httpx.Response(503)
         if req.url.host == "data.iana.org":
-            return httpx.Response(200, json={"services": [[["example"], ["https://rdap.nic.com/"]]]})
+            return httpx.Response(200, json={"services": [[["com"], ["https://rdap.nic.com/"]]]})
         if req.url.host == "rdap.nic.com":
             return httpx.Response(200, json=body)
         return httpx.Response(404)
