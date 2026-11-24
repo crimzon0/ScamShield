@@ -133,7 +133,7 @@ def score_brands(parts: dict[str, str], brands: list[dict]) -> list[dict]:
     results = []
     for bid, plist in pats:
         miss = 1.0
-        methods, evidence, kws = set(), [], set()
+        methods, evidence, kws, hit_parts = set(), [], set(), set()
         for kind, kw, pat, ln in plist:
             for part, txt in parts.items():
                 if not txt or not pat.search(txt):
@@ -145,12 +145,13 @@ def score_brands(parts: dict[str, str], brands: list[dict]) -> list[dict]:
                     w *= 0.8
                 miss *= (1 - w)
                 methods.add(kind)
+                hit_parts.add(part)
                 if kw not in kws:
                     evidence.append(f"'{kw}' in {part}")
                 kws.add(kw)
         if kws:
             results.append({"id": bid, "confidence": round(min(1 - miss, 0.99), 3), "methods": sorted(methods),
-                            "evidence": evidence[:8], "hits": len(kws)})
+                            "evidence": evidence[:8], "hits": len(kws), "parts": sorted(hit_parts)})
     results.sort(key=lambda r: (r["confidence"], r["hits"]), reverse=True)
     return results
 

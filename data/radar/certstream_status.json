@@ -1,18 +1,17 @@
 {
- "state": "stopped",
+ "state": "running",
  "url": "ws://localhost:8080/",
- "started_at": "2026-11-24T20:11:17.758477+00:00",
- "messages": 356164,
- "certs": 356164,
- "hits": 2,
- "new_hits": 2,
+ "started_at": "2026-11-24T20:14:45.425857+00:00",
+ "messages": 22938,
+ "certs": 22938,
+ "hits": 1,
+ "new_hits": 1,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "pierre-emoi.com",
-  "term": "moi",
-  "at": "2026-11-24 20:12:39.175099+00:00"
+  "domain": "adnoc.cleardox.com",
+  "term": "adnoc",
+  "at": "2026-11-24 20:14:49.768391+00:00"
  },
- "queue": 0,
- "stopped_at": "2026-11-24T20:13:27.764887+00:00"
+ "queue": 0
 }

@@ -449,14 +449,22 @@ function AccuracyCard() {
     <Card title={t("accuracyTitle")}>
       {!ev ? <p className="muted">{t("accNone")}</p> : ev.error ? <div className="alert alert-bad">{ev.error}</div> : (
         <>
-          <div className="kpis kpis-inner">
-            <Kpi value={pct(ev.precision)} label={t("accPrecision")} />
-            <Kpi value={pct(ev.recall)} label={t("accRecall")} />
-            <Kpi value={pct(ev.f1)} label={t("accF1")} />
-            <Kpi value={pct(ev.fpr)} label={t("accFpr")} />
-            <Kpi value={ev.n ?? "—"} label={t("accN")} />
-            {ev.official_fp && <Kpi value={`${ev.official_fp.flagged}/${ev.official_fp.total}`} label={t("accOfficialFp")} />}
-          </div>
+          <div className="tblwrap"><table className="tbl acc">
+            <thead><tr><th>{t("accRun")}</th><th>{t("accPrecision")}</th><th>{t("accRecall")}</th><th>{t("accF1")}</th><th>{t("accFpr")}</th><th>{t("accN")}</th></tr></thead>
+            <tbody>
+              <tr><th>{t("accHeadline")}</th><td>{pct(ev.precision)}</td><td>{pct(ev.recall)}</td><td>{pct(ev.f1)}</td><td>{pct(ev.fpr)}</td><td>{ev.n ?? "—"}</td></tr>
+              {ev.ablation_no_blocklist && (
+                <tr className="acc-honest" title={t("accNoBlocklistTip")}><th>{t("accNoBlocklist")} <span className="badge badge-warn">{t("accHonest")}</span></th>
+                  <td>{pct(ev.ablation_no_blocklist.precision)}</td><td>{pct(ev.ablation_no_blocklist.recall)}</td><td>{pct(ev.ablation_no_blocklist.f1)}</td><td>{pct(ev.ablation_no_blocklist.fpr)}</td><td>{ev.ablation_no_blocklist.n ?? ev.n ?? "—"}</td></tr>
+              )}
+              {ev.holdout && (
+                <tr className="acc-honest" title={t("accHoldoutTip")}><th>{t("accHoldout")}</th>
+                  <td>{pct(ev.holdout.precision)}</td><td>{pct(ev.holdout.recall)}</td><td>{pct(ev.holdout.f1)}</td><td>{pct(ev.holdout.fpr)}</td><td>{ev.holdout.n ?? "—"}</td></tr>
+              )}
+            </tbody>
+          </table></div>
+          {ev.ablation_no_blocklist && <p className="muted small">{t("accNoBlocklistTip")}</p>}
+          {ev.official_fp && <div className="kpis kpis-inner"><Kpi value={`${ev.official_fp.flagged}/${ev.official_fp.total}`} label={t("accOfficialFp")} /></div>}
           {ev.tp != null && (
             <table className="tbl confusion">
               <thead><tr><th>{t("accConfusion")}</th><th>{t("accPredScam")}</th><th>{t("accPredLegit")}</th></tr></thead>

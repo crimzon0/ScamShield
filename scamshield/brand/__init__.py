@@ -148,6 +148,18 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     asks = detect_asks(" ".join([parts["title"], parts["text"], parts["form"]]), det.form_fields)
     scored = {r["id"]: r for r in score_brands(parts, brands)}
 
+    # Prominence: a brand named ONLY in body text (not title, form, URL) is a mention, not a claim
+    # (dubaiholding.com: "Dubai Holding became the second-largest shareholder in Emirates NBD").
+    # It counts as a claim only if the page also asks for sensitive data; otherwise it is capped below the
+    # claim threshold and can only be lifted by another signal (logo/screenshot hash, LLM, hostname).
+    sensitive = bool({"credentials", "card", "otp", "emirates_id"} & set(asks))
+    for r in scored.values():
+        if r.get("parts") == ["text"]:
+            cap = 0.5 if sensitive else 0.15
+            if r["confidence"] > cap:
+                r["confidence"] = cap
+                r["evidence"] = r["evidence"] + ["body-text mention only" + ("" if sensitive else " (not a brand claim)")]
+
     # visual (favicon / screenshot pHash) - cheap, local, never raises
     for vm in visual.match(det):
         r = scored.setdefault(vm["id"], {"id": vm["id"], "confidence": 0.0, "methods": [], "evidence": [], "hits": 0})

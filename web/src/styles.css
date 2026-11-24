@@ -178,3 +178,9 @@ html[lang="ar"] .scanbox input:placeholder-shown { direction: rtl; font-family: 
 .confusion { max-width: 460px; margin-block-end: 10px; }
 .confusion th { text-align: start; }
 .num.good { color: var(--legit); } .num.bad { color: var(--scam); }
+
+.acc { margin-block-end: 8px; }
+.acc td { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--navy-800); }
+.acc th { text-align: start; }
+.acc tbody th { font-size: 13px; color: var(--ink); white-space: nowrap; }
+.acc tr.acc-honest td, .acc tr.acc-honest th { background: #fff8e6; }

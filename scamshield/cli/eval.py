@@ -161,9 +161,11 @@ def main(argv=None) -> int:
     try:
         import json
 
-        with open("data/eval/last_eval.json", "w", encoding="utf-8") as f:
+        stem = os.path.splitext(os.path.basename(a.labelled))[0]
+        jpath = "data/eval/last_eval.json" if stem == "sample" else f"data/eval/last_eval_{stem}.json"
+        with open(jpath, "w", encoding="utf-8") as f:
             json.dump(rep, f, ensure_ascii=False, indent=2)
-        print("wrote data/eval/last_eval.json")
+        print(f"wrote {jpath}")
     except Exception as e:
         print(f"could not write last_eval.json: {e}")
     return 0

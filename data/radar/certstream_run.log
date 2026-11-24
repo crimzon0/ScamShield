@@ -1,0 +1,3 @@
+2026-11-25 00:14:45,814 INFO scamshield.radar certstream connected: ws://localhost:8080/
+2026-11-25 00:14:49,819 INFO scamshield.radar certstream HIT adnoc.cleardox.com term=adnoc brand=adnoc_distribution
+2026-11-25 00:14:55,328 INFO scamshield.intel crt.sh failed for cleardox.com: RateLimited('crt.sh cooldown active')

@@ -53,11 +53,13 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
+export interface EvalMetrics { precision?: number; recall?: number; f1?: number; fpr?: number; n?: number; dataset?: string; tp?: number; fp?: number; fn?: number; tn?: number }
 export interface EvalResult {
   generated_at?: string; dataset?: string; n?: number; threshold?: string; error?: string;
   tp?: number; fp?: number; fn?: number; tn?: number; precision?: number; recall?: number; f1?: number; fpr?: number;
   official_fp?: { flagged: number; total: number }; labels?: Record<string, number>; modes?: Record<string, number>;
   false_positives?: { url: string; label?: string; score?: number }[]; false_negatives?: { url: string; label?: string; score?: number }[];
+  ablation_no_blocklist?: EvalMetrics | null; holdout?: EvalMetrics | null;
 }
 
 export async function downloadBundle(scanIds: string[]): Promise<void> {

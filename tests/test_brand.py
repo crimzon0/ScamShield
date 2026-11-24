@@ -260,3 +260,14 @@ async def test_bot_challenge_from_official_is_official():
 
 def test_moi_cpc_redirect_target_official():
     assert lookalike("moi-cpc.ae").score == 0
+
+
+async def test_body_mention_is_not_a_claim():
+    text = ("اكتشف المزيد بنك الإمارات دبي الوطني أصبحت دبي القابضة ثاني أكبر مساهم في بنك الإمارات دبي الوطني "
+            "بعد استحواذها على حصة بنسبة 14.8% في عام 2023. ") * 3 + " 500 درهم"
+    m = await match_brand(det("https://www.dubaiholding.com/ar", "شركة استثمار عالمية رائدة | دبي القابضة", text))
+    assert m.brand_id is None
+    # the same body mention plus a card/OTP form is a claim
+    m2 = await match_brand(det("https://holding-verify.example/", "Verify", text,
+                               [FormField(name="card", label="Card number"), FormField(name="otp", label="OTP")]))
+    assert m2.brand_id == "emirates_nbd" and not m2.is_official_domain

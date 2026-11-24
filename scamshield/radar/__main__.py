@@ -43,6 +43,8 @@ def main(argv=None) -> int:
     s.add_argument("--limit", type=int, default=None)
     s.add_argument("--no-scan", action="store_true")
     sub.add_parser("watchlist", help="print watchlist stats")
+    sp = sub.add_parser("scan-pending", help="scan stored hits that have no scan yet")
+    sp.add_argument("--limit", type=int, default=200)
     m = sub.add_parser("match")
     m.add_argument("domains", nargs="+")
     f = sub.add_parser("feed")
@@ -79,6 +81,15 @@ def main(argv=None) -> int:
 
         hits = asyncio.run(collect_search(scan=not a.no_scan, limit=a.limit))
         print(f"search: {len(hits)} hits")
+        _print_hits(hits)
+    elif a.cmd == "scan-pending":
+        from scamshield.core import db
+
+        from .common import scan_hits
+
+        todo = [h for h in db.list_radar_hits(5000) if not h.scan_id][: a.limit]
+        hits = asyncio.run(scan_hits(todo))
+        print(f"scanned {len(hits)} hits")
         _print_hits(hits)
     elif a.cmd == "watchlist":
         from collections import Counter
