@@ -1,0 +1,56 @@
+[
+ {
+  "issuer_ca_id": 1,
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R11",
+  "common_name": "uaepass-verify.com",
+  "name_value": "uaepass-verify.com\n*.uaepass-verify.com",
+  "id": 101,
+  "not_before": "2026-11-20T10:00:00",
+  "not_after": "2027-02-18T10:00:00"
+ },
+ {
+  "issuer_ca_id": 1,
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R11",
+  "common_name": "www.uaepass-verify.com",
+  "name_value": "www.uaepass-verify.com",
+  "id": 102,
+  "not_before": "2026-11-18T08:00:00",
+  "not_after": "2027-02-16T08:00:00"
+ },
+ {
+  "issuer_ca_id": 2,
+  "issuer_name": "C=US, O=Google Trust Services, CN=WE1",
+  "common_name": "docs.uaepass.ae",
+  "name_value": "docs.uaepass.ae",
+  "id": 103,
+  "not_before": "2026-11-21T00:44:11",
+  "not_after": "2027-02-19T00:44:11"
+ },
+ {
+  "issuer_ca_id": 1,
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R11",
+  "common_name": "tamm-fines.top",
+  "name_value": "tamm-fines.top",
+  "id": 104,
+  "not_before": "2026-09-01T00:00:00",
+  "not_after": "2026-12-01T00:00:00"
+ },
+ {
+  "issuer_ca_id": 1,
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R11",
+  "common_name": "tammy-bakery.com",
+  "name_value": "tammy-bakery.com",
+  "id": 105,
+  "not_before": "2026-11-22T00:00:00",
+  "not_after": "2027-02-20T00:00:00"
+ },
+ {
+  "issuer_ca_id": 1,
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R11",
+  "common_name": "xn--uepass-3nf.com",
+  "name_value": "xn--uepass-3nf.com",
+  "id": 106,
+  "not_before": "2026-11-23T05:00:00",
+  "not_after": "2027-02-21T05:00:00"
+ }
+]

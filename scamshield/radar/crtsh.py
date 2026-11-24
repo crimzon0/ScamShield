@@ -149,62 +149,73 @@ async def fetch_pattern(pattern: str, exclude_expired: bool = True, retries: int
     return "error", None
 
 
+# Phishing prefixes tried as literal prefixes for the highest-risk UAE terms (crt.sh can only use its index
+# for TRAILING-wildcard patterns: 'kw%' is fast, '%kw%' / '%.kw' time out or 502).
+PREFIXES = ["secure-", "login-", "my", "www-", "online-", "uae-", "pay-", "e-"]
+PRIORITY = ["uaepass", "tamm", "salik", "emiratesnbd", "adcb", "dubaipolice", "adpolice", "rtadubai", "rta",
+            "emiratespost", "icp", "mohre", "dewa", "etisalat", "aramex", "mashreq", "bankfab", "adib", "enbd"]
+
+
+def query_patterns(terms: Optional[list[str]] = None, prefixes: bool = True) -> list[tuple[str, str]]:
+    """[(term, crt.sh pattern)] in priority order: 'kw%' for every term, then prefix variants for PRIORITY."""
+    if terms is None:
+        terms = [e["term"].strip("-") for e in query_terms()]
+        terms = [t for t in dict.fromkeys(terms) if t and "-" not in t]
+        # 3-letter tokens make 'kw%' huge (rta% = every 'rtaxxx' cert) -> only via prefixes / '-'
+        terms = [t for t in terms if len(t) >= 4]
+    pri = [t for t in PRIORITY if t in terms or len(t) <= 3]
+    ordered = pri + [t for t in terms if t not in pri]
+    out: list[tuple[str, str]] = []
+    for t in ordered:
+        out.append((t, f"{t}-%" if len(t) <= 3 else f"{t}%"))
+    if prefixes:
+        for t in pri:
+            for p in PREFIXES:
+                out.append((t, f"{p}{t}%"))
+    return list(dict.fromkeys(out))
+
+
 async def collect_terms(days: int = 30, limit_terms: Optional[int] = None, force: bool = False,
                         terms: Optional[list[str]] = None, wait_cooldown: bool = True,
-                        max_wait: float = 900.0) -> dict:
-    """Query crt.sh for every strong term (resumable). Returns {term: status}."""
+                        max_wait: float = 1800.0) -> dict:
+    """Query crt.sh pattern by pattern (resumable; raw responses persisted). Returns {pattern: status}."""
     st = _load_state()
-    tl = terms or [e["term"] for e in query_terms()]
+    pats = query_patterns(terms)
     if limit_terms:
-        tl = tl[:limit_terms]
+        pats = pats[:limit_terms]
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     statuses: dict[str, str] = {}
     waited = 0.0
-    for i, t in enumerate(tl):
-        prev = st.get(t, {})
-        fresh = prev.get("status") == "ok" and time.time() - prev.get("ts", 0) < FRESH_HOURS * 3600
+    for i, (t, pat) in enumerate(pats):
+        prev = st.get(pat, {})
+        fresh = prev.get("status") in ("ok", "empty") and time.time() - prev.get("ts", 0) < FRESH_HOURS * 3600
         if fresh and not force:
-            statuses[t] = "cached:" + prev["status"]
+            statuses[pat] = "cached:" + prev["status"]
             continue
-        # crt.sh: a bare word is a full-text search on name tokens ('-' splits tokens, so 'emiratesnbd'
-        # finds emiratesnbd-secure.com); '%term%' is the LIKE form (often empty/timeouts on the big DB).
-        pats = [p for p in (t.strip("-"), f"%{t}%") if p] if "-" not in t.strip("-") else [f"%{t}%"]
-        rows, status, per = [], "empty", {}
-        for j, pat in enumerate(pats):
-            while True:
-                s1, r1 = await fetch_pattern(pat, exclude_expired=days <= 90)
-                if s1 in ("cooldown", "rate_limited") and wait_cooldown and waited < max_wait:
-                    log.warning("crt.sh cooling down; waiting 60 s (pattern %s)", pat)
-                    await asyncio.sleep(60)
-                    waited += 60
-                    continue
-                break
-            per[pat] = s1
-            if r1:
-                rows += r1
-            if s1 == "ok":
-                status = "ok"
-            elif s1 in ("cooldown", "rate_limited") or (s1.startswith("error") and status != "ok"):
-                status = s1 if status != "ok" else status
-            if s1 in ("cooldown", "rate_limited"):
-                break
-            if j < len(pats) - 1:
-                await asyncio.sleep(QUERY_GAP)
-        rows = rows if (rows or status in ("ok", "empty")) else None
-        statuses[t] = status
-        log.info("crt.sh %-22s %s %s %s", t, status, len(rows) if rows else 0, per)
+        while True:
+            status, rows = await fetch_pattern(pat, exclude_expired=days <= 90)
+            if status in ("cooldown", "rate_limited") and wait_cooldown and waited < max_wait:
+                log.warning("crt.sh cooling down; waiting 60 s (pattern %s)", pat)
+                await asyncio.sleep(60)
+                waited += 60
+                continue
+            break
+        if status == "error:http_404":  # crt.sh answers 404 for 'no certificates found' on some shapes
+            status, rows = "empty", []
+        statuses[pat] = status
+        log.info("crt.sh %-24s %-14s rows=%d", pat, status, len(rows) if rows else 0)
         if rows is not None:
             try:
-                (RAW_DIR / f"{_safe(t)}.json").write_text(json.dumps(
-                    {"term": t, "patterns": per, "fetched_at": utcnow().isoformat(), "rows": rows}),
+                (RAW_DIR / f"{_safe(pat)}.json").write_text(json.dumps(
+                    {"term": t, "pattern": pat, "fetched_at": utcnow().isoformat(), "rows": rows}),
                     encoding="utf-8")
             except Exception as e:
                 log.debug("raw save failed: %s", e)
-        st[t] = {"status": status, "ts": time.time(), "n": len(rows) if rows else 0}
+        st[pat] = {"term": t, "status": status, "ts": time.time(), "n": len(rows) if rows else 0}
         _save_state(st)
         if status in ("cooldown", "rate_limited"):
             break  # give up politely; rerun resumes from here
-        if i < len(tl) - 1:
+        if i < len(pats) - 1:
             await asyncio.sleep(QUERY_GAP)
     return statuses
 
@@ -212,7 +223,7 @@ async def collect_terms(days: int = 30, limit_terms: Optional[int] = None, force
 def hits_from_raw(days: int = 30, terms: Optional[list[str]] = None) -> list[RadarHit]:
     """Re-parse every persisted raw crt.sh response (no network) into RadarHits (not yet stored)."""
     rows: list[dict] = []
-    files = [RAW_DIR / f"{_safe(t)}.json" for t in terms] if terms else sorted(RAW_DIR.glob("*.json"))
+    files = sorted(RAW_DIR.glob("*.json"))
     for f in files:
         if f.name.startswith("_"):
             continue

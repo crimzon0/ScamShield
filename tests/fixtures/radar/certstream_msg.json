@@ -1,0 +1,23 @@
+{
+ "message_type": "certificate_update",
+ "data": {
+  "cert_index": 42,
+  "seen": 1795550000.0,
+  "source": {
+   "name": "Test Log",
+   "url": "https://ct.example/"
+  },
+  "leaf_cert": {
+   "all_domains": [
+    "salik-recharge.online",
+    "www.salik-recharge.online"
+   ],
+   "not_before": 1795540000,
+   "not_after": 1803316000,
+   "fingerprint": "AA:BB",
+   "issuer": {
+    "aggregated": "/C=US/CN=R11/O=Let's Encrypt"
+   }
+  }
+ }
+}

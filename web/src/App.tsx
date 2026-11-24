@@ -367,25 +367,35 @@ function RadarPage({ go }: { go: (r: string) => void }) {
   const { t } = useI18n();
   const [rows, setRows] = useState<RadarRow[] | null>(null);
   const [running, setRunning] = useState(false);
+  const [since, setSince] = useState<string | null>(null);
   const load = useCallback(() => api.radar().then(setRows).catch(() => setRows([])), []);
-  useEffect(() => { load(); }, [load]);
+  const syncStatus = useCallback(async () => {
+    const s = await api.radarStatus().catch(() => ({ running: false, last_started: null }));
+    setRunning(!!s.running);
+    setSince(s.running ? s.last_started ?? null : null);
+    return !!s.running;
+  }, []);
+  useEffect(() => { load(); syncStatus(); }, [load, syncStatus]);
   useEffect(() => {
     if (!running) return;
-    const id = window.setInterval(async () => {
-      const s = await api.radarStatus().catch(() => ({ running: false }));
-      load();
-      if (!s.running) setRunning(false);
-    }, 2000);
+    const id = window.setInterval(async () => { load(); await syncStatus(); }, 5000);
     return () => window.clearInterval(id);
-  }, [running, load]);
-  const backfill = async () => { setRunning(true); await api.backfill().catch(() => setRunning(false)); };
+  }, [running, load, syncStatus]);
+  // single-flight: the server refuses a second run; the button just reflects the running one
+  const backfill = async () => {
+    if (await syncStatus()) return;
+    setRunning(true);
+    await api.backfill().catch(() => undefined);
+    await syncStatus();
+  };
+  const sinceHm = since ? fmtUtc(since).slice(11, 16) : "";
   return (
     <>
     {rows && <RadarKpis rows={rows} />}
     <Card title={t("radarTitle")} actions={<>
       <BundleButton ids={(rows || []).filter((h) => h.scan_id).map((h) => h.scan_id as string)} />
       <button className="btn" onClick={load}>{t("refresh")}</button>
-      <button className="btn btn-accent" onClick={backfill} disabled={running}>{running ? t("radarRunning") : t("radarBackfill")}</button></>}>
+      <button className="btn btn-accent" onClick={backfill} disabled={running}>{running ? (sinceHm ? `${t("radarRunningSince")} ${sinceHm} UTC` : t("radarRunning")) : t("radarBackfill")}</button></>}>
       {!rows ? <p className="muted">{t("loading")}</p> : rows.length === 0 ? <p className="muted">{t("noRadar")}</p> : (
         <div className="tblwrap"><table className="tbl">
           <thead><tr><th>{t("colDomain")}</th><th>{t("colSource")}</th><th>{t("colTerm")}</th><th>{t("colBrand")}</th><th>{t("colFirstSeen")}</th><th>{t("colFlagged")}</th><th>{t("colTtd")}</th><th>{t("colVerdict")}</th></tr></thead>

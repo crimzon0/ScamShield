@@ -1,9 +1,0 @@
-2026-11-25 00:05:11,568 INFO scamshield.radar crt.sh emiratesnbd            empty 0 {'emiratesnbd': 'empty', '%emiratesnbd%': 'empty'}
-2026-11-25 00:07:21,768 INFO scamshield.radar crt.sh enbd                   empty 0 {'enbd': 'empty', '%enbd%': 'empty'}
-2026-11-25 00:07:26,771 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
-2026-11-25 00:08:26,797 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
-2026-11-25 00:09:26,802 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
-2026-11-25 00:10:26,826 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern bankfab)
-2026-11-25 00:12:12,374 INFO scamshield.radar crt.sh bankfab                empty 0 {'bankfab': 'empty', '%bankfab%': 'empty'}
-2026-11-25 00:13:27,666 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern %fabbank%)
-2026-11-25 00:14:27,699 WARNING scamshield.radar crt.sh cooling down; waiting 60 s (pattern %fabbank%)

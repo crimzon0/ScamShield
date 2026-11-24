@@ -56,6 +56,27 @@ _FIELD_HINTS = {  # form field name / type fragments
 }
 
 
+# Scam context: urgency / account-action / fine-payment phrasing. Used only to decide whether a body-text
+# brand mention is a claim (never reported as asks_for on its own).
+CLAIM_CONTEXT = [
+    "verify your account", "update your details", "update your information", "account suspended", "account blocked",
+    "account will be", "suspended", "unpaid", "pay now", "pay fine", "pay your fine", "traffic fine", "outstanding fine",
+    "within 24 hours", "urgent", "confirm your identity", "shipment on hold", "redelivery", "your parcel",
+    "تحديث البيانات", "تحديث بياناتك", "تم ايقاف", "حسابك", "موقوف", "تعليق", "مخالفة", "مخالفات", "غرامة", "ادفع",
+    "سداد", "خلال 24 ساعة", "عاجل", "شحنتك", "تاكيد هويتك",
+    "3indak", "mukhalafa", "mo5alfa", "idfa3", "edfa3", "7isabak", "hisabak",
+]
+
+
+@lru_cache(maxsize=1)
+def _ctx_patterns():
+    return [keyword_pattern(p) for p in CLAIM_CONTEXT]
+
+
+def claim_context(text_norm: str) -> bool:
+    return any(p.search(text_norm) for p in _ctx_patterns())
+
+
 @lru_cache(maxsize=1)
 def _ask_patterns():
     out = {}

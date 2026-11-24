@@ -136,7 +136,7 @@ def _challenge_origin(det: Detonation, url: str) -> str | None:
 
 
 async def _match_brand(det: Detonation) -> BrandMatch:
-    from .text import detect_asks, page_parts, score_brands
+    from .text import claim_context, detect_asks, page_parts, score_brands
     from . import visual
 
     brands = active_brands()
@@ -152,7 +152,7 @@ async def _match_brand(det: Detonation) -> BrandMatch:
     # (dubaiholding.com: "Dubai Holding became the second-largest shareholder in Emirates NBD").
     # It counts as a claim only if the page also asks for sensitive data; otherwise it is capped below the
     # claim threshold and can only be lifted by another signal (logo/screenshot hash, LLM, hostname).
-    sensitive = bool({"credentials", "card", "otp", "emirates_id"} & set(asks))
+    sensitive = bool({"credentials", "card", "otp", "emirates_id"} & set(asks)) or claim_context(parts["text"])
     for r in scored.values():
         if r.get("parts") == ["text"]:
             cap = 0.5 if sensitive else 0.15
