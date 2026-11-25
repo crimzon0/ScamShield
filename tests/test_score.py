@@ -367,3 +367,193 @@ async def test_llm_cannot_raise_legit_score(monkeypatch):
                               asks=(), title="Rewards", visible_text="Earn points")
     ids = {r.id for r in v.reasons}
     assert v.label == "legitimate" and "weak_brand_claim" not in ids and "llm_uncorroborated" in ids
+
+
+# ---------------------------------------------------------------- radar false-positive classes (2026-11-25)
+def _bm(bid="sandbox_bank", name="Sandbox Bank", conf=0.9, methods=("text",), evidence=("'Sandbox Bank' in title",),
+        asks=(), official=("sandboxbank.example",)):
+    return BrandMatch(brand_id=bid, name_en=name, name_ar="بنك التجربة", confidence=conf, methods=list(methods),
+                      evidence=list(evidence), official_domains=list(official), asks_for=list(asks))
+
+
+def _flagged(v):
+    return v.label in ("scam", "likely_scam")
+
+
+def _look(domain, score, techniques, distance=None):
+    return LookalikeResult(domain=domain, brand_id="sandbox_bank", closest_official="sandboxbank.example",
+                           techniques=list(techniques), distance=distance, score=score)
+
+
+def test_gov_site_with_own_login_and_uae_pass_button_is_not_scam():
+    # gcaa.ae pattern: real authority, not in registry, no intel (.ae has no RDAP), own username/password/OTP login
+    # next to a 'Login with UAE PASS' button. The fields are the site's own, not UAE PASS's.
+    url = "https://sandboxauthority.ae/en/pages/login.aspx"
+    d = _det(url, title="Login with UAE PASS", visible_text="Login with UAE PASS\nSandbox Authority (SandboxAuthority) "
+             "e-services. Do not have a UAE PASS account? Enter the OTP code sent to your phone.",
+             form_fields=[FormField(name="txtUserName", type="text", placeholder="Enter your username"),
+                          FormField(name="txtPwd", type="password", placeholder="Enter your password"),
+                          FormField(name="txtphoneOTP", type="text", label="OTP")])
+    b = _bm("uae_pass", "UAE PASS", 0.9, ("text", "llm"), ("'uae pass' in title",), ("credentials", "otp"),
+            ("uaepass.ae", "id.uaepass.ae"))
+    v = score("fp1", url, [d], Intel(domain="sandboxauthority.ae"), b, None)
+    assert not _flagged(v), (v.score, [r.id for r in v.reasons])
+    assert "sso_integration" in {r.id for r in v.reasons}
+
+
+def test_fake_uae_pass_login_collecting_its_password_still_scam():
+    url = "https://secure-gov-portal.example/login"
+    d = _det(url, title="Login with UAE PASS", visible_text="Login with UAE PASS",
+             form_fields=[FormField(name="u", label="UAE PASS username"),
+                          FormField(name="p", type="password", label="UAE PASS password")])
+    b = _bm("uae_pass", "UAE PASS", 0.9, ("text",), ("'uae pass' in title",), ("credentials",), ("uaepass.ae",))
+    v = score("fp2", url, [d], Intel(domain="secure-gov-portal.example", age_days=5), b, None)
+    assert v.label == "scam"
+
+
+def test_established_guide_mentioning_brand_is_not_scam():
+    # whatson.ae / pitstoparabia.com pattern: old site, brand in the title of a guide, 'OTP' / 'card' in prose only
+    url = "https://www.cityguide.example/2026/06/how-to-pay-sandbox-bank-card-bill/"
+    d = _det(url, title="How to pay your Sandbox Bank card bill", visible_text="Enter the OTP sent to your phone and "
+             "your card number in the Sandbox Bank app.", form_fields=[FormField(name="s", type="text", placeholder="Search")])
+    v = score("fp3", url, [d], Intel(domain="cityguide.example", age_days=4000, tranco_rank=160_000),
+              _bm(asks=("card", "otp", "payment")), None)
+    assert not _flagged(v) and "brand_on_unofficial_domain" not in {r.id for r in v.reasons}
+
+
+def test_guide_on_site_naming_itself_is_not_scam_without_intel():
+    # hertz.ae pattern: no RDAP / Tranco, but the page names its own organisation (its domain label)
+    url = "https://www.carhire.ae/en/blog/sandbox-bank-card-recharge"
+    d = _det(url, title="Sandbox Bank Recharge: different ways", visible_text="Carhire Car Rental Blog\nRecharge your "
+             "Sandbox Bank card: enter the card number and OTP in the app.")
+    v = score("fp4", url, [d], Intel(domain="carhire.ae"), _bm(asks=("card", "otp", "payment")), None)
+    assert not _flagged(v)
+    assert "brand_mention_other_site" in {r.id for r in v.reasons}
+
+
+def test_cobrand_partner_page_on_established_site_is_not_scam():
+    # airarabia.com RAKBANK card page: old high-rank site, brand only in the text, its own login modal has a password
+    url = "https://www.airline.example/en/rewards/sandbox-bank-platinum-credit-card"
+    d = _det(url, title="Airline Platinum Credit Card - Your ticket to more travel",
+             visible_text="Rewarding journeys with the Sandbox Bank Airline Platinum Credit Card. Apply now.",
+             form_fields=[FormField(name="emailaddress", type="email"), FormField(name="password", type="password")])
+    b = _bm(evidence=("'Sandbox Bank' in text",), methods=("text", "llm"), asks=("credentials", "card"))
+    v = score("fp5", url, [d], Intel(domain="airline.example", age_days=8781, tranco_rank=12769), b, None)
+    assert not _flagged(v)
+
+
+def test_compromised_old_site_with_branded_password_form_still_scam():
+    url = "https://old-shop.example/wp-content/x/sandbox/login.php"
+    d = _det(url, title="Sandbox Bank - Online Banking", visible_text="Sign in to Sandbox Bank",
+             form_fields=[FormField(name="user", label="Username"), FormField(name="pw", type="password")])
+    v = score("fp6", url, [d], Intel(domain="old-shop.example", age_days=4000), _bm(asks=("credentials",)), None)
+    assert v.label == "scam"
+
+
+def test_parking_page_is_domain_only_and_capped():
+    # .ph wildcard parking: 'Redirecting...' + 'This domain is available to be registered'
+    url = "https://sandbox-bank-app.example.ph/"
+    d = _det(url, title="Redirecting...", visible_text="This domain is available to be registered. Click here to register.\n"
+             "sandbox-bank-app.example.ph\nFinance\nTravel")
+    look = _look("sandbox-bank-app.example.ph", 0.85, ["keyword", "combosquat"])
+    v = score("fp7", url, [d], Intel(domain="sandbox-bank-app.example.ph"),
+              _bm(conf=0.65, methods=("text", "domain_keyword")), look)
+    ids = {r.id for r in v.reasons}
+    assert v.mode == "domain_only" and "parked_page" in ids and "brand_on_unofficial_domain" not in ids
+    assert not _flagged(v)
+
+
+def test_brand_protection_registrar_placeholder_is_defensive():
+    url = "https://sandboxbankpay.example/"
+    d = _det(url, title="Domain Registered at Safenames", visible_text="This domain is registered with Safenames\n\nThere is "
+             "no website configured for this address yet.")
+    look = _look("sandboxbankpay.example", 0.85, ["keyword", "combosquat"])
+    v = score("fp8", url, [d], Intel(domain="sandboxbankpay.example", age_days=4000, registrar="SafeNames Ltd."), None, look)
+    assert v.label == "legitimate" and "defensive_registration" in {r.id for r in v.reasons}
+
+
+def test_single_word_free_host_404_is_at_most_suspicious():
+    url = "https://sandboxbank.vercel.app/"
+    d = _det(url, http_status=404, title="404: NOT_FOUND", visible_text="404 DEPLOYMENT_NOT_FOUND")
+    look = _look("sandboxbank.vercel.app", 0.85, ["tld_swap"], 0)
+    v = score("fp9", url, [d], Intel(domain="sandboxbank.vercel.app"), None, look)
+    assert v.label == "suspicious" and "platform_takedown" in {r.id for r in v.reasons}
+    nx = _det(url, status="dead", error="net::ERR_NAME_NOT_RESOLVED")
+    assert score("fp9b", url, [nx], Intel(domain="sandboxbank.vercel.app"), None, look).label == "suspicious"
+
+
+def test_throwaway_free_host_404_still_flagged():
+    url = "https://secure-login-update-7781.vercel.app/"
+    d = _det(url, http_status=404, title="404: NOT_FOUND", visible_text="404 DEPLOYMENT_NOT_FOUND")
+    assert _flagged(score("fp10", url, [d], Intel(domain="secure-login-update-7781.vercel.app"), None, None))
+
+
+def test_unrelated_business_with_brand_word_is_at_most_suspicious():
+    # mashreqpress.com pattern: printing press named like the bank, contact form whose honeypot fields carry
+    # autocomplete=one-time-code (type 'otp'); asks for nothing sensitive
+    url = "https://sandboxbankpress.example/"
+    d = _det(url, title="Sandbox Bank - Printing Press Company", visible_text="Contact Us Now. We are a full-service printing press.",
+             form_fields=[FormField(name="First Name", type="text"), FormField(name="Email", type="email"),
+                          FormField(name="website", type="otp"), FormField(name="notes", type="otp")])
+    look = _look("sandboxbankpress.example", 0.4, ["keyword", "combosquat"])
+    v = score("fp11", url, [d], Intel(domain="sandboxbankpress.example", age_days=259), _bm(asks=("personal_info",)), look)
+    assert not _flagged(v) and "no_sensitive_request" in {r.id for r in v.reasons}
+
+
+def test_foreign_namesake_cctld_is_at_most_suspicious():
+    # adcb.com.eg / emiratesnbd.com.eg: exact brand label on another country's ccTLD, Tranco-ranked
+    url = "https://online.sandboxbank.com.eg/login"
+    d = _det(url, title="Sandbox Bank", visible_text="Sandbox Bank Egypt online banking",
+             form_fields=[FormField(name="user", label="Username"), FormField(name="pw", type="password")])
+    look = _look("online.sandboxbank.com.eg", 0.85, ["tld_swap"], 0)
+    v = score("fp12", url, [d], Intel(domain="sandboxbank.com.eg", tranco_rank=623_020), _bm(asks=("credentials",)), look)
+    assert v.label == "suspicious" and "foreign_namesake" in {r.id for r in v.reasons}
+
+
+def test_new_lookalike_brand_page_without_form_still_scam():
+    # fabbankinternational.com pattern: young combosquat, brand in title, only a contact form
+    url = "https://sandboxbankinternational.example/"
+    d = _det(url, title="SANDBOX BANK INTERNATIONAL", visible_text="+234 816 000 0000 Your next logistics solution",
+             form_fields=[FormField(name="your-name"), FormField(name="phone", type="tel")])
+    look = _look("sandboxbankinternational.example", 0.85, ["keyword", "combosquat"])
+    v = score("fp13", url, [d], Intel(domain="sandboxbankinternational.example", age_days=208),
+              _bm(asks=("personal_info",)), look)
+    assert v.label == "scam"
+
+
+def test_prize_scam_with_payment_still_scam():
+    # mashreq.watch pattern: young domain, brand in title, prize / pay-now page, no form
+    url = "https://sandboxbank.watch/"
+    d = _det(url, title="بنك التجربة - احصل على ساعتك", visible_text="اطلب ساعتك الآن ادفع اربح جوائز")
+    look = _look("sandboxbank.watch", 0.4, ["tld_swap"], 0)
+    v = score("fp14", url, [d], Intel(domain="sandboxbank.watch", age_days=108), _bm(asks=("payment",)), look)
+    assert v.label == "scam"
+
+
+def test_cloud_api_endpoint_with_brand_name_is_at_most_suspicious():
+    # rakbank-*-apim.azure-api.net from CT logs: no page, RDAP lookup of the full host fails
+    url = "https://sandboxbank-tst-apim.developer.azure-api.net/"
+    d = _det(url, status="dead", error="net::ERR_NAME_NOT_RESOLVED")
+    look = _look("sandboxbank-tst-apim.developer.azure-api.net", 0.9, ["subdomain_brand", "keyword"])
+    i = Intel(domain="azure-api.net", sources={"rdap": "not_found"})
+    v = score("fp15", url, [d], i, None, look)
+    assert not _flagged(v) and "cloud_service_endpoint" in {r.id for r in v.reasons}
+
+
+def test_brand_protection_registrar_of_parent_domain_is_not_defensive():
+    url = "https://sandboxbank-dev.postgres.database.azure.com/"
+    d = _det(url, status="dead", error="timeout")
+    look = _look("sandboxbank-dev.postgres.database.azure.com", 0.9, ["subdomain_brand", "keyword"])
+    v = score("fp16", url, [d], Intel(domain="azure.com", registrar="MarkMonitor Inc.", age_days=9000), None, look)
+    assert "defensive_registration" not in {r.id for r in v.reasons}
+
+
+def test_established_site_own_login_on_page_naming_brand_is_not_scam():
+    # expatwoman.com: 20-year-old site, brand in a guide title, the password field is the site's own login
+    url = "https://www.expatguide.com/dubai/finance/how-to-pay-sandbox-bank-bills"
+    d = _det(url, title="How to Pay Bills Online: Sandbox Bank, Phone, Parking | Expatguide",
+             visible_text="Here's everything you need to know about paying Sandbox Bank bills.",
+             form_fields=[FormField(name="name", label="Username or email *"), FormField(name="pass", type="password")])
+    v = score("fp17", url, [d], Intel(domain="expatguide.com", age_days=8210, tranco_rank=424_105),
+              _bm(asks=("credentials", "card")), None)
+    assert not _flagged(v)

@@ -347,3 +347,13 @@ async def test_uae_pass_sso_button_is_mention():
     m2 = await match_brand(det("https://uaepass-verify.example/", "Sign in", "Login with UAE PASS",
                                [FormField(name="u", label="UAE PASS username"), FormField(name="otp", label="OTP")]))
     assert m2.brand_id == "uae_pass" and not m2.is_official_domain
+
+
+@pytest.mark.parametrize("dom", ["cbdonlineshopping.com", "cbdonline-store.com", "cbdonline360.com"])
+def test_cbd_oil_shops_are_weak(dom):
+    # "CBD" is also cannabidiol: cbdonline<shop> is not Commercial Bank of Dubai without banking context
+    assert lookalike(dom).score <= 0.4, lookalike(dom)
+
+
+def test_cbdonline_with_bank_context_still_high():
+    assert lookalike("cbdonline-login-verify.com").score >= 0.8

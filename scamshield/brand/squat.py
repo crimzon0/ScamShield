@@ -102,6 +102,8 @@ WEAK_TOKENS = {
     "emirates": ("airline", "skywards", "fly", "flight", "ticket", "booking"),
     # المشرق "the East": Al Mashreq Medical, Mashreq newspapers...
     "mashreq": ("bank", "neo", "online", "login", "secure", "verify", "card", "update", "pay", "reward"),
+    # "CBD" is also cannabidiol: cbdonlineshop / cbdonline-store are oil shops, not Commercial Bank of Dubai
+    "cbdonline": ("bank", "login", "secure", "verify", "card", "update", "account", "uae", "dubai", "otp", "ibusiness"),
 }
 
 

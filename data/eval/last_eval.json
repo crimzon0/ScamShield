@@ -1,61 +1,124 @@
 {
-  "generated_at": "2026-11-24T20:56:29.117614+00:00",
+  "generated_at": "2026-11-25T00:05:57.475356+00:00",
   "dataset": "data/eval/sample.csv",
   "n": 127,
   "threshold": "likely_scam",
-  "tp": 59,
+  "tp": 47,
   "fp": 0,
-  "fn": 0,
+  "fn": 12,
   "tn": 68,
   "precision": 1.0,
-  "recall": 1.0,
-  "f1": 1.0,
+  "recall": 0.7966,
+  "f1": 0.8868,
   "fpr": 0.0,
-  "accuracy": 1.0,
-  "blocklist_ignored": false,
+  "accuracy": 0.9055,
+  "blocklist_ignored": true,
   "official_fp": {
     "flagged": 0,
     "total": 112,
     "not_legitimate": 0
   },
   "modes": {
-    "full": 87,
-    "domain_only": 40
+    "full": 96,
+    "domain_only": 31
   },
   "labels": {
-    "legitimate": 68,
-    "scam": 59
+    "legitimate": 74,
+    "scam": 26,
+    "likely_scam": 21,
+    "suspicious": 6
   },
   "domain_only": {
-    "recall": 1.0,
+    "recall": 0.8261,
     "fpr": 0.0,
-    "n": 40
+    "n": 31
   },
   "false_positives": [],
-  "false_negatives": [],
-  "ablation_no_blocklist": {
-    "precision": 1.0,
-    "recall": 0.7966,
-    "f1": 0.8868,
-    "fpr": 0.0
-  },
-  "ablation_no_blocklist_suspicious": {
-    "precision": 1.0,
-    "recall": 0.8983,
-    "f1": 0.9464,
-    "fpr": 0.0
-  },
+  "false_negatives": [
+    {
+      "url": "http://hotelbs.websiteseguro.com/css/outl0ok/true/login/aces.php",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://b4gpg-w01-6siw-0xlm2-18-10-2026-aa.pages.dev/qaz-wsx-edc-rfv",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://www.belepes-telekom-hu.vh22325.vh.net.pl/",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "full"
+    },
+    {
+      "url": "https://procasmexico.com",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "full"
+    },
+    {
+      "url": "https://apexrecoveryconsulting.com.glovonetwork.com",
+      "label": "legitimate",
+      "score": 16,
+      "mode": "full"
+    },
+    {
+      "url": "https://office365.internal-alerts.com/i/d5b9af0d256f14c03ab8396a78d3687bf",
+      "label": "suspicious",
+      "score": 45,
+      "mode": "full"
+    },
+    {
+      "url": "https://security.email-microsoft.com/diyc_smavt1av3ltaq",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "full"
+    },
+    {
+      "url": "https://urlz.li/B2McG0BJ",
+      "label": "legitimate",
+      "score": 0,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://sia0126.github.io/Netflix/",
+      "label": "suspicious",
+      "score": 47,
+      "mode": "full"
+    },
+    {
+      "url": "https://hawkinsinc.microsoft-alerts.org",
+      "label": "suspicious",
+      "score": 50,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://roblox.com.et/users/1413971851/profile",
+      "label": "suspicious",
+      "score": 43,
+      "mode": "full"
+    },
+    {
+      "url": "https://rewardsplatform.microsofth.com",
+      "label": "suspicious",
+      "score": 45,
+      "mode": "full"
+    }
+  ],
   "by_threshold": {
     "likely_scam": {
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
+      "recall": 0.7966,
+      "f1": 0.8868,
       "fpr": 0.0
     },
     "suspicious": {
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
+      "recall": 0.8983,
+      "f1": 0.9464,
       "fpr": 0.0
     }
   }

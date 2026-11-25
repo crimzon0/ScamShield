@@ -121,6 +121,21 @@ NOT_FOUND_PAGE = re.compile(
     r"this (site|account|page) (has been|is) (suspended|disabled|removed|deleted)|domain (is )?(for sale|parked)|"
     r"web page not available|this deployment is temporarily paused|project not found|error 1001|dns resolution error|"
     r"site (is )?(unavailable|disabled)|403 forbidden|not found", re.I)
+# Domain parking / for-sale / registrar placeholder pages: the content is the parking provider's, not the
+# domain holder's, so it is ignored (domain-only verdict, capped at suspicious unless independent evidence).
+PARKED_PAGE = re.compile(
+    r"domain (name )?(is |may be )?(available (to be registered|for (registration|purchase))|for sale|parked)|"
+    r"buy this domain|offer to sell domain|make an offer (on|for) this domain|this domain (name )?(is|has been|was) "
+    r"(registered|parked|reserved)|domain registered at |there is no website configured|future home of|"
+    r"parked (free|domain|by|courtesy)|domain parking|this web ?page is parked|hugedomains|sedoparking|"
+    r"parkingcrew|bodis\.com|afternic|dan\.com|is for sale!?|inquire about this domain", re.I)
+# Corporate brand-protection registrars (enterprise-only accounts; registrations there are almost always the brand's
+# own defensive registrations, not attacker infrastructure).
+BRAND_PROTECTION = re.compile(r"safenames|markmonitor|csc corporate domains|corporation service company|com laude|"
+                              r"nom-?iq|brandsight|lexsynergy|ebrand services|ip twins", re.I)
+# An input typed 'otp' (autocomplete="one-time-code") counts as OTP only if its name/label says so: contact forms
+# put that hint on honeypot fields ('website', 'notes', 'company').
+_OTP_HINT = re.compile(r"otp|code|pin|verif|token|sms|digit|one.?time|passcode|رمز", re.I)
 HOLD_STATUS = re.compile(r"client ?hold|server ?hold|redemption ?period|pending ?delete|inactive", re.I)
 NXDOMAIN = re.compile(r"ERR_NAME_NOT_RESOLVED|NXDOMAIN|getaddrinfo|Name or service not known|ENOTFOUND", re.I)
 
@@ -203,6 +218,107 @@ def _is_gone(d: Detonation) -> bool:
         return True
     head = f"{d.title} {(d.visible_text or '')[:300]}"
     return not d.form_fields and len((d.visible_text or "").strip()) < 600 and bool(NOT_FOUND_PAGE.search(head))
+
+
+# Cloud API / data / service endpoint suffixes (not web-site builders): names here are created by an organisation's
+# developers for back-end services and are published in CT logs without any page behind them.
+CLOUD_SERVICE = (
+    "azure-api.net", "cosmos.azure.com", "documents.azure.com", "database.azure.com", "database.windows.net",
+    "servicebus.windows.net", "vault.azure.net", "azurecr.io", "azure-devices.net", "redis.cache.windows.net",
+    "search.windows.net", "scm.azurewebsites.net", "azure-mobile.net", "execute-api.amazonaws.com", "rds.amazonaws.com", "apigee.net",
+)  # web-page hosts (azurewebsites.net, run.app, cloudfront.net...) are deliberately NOT here: phishing lives there
+
+
+def _cloud_service(host: str) -> str:
+    h = (host or "").lower()
+    return next((x for x in CLOUD_SERVICE if h.endswith("." + x)), "")
+
+
+def _is_parked(d: Detonation) -> bool:
+    """Loaded page is a parking / for-sale / registrar placeholder (phrase in the title or the top of the text)."""
+    if d.status != "ok":
+        return False
+    head = f"{d.title} {(d.visible_text or '')[:400]}"
+    return bool(PARKED_PAGE.search(head))
+
+
+def _form_asks(ok: list[Detonation]) -> set[str]:
+    """Secrets requested by actual input fields (not by words in the page text). Guides and blogs mention
+    'OTP' or 'card number' in prose; a phishing page has to provide a field for them."""
+    out: set[str] = set()
+    try:
+        from scamshield.brand.text import detect_asks
+    except Exception:  # pragma: no cover
+        detect_asks = None
+    for d in ok:
+        fields = []
+        for f in d.form_fields or []:
+            hint = f"{f.name} {f.label} {f.placeholder}"
+            if (f.type or "").lower() == "otp" and hint.strip() and not _OTP_HINT.search(hint):
+                f = f.model_copy(update={"type": "text"})  # autocomplete=one-time-code on a 'website'/'notes' field
+            fields.append(f)
+        for f in fields:
+            blob = f"{f.name} {f.type} {f.label} {f.placeholder}"
+            if (f.type or "").lower() in ("checkbox", "radio", "search", "submit", "button", "hidden", "file"):
+                continue
+            if f.type == "password" or re.search(r"pass(word|wd|code)?\b|pwd", blob, re.I):
+                out.add("credentials")
+            elif re.search(r"otp|one.time|verification.?code", blob, re.I):
+                out.add("otp")
+            elif re.search(r"card|cvv|cvc|ccnum|expiry", blob, re.I):
+                out.add("card")
+            elif re.search(r"emirates.?id", blob, re.I):
+                out.add("emirates_id")
+        if detect_asks:
+            out |= set(detect_asks("", fields)) & SECRETS_ALL
+    return out
+
+
+SECRETS_ALL = {"credentials", "card", "otp", "emirates_id"}
+
+
+def _brand_prominent(brand: Optional[BrandMatch], look: Optional[LookalikeResult]) -> bool:
+    """The page itself is styled as the brand: brand in the title, logo/favicon/screenshot match, or the
+    address imitates it. A body-text or LLM-only attribution is not prominent."""
+    if not brand or not brand.brand_id:
+        return False
+    if set(brand.methods or []) & {"logo_hash", "screenshot_hash", "favicon_hash"}:
+        return True
+    if any(" in title" in (e or "") for e in brand.evidence or []):
+        return True
+    return bool(look and look.brand_id == brand.brand_id and look.score >= 0.6)
+
+
+def _own_identity(final: str, ok: list[Detonation], brand: Optional[BrandMatch], look) -> str:
+    """The site's own name (its registrable label, e.g. 'hertz' for hertz.ae) appears on the page and has
+    nothing to do with the claimed brand: the page belongs to another organisation that mentions the brand."""
+    if not brand or not brand.brand_id or not ok:
+        return ""
+    try:
+        lab = (registrable_icann(final) or registrable(final)).split(".")[0].lower()
+    except Exception:
+        return ""
+    if len(lab) < 4 or not lab.isascii():
+        return ""
+    if look and look.brand_id == brand.brand_id and look.score >= 0.5:
+        return ""
+    toks = {d.split(".")[0].lower() for d in brand.official_domains or []}
+    try:
+        from scamshield.brand import get_brand
+
+        toks |= {k.lower().replace(" ", "").replace("-", "") for k in (get_brand(brand.brand_id) or {}).get("domain_keywords") or []}
+    except Exception:
+        pass
+    flat = lab.replace("-", "")
+    if any(t and len(t) >= 3 and (t in flat or flat in t) for t in toks):
+        return ""
+    text = " ".join(f"{d.title} {(d.visible_text or '')[:6000]}" for d in ok).lower()
+    if len(flat) >= 5:
+        squashed = re.sub(r"[^a-z0-9]+", "", text)
+        hit = flat in squashed
+    else:
+        hit = bool(re.search(r"(^|[^a-z0-9])" + re.escape(flat) + r"([^a-z0-9]|$)", text))
+    return lab if hit else ""
 
 
 _LINK_RE = re.compile(r"""(?:href|action|formaction|data-href)\s*=\s*["']([^"']{8,600})["']""", re.I)
@@ -415,7 +531,10 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     host = host_of(final)
     dom = registrable(final)
     gone = [d for d in dets if _is_gone(d)]
-    ok = [d for d in dets if d.status == "ok" and not _is_gone(d)]
+    parked = [d for d in dets if not _is_gone(d) and _is_parked(d)]
+    ok = [d for d in dets if d.status == "ok" and not _is_gone(d) and d not in parked]
+    if parked and ok:  # one persona got a live page, another a parking page: keep the live one
+        parked = []
     mode = "full" if ok else "domain_only"
     if not ok:
         brand = brand if (brand and brand.is_official_domain) else None  # page content unusable
@@ -438,17 +557,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     if intel and not shared:
         age = intel.age_days if intel.age_days is not None else _days_since(intel.created)
     asks = set(brand.asks_for) if brand else set()
-    for d in ok:
-        for f in d.form_fields:
-            blob = f"{f.name} {f.type} {f.label} {f.placeholder}"
-            if f.type == "password" or re.search(r"pass|pwd", blob, re.I):
-                asks.add("credentials")
-            elif re.search(r"otp|one.time|verification", blob, re.I):
-                asks.add("otp")
-            elif re.search(r"card|cvv|cvc|ccnum|expiry", blob, re.I):
-                asks.add("card")
-            elif re.search(r"emirates.?id", blob, re.I):
-                asks.add("emirates_id")
+    form_secrets = _form_asks(ok)
+    asks |= form_secrets
     b_en, b_ar = _brand_names(brand, look)
     strong_brand = bool(brand and brand.brand_id and set(brand.methods or []) - {"domain_keyword"})
     if strong_brand and is_mention_only(brand):
@@ -468,8 +578,18 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     sso = ""
     if ok and not (asks & SECRETS) and not on_official and ((brand_conf >= 0.2) or (look and look.score >= 0.5)):
         sso = _sso_target(ok, _brand_official(brand, look))
-    if not sso and ok and brand and brand.brand_id in SSO_BRANDS and not (asks & SECRETS) and not on_official:
-        sso = f"{brand.brand_id} sign-in button"
+    # SSO-only brands (UAE PASS): the button is an integration unless the page has its own secret INPUT fields
+    # (prose such as "enter the OTP sent by UAE PASS" on a gov login page is not a request).
+    if not sso and ok and brand and brand.brand_id in SSO_BRANDS and not on_official:
+        if not form_secrets:
+            sso = f"{brand.brand_id} sign-in button"
+        else:
+            # the site's own login next to a 'Login with UAE PASS' button (gcaa.ae): the fields belong to the site
+            # (its own name is on the page and no field is labelled as the SSO brand's password / OTP)
+            fl = " ".join(f"{f.name} {f.label} {f.placeholder}" for d in ok for f in d.form_fields or [])
+            own_rp = "" if re.search(r"uae\s*pass|الهوية الرقمية", fl, re.I) else _own_identity(final, ok, brand, look)
+            if own_rp:
+                sso = f"{brand.brand_id} sign-in button next to {own_rp}'s own login"
     if sso:
         add("sso_integration", 0, f"The page links its sign-in to the official {b_en or 'brand'} site and does not ask "
             f"for a password, OTP or card itself (typical 'Sign in with ...' integration).",
@@ -493,12 +613,34 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         add("long_cert_history", -10, f"Certificates for this domain have been seen for over {cert_age // 365} years.",
             f"شهادات الأمان لهذا النطاق مرصودة منذ أكثر من {cert_age // 365} سنوات.", f"cert_first_seen={intel.cert_first_seen}")
     brand_rule = False
+    mention = False
+    # settled: older than a year or in the global top-1M (a weaker notion than `established`)
+    settled = established or (age is not None and age > 365) or (tranco is not None and tranco <= 1_000_000) \
+        or (age is None and cert_age is not None and cert_age > 365)
+    styled_phish = bool(form_secrets) and _brand_prominent(brand, look)
+    if styled_phish and settled and not shared and _own_identity(final, ok, brand, look):
+        styled_phish = False  # an established site's own login (expatwoman.com) on a page that names the brand
+    own = ""
+    if brand_conf >= BRAND_THRESHOLD and not on_official and not sso and not rtld and not form_secrets \
+            and not shared and (age is None or age >= 90):
+        own = _own_identity(final, ok, brand, look)
     if brand_conf >= BRAND_THRESHOLD and not on_official and not sso and not rtld:
         ev = "; ".join(brand.evidence[:3])
-        if big or (established and not (asks & {"credentials", "card", "otp", "emirates_id"})):
+        if big or (settled and not styled_phish and not shared):
+            mention = True
+            # an established site (guide, news, partner / co-brand page) that mentions the brand: a claim only if
+            # it asks for the brand's secrets in real input fields on a page styled as that brand
             add("brand_mention_established_site", 10,
-                f"Mentions {b_en}, but this is a long-established site that does not ask for sensitive data.",
-                f"تذكر الصفحة {b_ar}، لكن الموقع قديم ومعروف ولا يطلب بيانات حساسة.", ev)
+                f"Mentions {b_en}, but this is a long-established site that does not ask for {b_en} sign-in or card "
+                f"details on a page presented as {b_en}.",
+                f"تذكر الصفحة {b_ar}، لكن الموقع قديم ومعروف ولا يطلب بيانات دخول أو بطاقة {b_ar} في صفحة تنتحل صفة {b_ar}.", ev)
+        elif own:
+            mention = True
+            add("brand_mention_other_site", 10,
+                f"Mentions {b_en}, but the site presents itself as a different organisation ({own}) and has no "
+                f"password, OTP or card field.",
+                f"تذكر الصفحة {b_ar}، لكن الموقع يعرّف نفسه كجهة أخرى ({own}) ولا يحتوي على حقل لكلمة مرور أو رمز تحقق أو بطاقة.",
+                ev)
         else:
             brand_rule = True
             add("brand_on_unofficial_domain", 75,
@@ -556,8 +698,10 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
 
     # registry takedown / hold
     rd_status = " ".join(str(x) for x in ((intel.raw_rdap or {}).get("status") or [])) if intel and not shared else ""
-    if HOLD_STATUS.search(rd_status):
-        add("registry_hold", 40, "The domain registry has put this domain on hold or deletion (typical after abuse reports).",
+    hold = bool(HOLD_STATUS.search(rd_status))
+    if hold:
+        # on an old domain without brand evidence a hold is as often an unpaid / unverified registration
+        add("registry_hold", 20 if (age is not None and age > 365 and not brand_rule and not (look and look.score >= 0.5)) else 40, "The domain registry has put this domain on hold or deletion (typical after abuse reports).",
             "وضع سجل النطاقات هذا النطاق قيد التعليق أو الحذف (يحدث عادةً بعد بلاغات إساءة).", rd_status)
 
     tld = host.rsplit(".", 1)[-1] if "." in host else ""
@@ -658,6 +802,8 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
     if sens and not brand_rule:
         young = (age is None or age < 365) and not established
         w = (40 if young else 25) if asks & {"card", "otp", "emirates_id"} else (35 if young else 18) if "credentials" in asks else 8
+        if asks & SECRETS and not form_secrets and (own or settled or mention):
+            w = 8  # a guide / news page naming secrets in prose ("enter the OTP you receive"), no input field
         if big or rtld:
             w = 0
         if w:
@@ -720,10 +866,11 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         g = gone[0]
         code = g.http_status or 0
         if shared:
-            add("platform_takedown", 40, f"The hosting platform reports this page as removed (HTTP {code}); "
-                "free-hosting pages are typically removed after abuse reports.",
-                f"تُفيد منصة الاستضافة بأن هذه الصفحة أُزيلت (HTTP {code})؛ عادةً ما تُزال صفحات الاستضافة المجانية بعد بلاغات إساءة.",
-                f"HTTP {code} {g.title[:60]}")
+            # a plain 404 on a free host also means "never deployed / renamed project": weak evidence
+            add("platform_takedown", 40, f"The hosting platform reports this page as missing or removed (HTTP {code}); "
+                "free-hosting pages are often removed after abuse reports.",
+                f"تُفيد منصة الاستضافة بأن هذه الصفحة غير موجودة أو أُزيلت (HTTP {code})؛ غالباً ما تُزال صفحات الاستضافة "
+                f"المجانية بعد بلاغات إساءة.", f"HTTP {code} {g.title[:60]}")
         else:
             add("page_gone", 5, f"The page returned HTTP {code} / 'not found' at scan time (it may already be taken down).",
                 f"أعادت الصفحة الرمز HTTP {code} / «غير موجودة» وقت الفحص (ربما أُزيلت بالفعل).", f"HTTP {code} {g.title[:60]}")
@@ -731,7 +878,12 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
         nx = any(NXDOMAIN.search(d.error or "") for d in dets)
         registered = bool(intel and ((intel.raw_rdap or {}).get("found") or intel.created or intel.cert_count))
         unreg = bool(intel and (intel.sources or {}).get("rdap") == "not_found" and not shared)
-        if unreg:
+        if parked:
+            add("parked_page", 5, "The address shows a domain parking / for-sale / registrar placeholder page (no "
+                "site of its own); the verdict is based on the domain only.",
+                "يعرض العنوان صفحة ركن نطاق أو عرض للبيع أو صفحة مؤقتة من المسجّل (لا يوجد موقع فعلي)؛ الحكم مبني على "
+                "معلومات النطاق فقط.", parked[0].title[:80])
+        elif unreg:
             add("domain_not_registered", 30, "The domain is not registered (any more): the link points to a site that "
                 "was removed or never legitimately existed.",
                 "النطاق غير مسجّل (حالياً): الرابط يشير إلى موقع أُزيل أو لم يكن موجوداً بشكل مشروع.", "RDAP not found")
@@ -756,8 +908,60 @@ def _score(scan_id, url, dets, intel, brand, look, cloak, extra) -> Verdict:
             f"the page asks for no password, OTP or card; often a partner integration, so it is not rated a scam.",
             f"اسم الجهة مجرد جزء فرعي على نطاق قائم منذ مدة ({dom}) والصفحة لا تطلب كلمة مرور أو رمز تحقق أو بطاقة؛ "
             f"غالباً تكامل لشريك، لذا لا يُصنَّف احتيالاً.", host)
+    strong_ev = bool(bl or warn or (cloak and cloak.cloaked) or ui)
+    caps: list[int] = []
+    # brand-protection registrar (Safenames, MarkMonitor, CSC...): the brand's own defensive registration
+    page_txt = " ".join(f"{d.title} {(d.visible_text or '')[:400]}" for d in dets if d.status == "ok")
+    bp = BRAND_PROTECTION.search(" ".join([intel.registrar if intel and not shared else "", page_txt]))
+    # the registrar describes the registrable domain: it says nothing when the brand word is only in a subdomain
+    # (x-bank.postgres.database.azure.com inherits azure.com's MarkMonitor registration)
+    sub_only = bool(look and "subdomain_brand" in (look.techniques or [])) or bool(_cloud_service(host))
+    if bp and not shared and not sub_only and not form_secrets and not strong_ev:
+        add("defensive_registration", -20, f"The domain is held at a corporate brand-protection registrar "
+            f"({bp.group(0)}) and hosts no site: typically a defensive registration by the brand itself.",
+            f"النطاق مسجّل لدى مسجّل متخصص في حماية العلامات التجارية ({bp.group(0)}) ولا يستضيف موقعاً: غالباً تسجيل "
+            f"وقائي من الجهة نفسها.", bp.group(0))
+        total -= 20
+        caps.append(SUSPICIOUS - 1 if not ok else LIKELY - 1)
+    expired = any(re.search(r"\bexpired\b", f"{d.title} {(d.visible_text or '')[:400]}", re.I) for d in parked)
+    if parked and not ok and not strong_ev and not hold and not expired:
+        caps.append(LIKELY - 1)  # parking page: domain-only evidence, never 'scam' on its own
+    if not ok and shared and not strong_ev and re.fullmatch(r"[a-z]{2,15}", scope or "")             and (gone or any(NXDOMAIN.search(d.error or "") for d in dets)):
+        # plain-word project name (adib.vercel.app): a 404 / unknown subdomain is not proof of a takedown
+        caps.append(LIKELY - 1)
+    # foreign same-name site: exact official label on another country's ccTLD, established (Tranco / age):
+    # usually the brand's foreign subsidiary or an unrelated namesake, not a phishing registration
+    if look and "tld_swap" in (look.techniques or []) and look.distance == 0 and not shared and not strong_ev \
+            and re.fullmatch(r"[a-z]{2}", (dom.rsplit(".", 1)[-1] if dom else "")) \
+            and ((tranco is not None and tranco <= 1_000_000) or (age is not None and age > 3 * 365)):
+        add("foreign_namesake", 0, f"{dom} uses the {b_en or 'brand'} name on another country's domain ending and "
+            f"has years of history or real traffic; often a foreign subsidiary or namesake. Verify before trusting it.",
+            f"يستخدم {dom} اسم {b_ar or 'الجهة'} بامتداد دولة أخرى وله تاريخ طويل أو زيارات فعلية؛ غالباً شركة تابعة "
+            f"أجنبية أو اسم مشابه. تحقّق قبل الثقة به.", dom)
+        caps.append(LIKELY - 1)
+    # live page that asks for nothing sensitive (no secret, no payment, neither in fields nor in text), on an
+    # address that is not a fresh look-alike: a brand-name coincidence or an unrelated business, not a phish
+    fresh_lookalike = age is not None and ((age < 365 and bool(look and look.score >= 0.6)) or (age < 180 and brand_rule))
+    if ok and not shared and not strong_ev and not hold and not (asks & (SECRETS | {"payment"})) \
+            and not form_secrets and not fresh_lookalike and (brand_rule or (look and look.score >= 0.2)):
+        add("no_sensitive_request", 0, "The page does not ask for a password, OTP, card or payment, and the address "
+            "is not a newly registered look-alike, so it is not rated a scam on the name alone.",
+            "لا تطلب الصفحة كلمة مرور أو رمز تحقق أو بطاقة أو دفعاً، والعنوان ليس نطاقاً مقلِّداً حديث التسجيل، لذا لا "
+            "يُصنَّف احتيالاً بسبب الاسم وحده.", "")
+        caps.append(LIKELY - 1)
+    # cloud API / database / service endpoint (rakbank-x-apim.azure-api.net, x.cosmos.azure.com) seen in CT logs:
+    # usually the brand's own infrastructure; never 'scam' unless it renders a brand-styled secret form
+    cs = _cloud_service(host)
+    if cs and not strong_ev and not form_secrets:
+        add("cloud_service_endpoint", 0, f"The address is a cloud API/service endpoint on {cs} (no website of its own); "
+            f"such names often belong to the organisation's own infrastructure, so the name alone is not rated a scam.",
+            f"العنوان نقطة خدمة/واجهة برمجية سحابية على {cs} (ليس موقعاً فعلياً)؛ غالباً ما تعود هذه الأسماء للبنية "
+            f"التحتية للجهة نفسها، لذا لا يُصنَّف احتيالاً بسبب الاسم وحده.", host)
+        caps.append(LIKELY - 1)
     if (sso or integrator) and not (bl or warn):
         total = min(total, LIKELY - 1)
+    elif caps:
+        total = min(total, *caps)
     elif brand_rule:
         total = max(total, 85)
     elif bl or warn:

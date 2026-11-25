@@ -1,57 +1,120 @@
 {
-  "generated_at": "2026-11-24T20:43:26.838007+00:00",
+  "generated_at": "2026-11-25T00:04:07.060785+00:00",
   "dataset": "data/eval/holdout.csv",
   "n": 79,
   "threshold": "likely_scam",
-  "tp": 42,
+  "tp": 30,
   "fp": 0,
-  "fn": 0,
+  "fn": 12,
   "tn": 37,
   "precision": 1.0,
-  "recall": 1.0,
-  "f1": 1.0,
+  "recall": 0.7143,
+  "f1": 0.8333,
   "fpr": 0.0,
-  "accuracy": 1.0,
-  "blocklist_ignored": false,
+  "accuracy": 0.8481,
+  "blocklist_ignored": true,
   "official_fp": null,
   "modes": {
-    "domain_only": 16,
-    "full": 63
+    "domain_only": 17,
+    "full": 62
   },
   "labels": {
-    "scam": 42,
-    "legitimate": 37
+    "suspicious": 6,
+    "scam": 16,
+    "legitimate": 43,
+    "likely_scam": 14
   },
   "domain_only": {
-    "recall": 1.0,
+    "recall": 0.5,
     "fpr": 0.0,
-    "n": 16
+    "n": 17
   },
   "false_positives": [],
-  "false_negatives": [],
-  "ablation_no_blocklist": {
-    "precision": 1.0,
-    "recall": 0.7143,
-    "f1": 0.8333,
-    "fpr": 0.0
-  },
-  "ablation_no_blocklist_suspicious": {
-    "precision": 1.0,
-    "recall": 0.8571,
-    "f1": 0.9231,
-    "fpr": 0.0
-  },
+  "false_negatives": [
+    {
+      "url": "https://teachschool.up.railway.app/wp-content/plugins/Seurnation/seur/page/index.php/",
+      "label": "suspicious",
+      "score": 37,
+      "mode": "domain_only"
+    },
+    {
+      "url": "http://danaa-iindonesiaa.hvv.my.id/",
+      "label": "suspicious",
+      "score": 38,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://www.notflix-azure.vercel.app/",
+      "label": "legitimate",
+      "score": 32,
+      "mode": "full"
+    },
+    {
+      "url": "https://sindikat.cc/shared/95796.html",
+      "label": "legitimate",
+      "score": 25,
+      "mode": "domain_only"
+    },
+    {
+      "url": "http://member157.metaagencypartner.com/",
+      "label": "suspicious",
+      "score": 40,
+      "mode": "full"
+    },
+    {
+      "url": "https://meccamacextnsuin.gitbook.io/us",
+      "label": "legitimate",
+      "score": 22,
+      "mode": "full"
+    },
+    {
+      "url": "https://www.aegtecnoservice.it/public/buchershoerling2023/metahbcha/recovery.html",
+      "label": "legitimate",
+      "score": 3,
+      "mode": "full"
+    },
+    {
+      "url": "http://www.complianceguides.org/",
+      "label": "suspicious",
+      "score": 40,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://shopi60.com/",
+      "label": "legitimate",
+      "score": 23,
+      "mode": "full"
+    },
+    {
+      "url": "http://cryby.xchhx.biz.id/",
+      "label": "suspicious",
+      "score": 38,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://ebay-lwholesale.com",
+      "label": "suspicious",
+      "score": 35,
+      "mode": "domain_only"
+    },
+    {
+      "url": "https://mail.bbvaexperiences.com",
+      "label": "legitimate",
+      "score": 10,
+      "mode": "full"
+    }
+  ],
   "by_threshold": {
     "likely_scam": {
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
+      "recall": 0.7143,
+      "f1": 0.8333,
       "fpr": 0.0
     },
     "suspicious": {
       "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
+      "recall": 0.8571,
+      "f1": 0.9231,
       "fpr": 0.0
     }
   }
