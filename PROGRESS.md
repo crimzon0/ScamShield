@@ -136,3 +136,11 @@ Keys added to `.env` (gitignored; verified absent from git history and working t
 7. **Hygiene** — no key in history; plain python next to each make target in README; live scam domains defanged in README/docs/PROGRESS.
 Offline `make test`: 308 passed, 88 skipped.
 Submission deck: docs/deck/ScamShield_Aegis.pdf. Pushed to https://github.com/crimzon0/ScamShield.
+
+### Keys round, continued (2026-11-25 ~00:30 UTC)
+4. **Search ads** — 57 SerpApi searches (EN+AR, google.ae, desktop+mobile): 0 ads shown for any UAE scam-intent query; 59 non-official organic hits. SerpApi month usage now 75/250 (57 radar + 18 helpline snippets).
+5. **Radar drain** — 3,436 hits, 3,418 scanned. First drain: scam 1,136, but a spot-check found many FPs. FP fix (score/brand: UAE PASS SSO on real sites, guides/partner pages on settled sites, parking pages, defensive registrations, plain-word free-host 404s, foreign namesakes, cloud API endpoints; +17 tests) -> re-scored stored scans persisted with `python -m scamshield.radar.rescore`: scam 388, likely 296, suspicious 2,376, legit 358. Scam on no blocklist (feeds 0, fresh Safe Browsing 17): **371/388**. Not hand-verified. Lead time not claimed (backfill). Report data/radar/drain_report_20261125_v2.md.
+   After the FP fix: hard_legit + deeplinks 87/87 legit, official 0/112, sample/holdout ablation unchanged (P 1.000 R 0.797 / 0.714), blind set re-scored P 1.000 R 0.566 (suspicious) FPR 0 (airarabia FP was in the fix brief, so not strictly blind).
+3b. **Helpline live (review mode)** — demo seeding ran Places live: 262 Maps listings for ADCB/FAB/ENBD, 256 match registry numbers, 6 differ (branch/department lines) -> human review, not scam.
+6. **Related domains** on the scan page: `/api/scans/{id}/related`, panel with bilingual reasons; live: aramex[.]rest -> 14 etisalat-* look-alikes on shared nameservers. Screenshot var/related_panel.png.
+Offline tests: 331 passed, 88 skipped. Local commits not yet pushed: GitHub credential manager needs an interactive sign-in.

@@ -252,6 +252,7 @@ make eval        # = .venv/Scripts/python -m scamshield.cli.eval data/eval/sampl
 - **The LLM changed 0 labels** on this set: it corroborated what the keyword rules found. The apparent +3 TPs between runs is re-scan variance of live pages (7 labels differed between two scans ~40 min apart).
 - **Biggest misses:** dead/blank/timeout pages judged on the domain only (43), crypto drainers with no brand claim (23), and kits that redirect to the impersonated brand's real site (they inherit its reputation).
 - **Official-domain sweep with the LLM on:** 0/112 flagged.
+- **After the radar false-positive fixes** (same stored scans re-scored, no re-detonation): P **1.000**, R 0.566 at suspicious, R 0.245 at likely_scam, **FPR 0.000**. The airarabia.com co-brand page is now legitimate. Caveat: that page was one of the patterns in the fix brief, so this row is no longer strictly blind; the 0.984 row above is the blind number.
 
 **LLM false-positive gate.** Before trusting the LLM we ran it on the three false-positive suites (112 official domains, 42 risky legitimate UAE logins, 45 official deep links): **0/199 flagged**. One legitimate page (smilesuae.ae) got a small score bump from LLM evidence alone, so LLM brand evidence is now gated: it can only corroborate a verdict that is already at least `suspicious` without it, and can never raise a legitimate page's score.
 
@@ -288,7 +289,15 @@ Real runs of `make eval` (`python -m scamshield.cli.eval`), latest 2026-11-24 20
 - **42/42** "hard legit" pages labelled legitimate: real UAE government, university, exchange-house and SaaS login pages that look risky (login forms, UAE PASS sign-in buttons, regulator footers). This pass first found 12 false positives (UAE PASS SSO buttons, regulator footers, "etihad" used as an ordinary Arabic word), which were fixed before the final runs.
 - **92** offline adversarial cases pass: IDN / homoglyph domains, combosquats, `user@host` URL tricks, obfuscated IP hosts, 12-hop redirect chains, persona cloaking, closed shadow DOM.
 
-**Early-warning radar, real hits (2026-11-24, one evening, no API keys):** 820+ hits from crt.sh (most), certstream and newly-registered-domain lists; 71+ scored scam or likely scam so far.
+**Early-warning radar (2026-11-25, all keys set):** 3,436 hits (crt.sh 3,312, live certstream 62, Google organic results via SerpApi 59, newly-registered lists 3), 3,418 scanned. After the false-positive fixes: **388 scam, 296 likely scam, 2,376 suspicious, 358 legitimate.** Of the 388 scam verdicts, **371 were on no blocklist at report time** (our feeds: 0; Google Safe Browsing, fresh lookup of domain, host and final URL: 17). These radar verdicts are **not hand-verified**: a spot check of the first drain found many false positives (parking pages, defensive registrations, guides, banks' own cloud API hosts), which are now handled (scam 1,136 -> 388 on the same stored scans), but the remainder still needs an analyst. Report: `data/radar/drain_report_20261125_v2.md`.
+
+- **Search ads:** 57 SerpApi searches (English + Arabic, google.ae, desktop + mobile) for UAE scam-intent queries such as card renewal, traffic fines, UAE PASS login, parcel fees. Google showed **0 ads** for all of them; 59 non-official organic results became radar hits.
+- **Lead time** is not claimed: most hits come from a crt.sh backfill, so `flagged_at - first_seen` (median ~70 days) measures our backfill delay, not a head start.
+- **Related domains:** the scan page lists domains sharing dedicated nameservers, IPs, certificates or favicons, e.g. one `aramex[.]rest` scan links 14 `etisalat-*[.]icu/cfd/click/sbs` look-alikes on the same nameservers.
+
+**Fake helplines, live Google Maps (Places API):** 262 Maps listings checked for 3 brands (ADCB, FAB, Emirates NBD); 256 show the registry's official number, **6 show a different number** (branch or department lines, e.g. a "Collections & Recoveries" listing). They are listed for human review, not called scams. The registry has 0 brands marked `verified`, so the verified-only check ran on 0 brands; these 3 were checked in review mode.
+
+Examples from the first evening (2026-11-24, verdicts as scored then):
 
 | Source | Domain | Why it matched | Verdict | Time to detection |
 |---|---|---|---|---|

@@ -65,7 +65,9 @@ Speaker notes: The core rule is simple and explainable: the page says "Emirates 
 **Real hits, 2026-11-24 (one evening, no API keys):**
 - certstream live: `salik[.]work` (TLD swap of salik.ae) flagged in the same hour its certificate was issued
 - newly registered domains: `adinwealth[.]org` (look-alike of ADIB's adibwealth.ae) **scam 87**; `trafficrta[.]xyz` **likely scam 70** (4 d 20 h / 2 d 20 h after the list date, mostly because we started watching that day)
-- 820+ radar hits in one evening, 71+ scam / likely scam; related domains grouped into networks
+- 2026-11-25: **3,436 radar hits**, 3,418 scanned, **388 scam**, **371 of them on no blocklist** (incl. Google Safe Browsing) at report time; not hand-verified
+- Related domains on the scan page: e.g. 14 `etisalat-*` look-alikes on the same nameservers
+- Search ads: 57 UAE scam-intent searches (EN + AR) showed 0 ads; Google Maps: 262 bank listings checked, 6 numbers for human review
 - caveat: some `uaepass` hits are real third-party UAE PASS integrations -> analyst review
 
 <!--
