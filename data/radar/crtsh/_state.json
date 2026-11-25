@@ -808,5 +808,389 @@
   "status": "empty",
   "ts": 1795566685.7016509,
   "n": 0
+ },
+ "secure-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566769.6609395,
+  "n": 0
+ },
+ "login-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566790.6342776,
+  "n": 0
+ },
+ "mymohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566816.6496985,
+  "n": 0
+ },
+ "www-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566826.488243,
+  "n": 0
+ },
+ "online-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566835.4142735,
+  "n": 0
+ },
+ "uae-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566845.8578653,
+  "n": 0
+ },
+ "pay-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566853.9581335,
+  "n": 0
+ },
+ "e-mohre%": {
+  "term": "mohre",
+  "status": "empty",
+  "ts": 1795566889.5969672,
+  "n": 0
+ },
+ "secure-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795566896.9271727,
+  "n": 0
+ },
+ "login-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795566908.7978976,
+  "n": 0
+ },
+ "mydewa%": {
+  "term": "dewa",
+  "status": "ok",
+  "ts": 1795566954.2363873,
+  "n": 39
+ },
+ "www-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795567004.0046082,
+  "n": 0
+ },
+ "online-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795567034.3279307,
+  "n": 0
+ },
+ "uae-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795567058.0845292,
+  "n": 0
+ },
+ "pay-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795567090.747157,
+  "n": 0
+ },
+ "e-dewa%": {
+  "term": "dewa",
+  "status": "empty",
+  "ts": 1795567106.5959709,
+  "n": 0
+ },
+ "secure-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567134.4392784,
+  "n": 0
+ },
+ "login-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567154.4820137,
+  "n": 0
+ },
+ "myetisalat%": {
+  "term": "etisalat",
+  "status": "ok",
+  "ts": 1795567172.0411832,
+  "n": 3
+ },
+ "www-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567190.841258,
+  "n": 0
+ },
+ "online-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567233.3218398,
+  "n": 0
+ },
+ "uae-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567283.5574915,
+  "n": 0
+ },
+ "pay-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567301.222443,
+  "n": 0
+ },
+ "e-etisalat%": {
+  "term": "etisalat",
+  "status": "empty",
+  "ts": 1795567306.8803952,
+  "n": 0
+ },
+ "secure-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567325.806973,
+  "n": 0
+ },
+ "login-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567342.412682,
+  "n": 0
+ },
+ "myaramex%": {
+  "term": "aramex",
+  "status": "ok",
+  "ts": 1795567384.6485195,
+  "n": 6
+ },
+ "www-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567390.6860697,
+  "n": 0
+ },
+ "online-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567396.512789,
+  "n": 0
+ },
+ "uae-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567407.137548,
+  "n": 0
+ },
+ "pay-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567420.240768,
+  "n": 0
+ },
+ "e-aramex%": {
+  "term": "aramex",
+  "status": "empty",
+  "ts": 1795567433.504809,
+  "n": 0
+ },
+ "secure-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567439.232146,
+  "n": 0
+ },
+ "login-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567447.178729,
+  "n": 0
+ },
+ "mymashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567492.8315911,
+  "n": 0
+ },
+ "www-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567520.0160828,
+  "n": 0
+ },
+ "online-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567529.9783769,
+  "n": 0
+ },
+ "uae-mashreq%": {
+  "term": "mashreq",
+  "status": "error:http_502",
+  "ts": 1795567564.908957,
+  "n": 0
+ },
+ "pay-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567588.2069633,
+  "n": 0
+ },
+ "e-mashreq%": {
+  "term": "mashreq",
+  "status": "empty",
+  "ts": 1795567594.2185266,
+  "n": 0
+ },
+ "secure-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567599.953806,
+  "n": 0
+ },
+ "login-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567627.1694312,
+  "n": 0
+ },
+ "mybankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567722.4414592,
+  "n": 0
+ },
+ "www-bankfab%": {
+  "term": "bankfab",
+  "status": "error:http_502",
+  "ts": 1795567781.2911181,
+  "n": 0
+ },
+ "online-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567827.7913241,
+  "n": 0
+ },
+ "uae-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567868.0374916,
+  "n": 0
+ },
+ "pay-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567919.5045948,
+  "n": 0
+ },
+ "e-bankfab%": {
+  "term": "bankfab",
+  "status": "empty",
+  "ts": 1795567946.883587,
+  "n": 0
+ },
+ "secure-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795567966.6586163,
+  "n": 0
+ },
+ "login-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568012.305976,
+  "n": 0
+ },
+ "myadib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568022.995281,
+  "n": 0
+ },
+ "www-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568028.8311813,
+  "n": 0
+ },
+ "online-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568035.3934088,
+  "n": 0
+ },
+ "uae-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568055.7954519,
+  "n": 0
+ },
+ "pay-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568064.886548,
+  "n": 0
+ },
+ "e-adib%": {
+  "term": "adib",
+  "status": "empty",
+  "ts": 1795568110.3628283,
+  "n": 0
+ },
+ "secure-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568116.865667,
+  "n": 0
+ },
+ "login-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568132.8463922,
+  "n": 0
+ },
+ "myenbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568165.7770972,
+  "n": 0
+ },
+ "www-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568171.4574378,
+  "n": 0
+ },
+ "online-enbd%": {
+  "term": "enbd",
+  "status": "error:http_502",
+  "ts": 1795568278.1472168,
+  "n": 0
+ },
+ "uae-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568296.5292494,
+  "n": 0
+ },
+ "pay-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568303.8072467,
+  "n": 0
+ },
+ "e-enbd%": {
+  "term": "enbd",
+  "status": "empty",
+  "ts": 1795568309.518029,
+  "n": 0
  }
 }

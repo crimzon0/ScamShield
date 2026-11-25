@@ -1,17 +1,18 @@
 {
- "state": "running",
+ "state": "stopped",
  "url": "ws://localhost:8080/",
- "started_at": "2026-11-24T20:32:22.502921+00:00",
- "messages": 52357898,
- "certs": 52357898,
- "hits": 61,
- "new_hits": 57,
+ "started_at": "2026-11-25T01:01:15.631677+00:00",
+ "messages": 5705707,
+ "certs": 5705707,
+ "hits": 119,
+ "new_hits": 116,
  "reconnects": 0,
  "last_error": "",
  "last_hit": {
-  "domain": "bankfab-googleplsly-liverpool.com.ph",
+  "domain": "bankfab-reddit.com.ph",
   "term": "bankfab",
-  "at": "2026-11-25 00:30:46.787772+00:00"
+  "at": "2026-11-25 06:01:09.340148+00:00"
  },
- "queue": 0
+ "queue": 0,
+ "stopped_at": "2026-11-25T06:01:15.633191+00:00"
 }
